@@ -15,6 +15,9 @@ import CadastrarAluno from "@/pages/CadastrarAluno";
 import EditarAluno from "@/pages/EditarAluno";
 import FichaTreino from "@/pages/FichaTreino";
 import CadastrarProfessor from "@/pages/CadastrarProfessor";
+import GerenciarPagamentos from "@/pages/GerenciarPagamentos";
+import CadastrarPagamento from "@/pages/CadastrarPagamento";
+import EditarPagamento from "@/pages/EditarPagamento";
 import NotFound from "@/pages/NotFound";
 import Index from "@/pages/Index";
 
@@ -46,6 +49,9 @@ const App = () => (
               <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
               <Route path="/editar-aluno/:id" element={<EditarAluno />} />
               <Route path="/ficha-treino/:id" element={<FichaTreino />} />
+              <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
+              <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
+              <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

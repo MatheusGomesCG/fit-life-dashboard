@@ -2,7 +2,7 @@
 import React, { ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Home, Activity, Users } from "lucide-react";
+import { LogOut, User, Home, Activity, Users, DollarSign } from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -86,6 +86,19 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             >
               <User size={18} />
               <span>Novo Aluno</span>
+            </Link>
+            <Link
+              to="/gerenciar-pagamentos"
+              className={`flex items-center gap-2 p-3 rounded-md ${
+                location.pathname === "/gerenciar-pagamentos" || 
+                location.pathname.startsWith("/cadastrar-pagamento") ||
+                location.pathname.startsWith("/editar-pagamento")
+                  ? "bg-fitness-primary text-white" 
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              <DollarSign size={18} />
+              <span>Pagamentos</span>
             </Link>
           </nav>
         </aside>
