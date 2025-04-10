@@ -1,10 +1,10 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import FormInput from "@/components/FormInput";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Save } from "lucide-react";
+import { Save, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface FormData {
@@ -81,7 +81,6 @@ const CadastrarProfessor: React.FC = () => {
     try {
       setIsSubmitting(true);
       
-      // Aqui seria feito o registro do professor
       await register({
         email: form.email,
         password: form.senha,
@@ -92,7 +91,8 @@ const CadastrarProfessor: React.FC = () => {
       });
       
       toast.success("Professor cadastrado com sucesso!");
-      navigate("/dashboard-professor");
+      // Aguardamos um breve momento antes de navegar para evitar problemas de rendering
+      setTimeout(() => navigate("/dashboard-professor"), 100);
     } catch (error) {
       console.error("Erro ao cadastrar professor:", error);
       toast.error("Erro ao cadastrar professor. Por favor, tente novamente.");
@@ -102,7 +102,7 @@ const CadastrarProfessor: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
       <div className="bg-white rounded-lg shadow-md p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-fitness-primary">Cadastro de Professor</h1>
@@ -151,7 +151,7 @@ const CadastrarProfessor: React.FC = () => {
             error={errors.confirmaSenha}
           />
           
-          <div className="pt-4">
+          <div className="pt-4 space-y-2">
             <button
               type="submit"
               disabled={isSubmitting}
@@ -166,6 +166,16 @@ const CadastrarProfessor: React.FC = () => {
                 </>
               )}
             </button>
+            
+            <Link 
+              to="/login" 
+              className="w-full text-center block mt-2 text-sm text-fitness-secondary hover:underline"
+            >
+              <div className="flex items-center justify-center gap-1">
+                <ArrowLeft size={16} />
+                <span>Voltar para o login</span>
+              </div>
+            </Link>
           </div>
         </form>
       </div>

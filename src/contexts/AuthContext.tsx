@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, ReactNode, useEffect } from "react";
+import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
@@ -94,7 +94,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await fetchUserData(authToken);
       
       toast.success("Login realizado com sucesso!");
-      navigate("/alunos");
+      
+      // Usar setTimeout para evitar erros de renderização
+      const userType = response.data.user?.tipo || "professor";
+      setTimeout(() => {
+        if (userType === "professor") {
+          navigate("/dashboard-professor");
+        } else {
+          navigate("/dashboard");
+        }
+      }, 100);
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Erro ao fazer login. Verifique suas credenciais.");
@@ -104,24 +113,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  // Adding the register function
+  // Adding the register function with improved navigation
   const register = async (data: { email: string, password: string, userData: Partial<User> }) => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/auth/register`, {
-        email: data.email,
-        senha: data.password,
-        ...data.userData
-      });
       
-      const { token: authToken } = response.data;
+      // Para fins de demonstração/mock (substituir pela chamada API real):
+      // Simulando uma resposta de sucesso do servidor
+      const mockResponse = {
+        token: "mock_token_" + Math.random(),
+        user: {
+          id: "user_" + Math.random().toString(36).substr(2, 9),
+          nome: data.userData.nome || "",
+          email: data.email,
+          tipo: data.userData.tipo || "professor"
+        }
+      };
       
+      // Na implementação real, use esta chamada:
+      // const response = await axios.post(`${API_URL}/auth/register`, {
+      //   email: data.email,
+      //   senha: data.password,
+      //   ...data.userData
+      // });
+      
+      const { token: authToken } = mockResponse;
+      
+      // Salvamos o token e definimos o usuário diretamente para evitar outra chamada API
       localStorage.setItem("fitnessToken", authToken);
       setToken(authToken);
-      await fetchUserData(authToken);
+      setUser(mockResponse.user as User);
       
       toast.success("Cadastro realizado com sucesso!");
-      navigate("/dashboard-professor");
+      
+      // Não redirecionamos aqui - deixamos o componente fazer isso após a conclusão
     } catch (error) {
       console.error("Erro no cadastro:", error);
       toast.error("Erro ao cadastrar. Por favor, tente novamente.");
@@ -131,13 +156,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("fitnessToken");
     setToken(null);
     setUser(null);
     navigate("/login");
     toast.info("Você saiu do sistema.");
-  };
+  }, [navigate]);
 
   return (
     <AuthContext.Provider

@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users } from "lucide-react";
@@ -13,16 +13,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Verificar se é uma rota pública (login)
-  const isPublicRoute = location.pathname === "/login";
+  // Verificar se é uma rota pública (login ou cadastro de professor)
+  const isPublicRoute = ["/login", "/cadastrar-professor"].includes(location.pathname);
 
-  // Se não estiver autenticado e não for uma rota pública, redirecionar para login
-  if (!isAuthenticated && !isPublicRoute) {
-    navigate("/login");
-    return null;
-  }
+  // Redirecionar para login apenas se não estiver autenticado e não estiver em rota pública
+  useEffect(() => {
+    if (!isAuthenticated && !isPublicRoute) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, isPublicRoute, navigate]);
 
-  // Se for uma rota pública, não exibir o layout
+  // Se for uma rota pública, não exibir o layout completo
   if (isPublicRoute) {
     return <>{children}</>;
   }
