@@ -1,106 +1,112 @@
 
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Activity, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { Activity, LogIn } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (!email || !senha) {
-      toast.error("Por favor, preencha todos os campos.");
-      return;
-    }
-    
+    setLoading(true);
+
     try {
-      setIsSubmitting(true);
-      await login(email, senha);
+      await login(email, password);
+      toast.success("Login realizado com sucesso!");
+      navigate("/");
     } catch (error) {
       console.error("Erro no login:", error);
-      // O toast de erro já é exibido na função login
+      toast.error("Credenciais inválidas. Por favor, tente novamente.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center">
-      <div className="max-w-md w-full mx-auto p-6">
-        <div className="flex justify-center mb-8">
-          <div className="bg-white p-4 rounded-full shadow-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <div className="flex justify-center">
             <Activity className="h-12 w-12 text-fitness-primary" />
           </div>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
+            FitLife
+          </h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Sistema de Avaliação Física
+          </p>
         </div>
-        
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-800">Login</h1>
-            <p className="text-gray-600 mt-2">Sistema de Avaliação Física</p>
-          </div>
-          
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4 rounded-md">
+            <div>
+              <label htmlFor="email" className="fitness-label">
                 Email
               </label>
               <input
                 id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
+                className="fitness-input"
+                placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="fitness-input w-full"
-                placeholder="seu@email.com"
-                required
               />
             </div>
-            
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor="senha" className="block text-sm font-medium text-gray-700">
-                  Senha
-                </label>
-                <a href="#" className="text-sm text-fitness-secondary hover:text-fitness-primary">
-                  Esqueceu a senha?
-                </a>
-              </div>
+
+            <div>
+              <label htmlFor="password" className="fitness-label">
+                Senha
+              </label>
               <input
-                id="senha"
+                id="password"
+                name="password"
                 type="password"
-                value={senha}
-                onChange={(e) => setSenha(e.target.value)}
-                className="fitness-input w-full"
-                placeholder="••••••••"
+                autoComplete="current-password"
                 required
+                className="fitness-input"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            
+          </div>
+
+          <div>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 focus:outline-none focus:ring-2 focus:ring-fitness-primary focus:ring-offset-2 transition-colors flex items-center justify-center"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fitness-primary hover:bg-fitness-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fitness-primary"
+              disabled={loading}
             >
-              {isSubmitting ? (
-                <LoadingSpinner size="small" />
+              {loading ? (
+                <LoadingSpinner size="small" className="mx-auto" />
               ) : (
                 <>
-                  <LogIn className="w-5 h-5 mr-2" />
-                  Entrar
+                  <LogIn className="h-5 w-5 mr-2" />
+                  <span>Entrar</span>
                 </>
               )}
             </button>
-          </form>
-        </div>
-        
-        <p className="text-center mt-6 text-sm text-gray-600">
-          Sistema desenvolvido para avaliação física de academia
-        </p>
+          </div>
+
+          <div className="text-center mt-4">
+            <p className="text-sm text-gray-600">
+              É um professor novo?{" "}
+              <Link to="/cadastrar-professor" className="text-fitness-secondary hover:underline">
+                Cadastre-se aqui
+              </Link>
+            </p>
+          </div>
+        </form>
       </div>
     </div>
   );

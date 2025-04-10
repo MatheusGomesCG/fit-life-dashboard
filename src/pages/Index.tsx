@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Index: React.FC = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -15,8 +15,16 @@ const Index: React.FC = () => {
     );
   }
 
-  // Redirecionar para o dashboard se estiver autenticado, ou para login se não estiver
-  return <Navigate to={isAuthenticated ? "/" : "/login"} replace />;
+  // Redirecionar para o dashboard adequado se estiver autenticado
+  // ou para login se não estiver
+  if (isAuthenticated) {
+    if (user?.tipo === "professor") {
+      return <Navigate to="/dashboard-professor" replace />;
+    }
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Navigate to="/login" replace />;
 };
 
 export default Index;
