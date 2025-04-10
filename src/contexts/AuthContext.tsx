@@ -10,6 +10,7 @@ interface User {
   id: string;
   nome: string;
   email: string;
+  tipo?: "aluno" | "professor"; // Added tipo property which can be "aluno" or "professor"
 }
 
 interface AuthContextType {
@@ -19,6 +20,7 @@ interface AuthContextType {
   login: (email: string, senha: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  register: (data: { email: string, password: string, userData: Partial<User> }) => Promise<void>; // Added register function
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -102,6 +104,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Adding the register function
+  const register = async (data: { email: string, password: string, userData: Partial<User> }) => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        email: data.email,
+        senha: data.password,
+        ...data.userData
+      });
+      
+      const { token: authToken } = response.data;
+      
+      localStorage.setItem("fitnessToken", authToken);
+      setToken(authToken);
+      await fetchUserData(authToken);
+      
+      toast.success("Cadastro realizado com sucesso!");
+      navigate("/dashboard-professor");
+    } catch (error) {
+      console.error("Erro no cadastro:", error);
+      toast.error("Erro ao cadastrar. Por favor, tente novamente.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("fitnessToken");
     setToken(null);
@@ -119,6 +148,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         logout,
         loading,
+        register,
       }}
     >
       {children}
