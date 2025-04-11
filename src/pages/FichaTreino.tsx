@@ -10,6 +10,7 @@ import {
 import { gerarPDFFichaTreino, downloadPDF } from "@/services/pdfService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { ArrowLeft, Download, Video, Youtube } from "lucide-react";
+import { FileText } from "lucide-react";
 
 const VisualizarFichaTreino: React.FC = () => {
   const { id } = useParams<{ id: string }>();

@@ -1,257 +1,192 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { listarAlunos, Aluno } from "@/services/alunosService";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { DatePicker } from "@/components/date-picker";
+import { Aluno, listarAlunos } from "@/services/alunosService";
 import { cadastrarPagamento } from "@/services/pagamentosService";
-import { ArrowLeft, Save } from "lucide-react";
-import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
-import LoadingSpinner from "@/components/LoadingSpinner";
-
-interface FormData {
-  alunoId: string;
-  valor: string;
-  dataVencimento: string;
-  dataPagamento: string;
-  status: string;
-  metodoPagamento: string;
-}
 
 const CadastrarPagamento: React.FC = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [carregandoAlunos, setCarregandoAlunos] = useState(true);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [formData, setFormData] = useState<FormData>({
-    alunoId: "",
-    valor: "",
-    dataVencimento: "",
-    dataPagamento: "",
-    status: "pendente",
-    metodoPagamento: "",
-  });
-
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
+  const [valor, setValor] = useState("");
+  const [dataVencimento, setDataVencimento] = useState<Date | null>(null);
+  const [dataPagamento, setDataPagamento] = useState<Date | null>(null);
+  const [status, setStatus] = useState<"pendente" | "pago" | "atrasado">("pendente");
+  const [observacao, setObservacao] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [metodoPagamento, setMetodoPagamento] = useState("");
 
   useEffect(() => {
-    const carregarAlunos = async () => {
-      try {
-        setCarregandoAlunos(true);
-        const data = await listarAlunos();
-        setAlunos(data);
-      } catch (error) {
-        console.error("Erro ao carregar alunos:", error);
-        toast.error("Erro ao carregar lista de alunos.");
-      } finally {
-        setCarregandoAlunos(false);
-      }
-    };
-
     carregarAlunos();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-    
-    // Limpar erro quando campo é alterado
-    if (formErrors[id as keyof FormData]) {
-      setFormErrors((prev) => ({ ...prev, [id]: "" }));
+  const carregarAlunos = async () => {
+    try {
+      setIsLoading(true);
+      const data = await listarAlunos();
+      setAlunos(data);
+    } catch (error) {
+      console.error("Erro ao carregar alunos:", error);
+      toast.error("Erro ao carregar alunos.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const validateForm = () => {
-    const errors: Partial<Record<keyof FormData, string>> = {};
-    let valid = true;
-
-    if (!formData.alunoId) {
-      errors.alunoId = "Selecione um aluno";
-      valid = false;
-    }
-
-    if (!formData.valor) {
-      errors.valor = "Valor é obrigatório";
-      valid = false;
-    } else if (isNaN(Number(formData.valor)) || Number(formData.valor) <= 0) {
-      errors.valor = "Valor inválido";
-      valid = false;
-    }
-
-    if (!formData.dataVencimento) {
-      errors.dataVencimento = "Data de vencimento é obrigatória";
-      valid = false;
-    }
-
-    if (formData.status === "pago" && !formData.dataPagamento) {
-      errors.dataPagamento = "Data de pagamento é obrigatória para pagamentos realizados";
-      valid = false;
-    }
-
-    if (formData.status === "pago" && !formData.metodoPagamento) {
-      errors.metodoPagamento = "Método de pagamento é obrigatório para pagamentos realizados";
-      valid = false;
-    }
-
-    setFormErrors(errors);
-    return valid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error("Por favor, corrija os erros no formulário.");
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      setLoading(true);
-      
-      const pagamentoData = {
-        alunoId: formData.alunoId,
-        alunoNome: alunos.find(a => a.id === formData.alunoId)?.nome || "",
-        valor: Number(formData.valor),
-        dataVencimento: formData.dataVencimento,
-        dataPagamento: formData.dataPagamento || null,
-        status: formData.status as "pendente" | "pago" | "atrasado",
-        metodoPagamento: formData.metodoPagamento || null,
-      };
+      if (!selectedAluno) {
+        toast.error("Selecione um aluno para cadastrar o pagamento.");
+        return;
+      }
 
-      await cadastrarPagamento(pagamentoData);
+      // Parse the date to get month and year
+      const dataVencimentoDate = new Date(dataVencimento);
+      const mes = dataVencimentoDate.getMonth() + 1; // JavaScript months are 0-indexed
+      const ano = dataVencimentoDate.getFullYear();
+
+      // Convert string value to number
+      const valorNum = parseFloat(valor);
+
+      await cadastrarPagamento({
+        alunoId: selectedAluno.id,
+        alunoNome: selectedAluno.nome,
+        valor: valorNum, // Converted to number
+        dataVencimento,
+        dataPagamento: status === "pago" ? dataPagamento : undefined,
+        mes, // Added mes field
+        ano, // Added ano field
+        observacao,
+        metodoPagamento // This field was added but needs to be included in the interface
+      });
+
       toast.success("Pagamento cadastrado com sucesso!");
       navigate("/gerenciar-pagamentos");
     } catch (error) {
       console.error("Erro ao cadastrar pagamento:", error);
-      toast.error("Erro ao cadastrar pagamento. Tente novamente.");
+      toast.error("Erro ao cadastrar pagamento. Por favor, tente novamente.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Pagamento</h1>
-          <p className="text-gray-600 mt-1">
-            Registre um novo pagamento no sistema
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Pagamento</h1>
+        <p className="text-gray-600 mt-1">
+          Preencha o formulário para cadastrar um novo pagamento
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="space-y-4">
-          <FormSelect
-            id="alunoId"
-            label="Aluno"
-            value={formData.alunoId}
-            onChange={handleChange}
-            options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
-            error={formErrors.alunoId}
-            required
-          />
-          
-          <FormInput
-            id="valor"
-            label="Valor (R$)"
-            type="number"
-            step="0.01"
-            value={formData.valor}
-            onChange={handleChange}
-            error={formErrors.valor}
-            required
-          />
-          
-          <FormInput
-            id="dataVencimento"
-            label="Data de Vencimento"
-            type="date"
-            value={formData.dataVencimento}
-            onChange={handleChange}
-            error={formErrors.dataVencimento}
-            required
-          />
-          
-          <FormSelect
-            id="status"
-            label="Status"
-            value={formData.status}
-            onChange={handleChange}
-            options={[
-              { value: "pendente", label: "Pendente" },
-              { value: "pago", label: "Pago" },
-              { value: "atrasado", label: "Atrasado" },
-            ]}
-            error={formErrors.status}
-            required
-          />
-          
-          {formData.status === "pago" && (
-            <>
-              <FormInput
-                id="dataPagamento"
-                label="Data do Pagamento"
-                type="date"
-                value={formData.dataPagamento}
-                onChange={handleChange}
-                error={formErrors.dataPagamento}
-                required
-              />
-              
-              <FormSelect
-                id="metodoPagamento"
-                label="Método de Pagamento"
-                value={formData.metodoPagamento}
-                onChange={handleChange}
-                options={[
-                  { value: "pix", label: "PIX" },
-                  { value: "dinheiro", label: "Dinheiro" },
-                  { value: "cartao_credito", label: "Cartão de Crédito" },
-                  { value: "cartao_debito", label: "Cartão de Débito" },
-                  { value: "transferencia", label: "Transferência Bancária" },
-                  { value: "boleto", label: "Boleto" },
-                ]}
-                error={formErrors.metodoPagamento}
-                required
-              />
-            </>
-          )}
-        </div>
+      <div className="bg-white p-6 rounded-md shadow-md border border-gray-200">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="aluno">Aluno</Label>
+            <Select onValueChange={(value) => {
+              const alunoSelecionado = alunos.find(aluno => aluno.id === value);
+              setSelectedAluno(alunoSelecionado || null);
+            }}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione um aluno" />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoading ? (
+                  <SelectItem value="" disabled>Carregando...</SelectItem>
+                ) : (
+                  alunos.map((aluno) => (
+                    <SelectItem key={aluno.id} value={aluno.id}>
+                      {aluno.nome}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex justify-end mt-8">
-          <button
-            type="button"
-            onClick={() => navigate("/gerenciar-pagamentos")}
-            className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
-            disabled={loading}
-          >
-            {loading ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <>
-                <Save className="h-5 w-5 mr-2" />
-                Salvar
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          <div>
+            <Label htmlFor="valor">Valor</Label>
+            <Input
+              type="number"
+              id="valor"
+              placeholder="R$ 0,00"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+            <DatePicker
+              selected={dataVencimento}
+              onSelect={setDataVencimento}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="dataPagamento">Data de Pagamento</Label>
+            <DatePicker
+              selected={dataPagamento}
+              onSelect={setDataPagamento}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="status">Status</Label>
+            <Select onValueChange={setStatus} defaultValue={status}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="atrasado">Atrasado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label htmlFor="metodoPagamento">Método de Pagamento</Label>
+            <Input
+              type="text"
+              id="metodoPagamento"
+              placeholder="Ex: Cartão de crédito, Boleto, Pix"
+              value={metodoPagamento}
+              onChange={(e) => setMetodoPagamento(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="observacao">Observação</Label>
+            <Input
+              type="text"
+              id="observacao"
+              placeholder="Observações adicionais"
+              value={observacao}
+              onChange={(e) => setObservacao(e.target.value)}
+            />
+          </div>
+
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Cadastrando..." : "Cadastrar Pagamento"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 };

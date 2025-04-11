@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
   Users, 
@@ -9,19 +9,49 @@ import {
   Calendar, 
   DollarSign,
   MessageSquare,
-  ChevronRight 
+  ChevronRight,
+  CheckCircle,
+  Clock 
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
+import { format } from "date-fns";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (user?.id) {
+      carregarPagamentos();
+    }
+  }, [user]);
+
+  const carregarPagamentos = async () => {
+    try {
+      setIsLoading(true);
+      if (user?.id) {
+        const pagamentosData = await buscarPagamentosPorAluno(user.id);
+        setPagamentos(pagamentosData);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar pagamentos:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const proximoPagamento = pagamentos
+    .filter(p => p.status === "pendente")
+    .sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime())[0];
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard do Aluno</h1>
         <p className="text-gray-600 mt-1">
-          Bem-vindo ao sistema de avaliação física, {user?.nome}
+          Bem-vindo ao sistema de avaliação física, {user?.nome || "Aluno"}
         </p>
       </div>
 
@@ -117,7 +147,8 @@ const Dashboard: React.FC = () => {
         </Link>
       </div>
 
-      <div className="mt-10">
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Próxima avaliação */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Próxima avaliação
@@ -134,6 +165,65 @@ const Dashboard: React.FC = () => {
               Agendar avaliação física
             </Link>
           </div>
+        </div>
+
+        {/* Próximo pagamento */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Próximo pagamento
+          </h2>
+          
+          {isLoading ? (
+            <div className="animate-pulse space-y-2">
+              <div className="h-6 bg-gray-100 rounded"></div>
+              <div className="h-6 bg-gray-100 rounded"></div>
+            </div>
+          ) : proximoPagamento ? (
+            <>
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-gray-600">Vencimento:</span>
+                </div>
+                <span className="font-medium">{format(new Date(proximoPagamento.dataVencimento), "dd/MM/yyyy")}</span>
+              </div>
+              <div className="flex items-center justify-between border-b border-gray-100 py-3">
+                <div className="flex items-center">
+                  <DollarSign className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-gray-600">Valor:</span>
+                </div>
+                <span className="font-medium">R$ {proximoPagamento.valor.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-center">
+                  <Clock className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-gray-600">Status:</span>
+                </div>
+                <span className="font-medium flex items-center">
+                  {proximoPagamento.status === "pendente" ? (
+                    <>
+                      <Clock className="h-4 w-4 text-amber-500 mr-1" />
+                      <span className="text-amber-600">Pendente</span>
+                    </>
+                  ) : proximoPagamento.status === "pago" ? (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
+                      <span className="text-green-600">Pago</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-red-500 mr-1">⚠️</span>
+                      <span className="text-red-600">Atrasado</span>
+                    </>
+                  )}
+                </span>
+              </div>
+            </>
+          ) : (
+            <p className="text-gray-600 text-center py-3">
+              Não há pagamentos pendentes.
+            </p>
+          )}
         </div>
       </div>
     </div>

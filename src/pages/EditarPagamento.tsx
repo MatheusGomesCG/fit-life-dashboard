@@ -1,286 +1,201 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { listarAlunos, Aluno } from "@/services/alunosService";
-import { buscarPagamentoPorId, atualizarPagamento } from "@/services/pagamentosService";
-import { ArrowLeft, Save } from "lucide-react";
-import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
-import LoadingSpinner from "@/components/LoadingSpinner";
-
-interface FormData {
-  alunoId: string;
-  valor: string;
-  dataVencimento: string;
-  dataPagamento: string;
-  status: string;
-  metodoPagamento: string;
-}
+import { format, parseISO } from "date-fns";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { atualizarPagamento, buscarPagamentoPorId, Pagamento } from "@/services/pagamentosService";
 
 const EditarPagamento: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [carregandoDados, setCarregandoDados] = useState(true);
-  const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [formData, setFormData] = useState<FormData>({
-    alunoId: "",
-    valor: "",
-    dataVencimento: "",
-    dataPagamento: "",
-    status: "",
-    metodoPagamento: "",
-  });
-
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const { id } = useParams<{ id: string }>();
+  const [pagamento, setPagamento] = useState<Pagamento | null>(null);
+  const [valor, setValor] = useState("");
+  const [dataVencimento, setDataVencimento] = useState("");
+  const [status, setStatus] = useState<Pagamento["status"]>("pendente");
+  const [dataPagamento, setDataPagamento] = useState<string | undefined>(undefined);
+  const [observacao, setObservacao] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const carregarDados = async () => {
-      if (!id) return;
-      
-      try {
-        setCarregandoDados(true);
-        
-        // Carregar pagamento
-        const pagamento = await buscarPagamentoPorId(id);
-        
-        // Carregar alunos
-        const alunosData = await listarAlunos();
-        
-        setAlunos(alunosData);
-        setFormData({
-          alunoId: pagamento.alunoId,
-          valor: pagamento.valor.toString(),
-          dataVencimento: pagamento.dataVencimento,
-          dataPagamento: pagamento.dataPagamento || "",
-          status: pagamento.status,
-          metodoPagamento: pagamento.metodoPagamento || "",
-        });
-      } catch (error) {
-        console.error("Erro ao carregar dados:", error);
-        toast.error("Erro ao carregar dados do pagamento.");
-        navigate("/gerenciar-pagamentos");
-      } finally {
-        setCarregandoDados(false);
+    const carregarPagamento = async () => {
+      if (id) {
+        try {
+          const data = await buscarPagamentoPorId(id);
+          setPagamento(data);
+          setValor(data.valor.toString());
+          setDataVencimento(data.dataVencimento);
+          setStatus(data.status);
+          setDataPagamento(data.dataPagamento);
+          setObservacao(data.observacao || "");
+        } catch (error) {
+          console.error("Erro ao carregar pagamento:", error);
+          toast.error("Erro ao carregar dados do pagamento.");
+        }
       }
     };
 
-    carregarDados();
-  }, [id, navigate]);
+    carregarPagamento();
+  }, [id]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-    
-    // Limpar erro quando campo é alterado
-    if (formErrors[id as keyof FormData]) {
-      setFormErrors((prev) => ({ ...prev, [id]: "" }));
-    }
-  };
-
-  const validateForm = () => {
-    const errors: Partial<Record<keyof FormData, string>> = {};
-    let valid = true;
-
-    if (!formData.alunoId) {
-      errors.alunoId = "Selecione um aluno";
-      valid = false;
-    }
-
-    if (!formData.valor) {
-      errors.valor = "Valor é obrigatório";
-      valid = false;
-    } else if (isNaN(Number(formData.valor)) || Number(formData.valor) <= 0) {
-      errors.valor = "Valor inválido";
-      valid = false;
-    }
-
-    if (!formData.dataVencimento) {
-      errors.dataVencimento = "Data de vencimento é obrigatória";
-      valid = false;
-    }
-
-    if (formData.status === "pago" && !formData.dataPagamento) {
-      errors.dataPagamento = "Data de pagamento é obrigatória para pagamentos realizados";
-      valid = false;
-    }
-
-    if (formData.status === "pago" && !formData.metodoPagamento) {
-      errors.metodoPagamento = "Método de pagamento é obrigatório para pagamentos realizados";
-      valid = false;
-    }
-
-    setFormErrors(errors);
-    return valid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error("Por favor, corrija os erros no formulário.");
-      return;
-    }
-
-    if (!id) return;
+    setIsSubmitting(true);
 
     try {
-      setLoading(true);
-      
-      const pagamentoData = {
-        id,
-        alunoId: formData.alunoId,
-        alunoNome: alunos.find(a => a.id === formData.alunoId)?.nome || "",
-        valor: Number(formData.valor),
-        dataVencimento: formData.dataVencimento,
-        dataPagamento: formData.dataPagamento || null,
-        status: formData.status as "pendente" | "pago" | "atrasado",
-        metodoPagamento: formData.metodoPagamento || null,
-      };
+      if (!pagamento) {
+        toast.error("Dados do pagamento não encontrados.");
+        return;
+      }
 
-      await atualizarPagamento(id, pagamentoData);
+      // Convert string value to number
+      const valorNum = parseFloat(valor);
+
+      await atualizarPagamento(id, {
+        valor: valorNum, // Converted to number
+        dataVencimento,
+        status,
+        dataPagamento: status === "pago" ? dataPagamento : undefined,
+        observacao,
+        // Don't include metodoPagamento since it's not in the Pagamento interface
+      });
+
       toast.success("Pagamento atualizado com sucesso!");
       navigate("/gerenciar-pagamentos");
     } catch (error) {
       console.error("Erro ao atualizar pagamento:", error);
-      toast.error("Erro ao atualizar pagamento. Tente novamente.");
+      toast.error("Erro ao atualizar pagamento. Por favor, tente novamente.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (carregandoDados) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
-          <p className="text-gray-600 mt-1">
-            Atualize as informações do pagamento
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
+        <p className="text-gray-600 mt-1">
+          Atualize os detalhes do pagamento
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="space-y-4">
-          <FormSelect
-            id="alunoId"
-            label="Aluno"
-            value={formData.alunoId}
-            onChange={handleChange}
-            options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
-            error={formErrors.alunoId}
-            required
-          />
-          
-          <FormInput
-            id="valor"
-            label="Valor (R$)"
-            type="number"
-            step="0.01"
-            value={formData.valor}
-            onChange={handleChange}
-            error={formErrors.valor}
-            required
-          />
-          
-          <FormInput
-            id="dataVencimento"
-            label="Data de Vencimento"
-            type="date"
-            value={formData.dataVencimento}
-            onChange={handleChange}
-            error={formErrors.dataVencimento}
-            required
-          />
-          
-          <FormSelect
-            id="status"
-            label="Status"
-            value={formData.status}
-            onChange={handleChange}
-            options={[
-              { value: "pendente", label: "Pendente" },
-              { value: "pago", label: "Pago" },
-              { value: "atrasado", label: "Atrasado" },
-            ]}
-            error={formErrors.status}
-            required
-          />
-          
-          {formData.status === "pago" && (
-            <>
-              <FormInput
-                id="dataPagamento"
-                label="Data do Pagamento"
-                type="date"
-                value={formData.dataPagamento}
-                onChange={handleChange}
-                error={formErrors.dataPagamento}
+      <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+        {pagamento ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="valor">Valor</Label>
+              <Input
+                type="number"
+                id="valor"
+                value={valor}
+                onChange={(e) => setValor(e.target.value)}
                 required
               />
-              
-              <FormSelect
-                id="metodoPagamento"
-                label="Método de Pagamento"
-                value={formData.metodoPagamento}
-                onChange={handleChange}
-                options={[
-                  { value: "pix", label: "PIX" },
-                  { value: "dinheiro", label: "Dinheiro" },
-                  { value: "cartao_credito", label: "Cartão de Crédito" },
-                  { value: "cartao_debito", label: "Cartão de Débito" },
-                  { value: "transferencia", label: "Transferência Bancária" },
-                  { value: "boleto", label: "Boleto" },
-                ]}
-                error={formErrors.metodoPagamento}
-                required
-              />
-            </>
-          )}
-        </div>
-
-        <div className="flex justify-end mt-8">
-          <button
-            type="button"
-            onClick={() => navigate("/gerenciar-pagamentos")}
-            className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
-            disabled={loading}
-          >
-            {loading ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <>
-                <Save className="h-5 w-5 mr-2" />
-                Salvar
-              </>
+            </div>
+            <div>
+              <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dataVencimento && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dataVencimento ? format(parseISO(dataVencimento), "dd/MM/yyyy") : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                  <Calendar
+                    mode="single"
+                    selected={dataVencimento ? parseISO(dataVencimento) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        setDataVencimento(format(date, "yyyy-MM-dd"));
+                      }
+                    }}
+                    disabled={(date) =>
+                      date > new Date()
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label htmlFor="status">Status</Label>
+              <Select value={status} onValueChange={(value) => setStatus(value as Pagamento["status"])}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="atrasado">Atrasado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {status === "pago" && (
+              <div>
+                <Label htmlFor="dataPagamento">Data de Pagamento</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dataPagamento && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dataPagamento ? format(parseISO(dataPagamento), "dd/MM/yyyy") : (
+                        <span>Selecione a data</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                    <Calendar
+                      mode="single"
+                      selected={dataPagamento ? parseISO(dataPagamento) : undefined}
+                      onSelect={(date) => {
+                        if (date) {
+                          setDataPagamento(format(date, "yyyy-MM-dd"));
+                        }
+                      }}
+                      max={new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             )}
-          </button>
-        </div>
-      </form>
+            <div>
+              <Label htmlFor="observacao">Observação</Label>
+              <Input
+                type="text"
+                id="observacao"
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+              />
+            </div>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Atualizando..." : "Atualizar Pagamento"}
+            </Button>
+          </form>
+        ) : (
+          <p className="text-center py-8 text-gray-500">Carregando dados do pagamento...</p>
+        )}
+      </div>
     </div>
   );
 };

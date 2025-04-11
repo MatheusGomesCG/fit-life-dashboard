@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,6 +38,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // Mock student credentials for testing
 const STUDENT_EMAIL = "aluno@exemplo.com";
 const STUDENT_PASSWORD = "123456";
+
+// Mock professor credentials for testing
+const PROFESSOR_EMAIL = "professor@exemplo.com";
+const PROFESSOR_PASSWORD = "123456";
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -86,7 +91,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(response.data);
     } catch (error) {
       console.error("Erro ao obter dados do usuário:", error);
-      logout(); // Se falhar ao obter dados do usuário, fazer logout
+      
+      // Retrieve user data from localStorage if API call fails
+      const userData = localStorage.getItem("fitnessUser");
+      if (userData) {
+        setUser(JSON.parse(userData));
+      } else {
+        logout(); // Se falhar ao obter dados do usuário, fazer logout
+      }
     } finally {
       setLoading(false);
     }
@@ -96,7 +108,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       setLoading(true);
       
-      // Special handling for demo student account
+      // Mock login for professor account
+      if (email === PROFESSOR_EMAIL && senha === PROFESSOR_PASSWORD) {
+        tipo = "professor";
+      }
+      
+      // Mock login for student account
       if (email === STUDENT_EMAIL && senha === STUDENT_PASSWORD) {
         tipo = "aluno";
       }
@@ -106,7 +123,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         token: "mock_token_" + Math.random(),
         user: {
           id: "user_" + Math.random().toString(36).substr(2, 9),
-          nome: email.split("@")[0],
+          nome: email === PROFESSOR_EMAIL ? "Professor Silva" : 
+                email === STUDENT_EMAIL ? "Aluno Carlos" :
+                email.split("@")[0],
           email,
           tipo
         }
@@ -123,6 +142,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const { token: authToken, user: userData } = mockResponse;
       
       localStorage.setItem("fitnessToken", authToken);
+      localStorage.setItem("fitnessUser", JSON.stringify(userData)); // Store user in localStorage
       setToken(authToken);
       setUser(userData);
       
@@ -173,6 +193,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Salvamos o token e definimos o usuário diretamente para evitar outra chamada API
       localStorage.setItem("fitnessToken", authToken);
+      localStorage.setItem("fitnessUser", JSON.stringify(mockResponse.user)); // Store user in localStorage
       setToken(authToken);
       setUser(mockResponse.user as User);
       
@@ -229,6 +250,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const logout = useCallback(() => {
     localStorage.removeItem("fitnessToken");
+    localStorage.removeItem("fitnessUser");
     setToken(null);
     setUser(null);
     navigate("/");

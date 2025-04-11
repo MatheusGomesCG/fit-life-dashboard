@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock } from "lucide-react";
@@ -22,6 +23,10 @@ const DashboardProfessor: React.FC = () => {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
+  
+  // Count of total students 
+  const [totalAlunos] = useState(15); // Mock value
+  const [alunosAtivos] = useState(12); // Mock value
 
   useEffect(() => {
     carregarPagamentos();
@@ -73,8 +78,32 @@ const DashboardProfessor: React.FC = () => {
         </TabsList>
         
         <TabsContent value="resumo">
-          {/* Resumo Financeiro */}
+          {/* Resumo de Alunos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+                <h2 className="text-lg font-semibold ml-3">Total de Alunos</h2>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <p className="text-2xl font-bold text-blue-600">
+                  {totalAlunos}
+                </p>
+                <p className="text-sm text-gray-500">
+                  <span className="font-medium text-green-600">{alunosAtivos}</span> ativos
+                </p>
+              </div>
+              
+              <Link to="/gerenciar-alunos" className="mt-4 flex items-center text-blue-600 font-medium">
+                <span>Gerenciar alunos</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+          
+            {/* Resumo Financeiro */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-green-100 rounded-full">
@@ -96,7 +125,10 @@ const DashboardProfessor: React.FC = () => {
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </div>
+          </div>
 
+          {/* Pagamentos Pendentes */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-amber-100 rounded-full">
@@ -115,6 +147,23 @@ const DashboardProfessor: React.FC = () => {
               
               <Link to="/gerenciar-pagamentos" className="mt-4 flex items-center text-amber-600 font-medium">
                 <span>Gerenciar pendências</span>
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Link>
+            </div>
+            
+            {/* Novas avaliações esta semana */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="flex items-center mb-4">
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <Activity className="h-6 w-6 text-purple-600" />
+                </div>
+                <h2 className="text-lg font-semibold ml-3">Avaliações esta semana</h2>
+              </div>
+              
+              <p className="text-2xl font-bold text-purple-600">3</p>
+              
+              <Link to="/agendamentos" className="mt-4 flex items-center text-purple-600 font-medium">
+                <span>Ver agendamentos</span>
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Link>
             </div>

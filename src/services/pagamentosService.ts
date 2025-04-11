@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da API
@@ -14,6 +13,7 @@ export interface Pagamento {
   mes: number; // 1-12
   ano: number;
   observacao?: string;
+  metodoPagamento?: string; // Add this field to the interface
 }
 
 export const listarPagamentos = async (): Promise<Pagamento[]> => {
@@ -145,7 +145,8 @@ const dadosMock: Pagamento[] = [
     status: "pago",
     mes: 4,
     ano: 2025,
-    observacao: "Pagamento antecipado"
+    observacao: "Pagamento antecipado",
+    metodoPagamento: "Cartão de crédito"
   },
   {
     id: "pag_2",
@@ -155,7 +156,8 @@ const dadosMock: Pagamento[] = [
     dataVencimento: "2025-04-15",
     status: "pendente",
     mes: 4,
-    ano: 2025
+    ano: 2025,
+    metodoPagamento: "Boleto bancário"
   },
   {
     id: "pag_3",
@@ -165,7 +167,8 @@ const dadosMock: Pagamento[] = [
     dataVencimento: "2025-03-10",
     status: "atrasado",
     mes: 3,
-    ano: 2025
+    ano: 2025,
+    metodoPagamento: "Pix"
   },
   {
     id: "pag_4",
@@ -176,7 +179,8 @@ const dadosMock: Pagamento[] = [
     dataPagamento: "2025-04-01",
     status: "pago",
     mes: 4,
-    ano: 2025
+    ano: 2025,
+    metodoPagamento: "Transferência bancária"
   },
   {
     id: "pag_5",
@@ -186,6 +190,7 @@ const dadosMock: Pagamento[] = [
     dataVencimento: "2025-04-20",
     status: "pendente",
     mes: 4,
-    ano: 2025
+    ano: 2025,
+    metodoPagamento: "Dinheiro"
   }
 ];
