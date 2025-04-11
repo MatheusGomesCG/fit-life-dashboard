@@ -1,352 +1,297 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Save } from "lucide-react";
-import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@/components/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cadastrarAluno } from "@/services/alunosService";
-import { useAuth } from "@/contexts/AuthContext";
-import LoadingSpinner from "@/components/LoadingSpinner";
 
-interface FormData {
+// Interface para dados do aluno
+interface DadosAluno {
   nome: string;
   email: string;
-  senha: string;
-  confirmaSenha: string;
-  idade: string;
-  peso: string;
-  altura: string;
+  telefone: string;
+  dataNascimento: Date | null;
   genero: string;
-  experiencia: string;
-  valorMensalidade: string;
-  dataVencimento: string;
+  endereco: string;
+  objetivo: string;
+  observacoes: string;
+  altura: number;
+  peso: number;
+  valorMensalidade: number;
+  dataVencimento: Date | null;
 }
 
 const CadastrarAluno: React.FC = () => {
   const navigate = useNavigate();
-  const { registerAluno } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
+  
+  const [dadosAluno, setDadosAluno] = useState<DadosAluno>({
     nome: "",
     email: "",
-    senha: "",
-    confirmaSenha: "",
-    idade: "",
-    peso: "",
-    altura: "",
-    genero: "masculino",
-    experiencia: "iniciante",
-    valorMensalidade: "",
-    dataVencimento: new Date().toISOString().substring(0, 10),
+    telefone: "",
+    dataNascimento: null,
+    genero: "",
+    endereco: "",
+    objetivo: "",
+    observacoes: "",
+    altura: 0,
+    peso: 0,
+    valorMensalidade: 0,
+    dataVencimento: null
   });
 
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
-    if (formErrors[id as keyof FormData]) {
-      setFormErrors((prev) => ({ ...prev, [id]: "" }));
-    }
+    setDadosAluno(prev => ({ ...prev, [id]: value }));
+  };
+  
+  const handleSelectChange = (field: string, value: string) => {
+    setDadosAluno(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateForm = () => {
-    const errors: Partial<Record<keyof FormData, string>> = {};
-    let valid = true;
-
-    if (!formData.nome.trim()) {
-      errors.nome = "Nome é obrigatório";
-      valid = false;
-    }
-
-    if (!formData.email.trim()) {
-      errors.email = "Email é obrigatório";
-      valid = false;
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = "Email inválido";
-      valid = false;
-    }
-
-    if (!formData.senha) {
-      errors.senha = "Senha é obrigatória";
-      valid = false;
-    } else if (formData.senha.length < 6) {
-      errors.senha = "A senha deve ter pelo menos 6 caracteres";
-      valid = false;
-    }
-
-    if (!formData.confirmaSenha) {
-      errors.confirmaSenha = "Confirme sua senha";
-      valid = false;
-    } else if (formData.senha !== formData.confirmaSenha) {
-      errors.confirmaSenha = "As senhas não coincidem";
-      valid = false;
-    }
-
-    if (!formData.idade) {
-      errors.idade = "Idade é obrigatória";
-      valid = false;
-    } else if (isNaN(Number(formData.idade)) || Number(formData.idade) <= 0) {
-      errors.idade = "Idade inválida";
-      valid = false;
-    }
-
-    if (!formData.peso) {
-      errors.peso = "Peso é obrigatório";
-      valid = false;
-    } else if (isNaN(Number(formData.peso)) || Number(formData.peso) <= 0) {
-      errors.peso = "Peso inválido";
-      valid = false;
-    }
-
-    if (!formData.altura) {
-      errors.altura = "Altura é obrigatória";
-      valid = false;
-    } else if (
-      isNaN(Number(formData.altura)) ||
-      Number(formData.altura) <= 0
-    ) {
-      errors.altura = "Altura inválida";
-      valid = false;
-    }
-
-    if (!formData.valorMensalidade) {
-      errors.valorMensalidade = "Valor da mensalidade é obrigatório";
-      valid = false;
-    } else if (isNaN(Number(formData.valorMensalidade)) || Number(formData.valorMensalidade) <= 0) {
-      errors.valorMensalidade = "Valor inválido";
-      valid = false;
-    }
-
-    if (!formData.dataVencimento) {
-      errors.dataVencimento = "Data de vencimento é obrigatória";
-      valid = false;
-    }
-
-    setFormErrors(errors);
-    return valid;
+  const handleDateChange = (field: string, date: Date | null) => {
+    setDadosAluno(prev => ({ ...prev, [field]: date }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      toast.error("Por favor, corrija os erros no formulário.");
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      setLoading(true);
+      // Validações básicas
+      if (!dadosAluno.nome || !dadosAluno.email || !dadosAluno.telefone) {
+        toast.error("Por favor, preencha os campos obrigatórios");
+        return;
+      }
 
-      await registerAluno({
-        nome: formData.nome,
-        email: formData.email,
-        senha: formData.senha,
-        idade: Number(formData.idade),
-        peso: Number(formData.peso),
-        altura: Number(formData.altura),
-        experiencia: formData.experiencia
-      });
-
-      const dobrasCutaneas = {
-        triceps: 0,
-        subescapular: 0,
-        axilarMedia: 0,
-        peitoral: 0,
-        suprailiaca: 0,
-        abdominal: 0,
-        coxa: 0
+      // Convertendo as strings para números
+      const alunoFormatado = {
+        ...dadosAluno,
+        altura: Number(dadosAluno.altura),
+        peso: Number(dadosAluno.peso),
+        valorMensalidade: Number(dadosAluno.valorMensalidade)
       };
 
-      await cadastrarAluno({
-        nome: formData.nome,
-        idade: Number(formData.idade),
-        peso: Number(formData.peso),
-        altura: Number(formData.altura),
-        genero: formData.genero as "masculino" | "feminino",
-        experiencia: formData.experiencia as "iniciante" | "intermediario" | "avancado",
-        dobrasCutaneas: dobrasCutaneas,
-        valorMensalidade: Number(formData.valorMensalidade),
-        dataVencimento: formData.dataVencimento
-      });
-
+      await cadastrarAluno(alunoFormatado);
+      
       toast.success("Aluno cadastrado com sucesso!");
       navigate("/gerenciar-alunos");
     } catch (error) {
       console.error("Erro ao cadastrar aluno:", error);
-      toast.error("Erro ao cadastrar aluno. Tente novamente.");
+      toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Aluno</h1>
-          <p className="text-gray-600 mt-1">
-            Preencha os dados do novo aluno
-          </p>
-        </div>
+    <div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
+        <p className="text-gray-600 mt-1">Preencha o formulário para cadastrar um novo aluno</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
-          Informações de Conta
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
-          <FormInput
-            id="nome"
-            label="Nome completo"
-            value={formData.nome}
-            onChange={handleChange}
-            error={formErrors.nome}
-            required
-          />
-          <FormInput
-            id="email"
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={formErrors.email}
-            required
-          />
-          <FormInput
-            id="senha"
-            label="Senha"
-            type="password"
-            value={formData.senha}
-            onChange={handleChange}
-            error={formErrors.senha}
-            required
-          />
-          <FormInput
-            id="confirmaSenha"
-            label="Confirmar senha"
-            type="password"
-            value={formData.confirmaSenha}
-            onChange={handleChange}
-            error={formErrors.confirmaSenha}
-            required
-          />
-        </div>
+      <div className="bg-white p-6 rounded-md shadow-md border border-gray-200">
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          {/* Dados Pessoais */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados Pessoais</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Nome */}
+              <div>
+                <Label htmlFor="nome">Nome Completo*</Label>
+                <Input 
+                  id="nome" 
+                  placeholder="Nome do aluno" 
+                  value={dadosAluno.nome}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
-          Informações Físicas
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6">
-          <FormInput
-            id="idade"
-            label="Idade"
-            type="number"
-            value={formData.idade}
-            onChange={handleChange}
-            error={formErrors.idade}
-            required
-          />
-          <FormInput
-            id="peso"
-            label="Peso (kg)"
-            type="number"
-            step="0.01"
-            value={formData.peso}
-            onChange={handleChange}
-            error={formErrors.peso}
-            required
-          />
-          <FormInput
-            id="altura"
-            label="Altura (m)"
-            type="number"
-            step="0.01"
-            value={formData.altura}
-            onChange={handleChange}
-            error={formErrors.altura}
-            required
-          />
-          <FormSelect
-            id="genero"
-            label="Gênero"
-            value={formData.genero}
-            onChange={handleChange}
-            options={[
-              { value: "masculino", label: "Masculino" },
-              { value: "feminino", label: "Feminino" },
-            ]}
-            required
-          />
-          <FormSelect
-            id="experiencia"
-            label="Nível de experiência"
-            value={formData.experiencia}
-            onChange={handleChange}
-            options={[
-              { value: "iniciante", label: "Iniciante" },
-              { value: "intermediario", label: "Intermediário" },
-              { value: "avancado", label: "Avançado" },
-            ]}
-            required
-          />
-        </div>
+              {/* Email */}
+              <div>
+                <Label htmlFor="email">E-mail*</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="email@exemplo.com" 
+                  value={dadosAluno.email}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
-          Informações de Pagamento
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
-          <FormInput
-            id="valorMensalidade"
-            label="Valor da mensalidade (R$)"
-            type="number"
-            step="0.01"
-            value={formData.valorMensalidade}
-            onChange={handleChange}
-            error={formErrors.valorMensalidade}
-            required
-          />
-          <FormInput
-            id="dataVencimento"
-            label="Data de vencimento"
-            type="date"
-            value={formData.dataVencimento}
-            onChange={handleChange}
-            error={formErrors.dataVencimento}
-            required
-          />
-        </div>
+              {/* Telefone */}
+              <div>
+                <Label htmlFor="telefone">Telefone*</Label>
+                <Input 
+                  id="telefone" 
+                  placeholder="(00) 00000-0000" 
+                  value={dadosAluno.telefone}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
 
-        <div className="flex justify-end mt-8">
-          <button
-            type="button"
-            onClick={() => navigate("/gerenciar-alunos")}
-            className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
-            disabled={loading}
-          >
-            {loading ? (
-              <LoadingSpinner size="small" />
-            ) : (
-              <>
-                <Save className="h-5 w-5 mr-2" />
-                Salvar
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+              {/* Data de Nascimento */}
+              <div>
+                <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                <DatePicker
+                  selected={dadosAluno.dataNascimento}
+                  onSelect={(date) => handleDateChange('dataNascimento', date)}
+                  placeholder="Selecione uma data"
+                />
+              </div>
+
+              {/* Gênero */}
+              <div>
+                <Label htmlFor="genero">Gênero</Label>
+                <Select 
+                  onValueChange={(value) => handleSelectChange('genero', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o gênero" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="masculino">Masculino</SelectItem>
+                    <SelectItem value="feminino">Feminino</SelectItem>
+                    <SelectItem value="outro">Outro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Endereço */}
+              <div>
+                <Label htmlFor="endereco">Endereço</Label>
+                <Input 
+                  id="endereco" 
+                  placeholder="Endereço completo" 
+                  value={dadosAluno.endereco}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Dados Físicos */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados Físicos</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Altura */}
+              <div>
+                <Label htmlFor="altura">Altura (cm)</Label>
+                <Input 
+                  id="altura" 
+                  type="number" 
+                  placeholder="170"
+                  value={dadosAluno.altura || ''}
+                  onChange={(e) => setDadosAluno(prev => ({ 
+                    ...prev, 
+                    altura: Number(e.target.value) 
+                  }))}
+                />
+              </div>
+
+              {/* Peso */}
+              <div>
+                <Label htmlFor="peso">Peso (kg)</Label>
+                <Input 
+                  id="peso" 
+                  type="number" 
+                  placeholder="70"
+                  value={dadosAluno.peso || ''}
+                  onChange={(e) => setDadosAluno(prev => ({ 
+                    ...prev, 
+                    peso: Number(e.target.value) 
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Dados de Contrato */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados de Pagamento</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Valor da Mensalidade */}
+              <div>
+                <Label htmlFor="valorMensalidade">Valor da Mensalidade (R$)</Label>
+                <Input 
+                  id="valorMensalidade" 
+                  type="number" 
+                  placeholder="100.00"
+                  value={dadosAluno.valorMensalidade || ''}
+                  onChange={(e) => setDadosAluno(prev => ({ 
+                    ...prev, 
+                    valorMensalidade: Number(e.target.value) 
+                  }))}
+                />
+              </div>
+
+              {/* Data de Vencimento */}
+              <div>
+                <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+                <DatePicker
+                  selected={dadosAluno.dataVencimento}
+                  onSelect={(date) => handleDateChange('dataVencimento', date)}
+                  placeholder="Selecione a data de vencimento"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Plano de Treino */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Informações do Treino</h2>
+            <div className="grid grid-cols-1 gap-6">
+              {/* Objetivo */}
+              <div>
+                <Label htmlFor="objetivo">Objetivo</Label>
+                <Select 
+                  onValueChange={(value) => handleSelectChange('objetivo', value)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o objetivo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hipertrofia">Hipertrofia</SelectItem>
+                    <SelectItem value="emagrecimento">Emagrecimento</SelectItem>
+                    <SelectItem value="condicionamento">Condicionamento Físico</SelectItem>
+                    <SelectItem value="reabilitacao">Reabilitação</SelectItem>
+                    <SelectItem value="saude">Saúde e Bem-estar</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Observações */}
+              <div>
+                <Label htmlFor="observacoes">Observações</Label>
+                <Textarea 
+                  id="observacoes" 
+                  placeholder="Informações adicionais, restrições médicas, etc."
+                  value={dadosAluno.observacoes}
+                  onChange={handleInputChange}
+                  className="h-32"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Botão de Cadastrar */}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cadastrando..." : "Cadastrar Aluno"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
