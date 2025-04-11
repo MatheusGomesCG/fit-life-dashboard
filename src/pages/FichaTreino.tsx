@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,13 +9,14 @@ import {
 } from "@/services/alunosService";
 import { gerarPDFFichaTreino, downloadPDF } from "@/services/pdfService";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { ArrowLeft, Download, Printer, FileText } from "lucide-react";
+import { ArrowLeft, Download, Video, Youtube } from "lucide-react";
 
 const VisualizarFichaTreino: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [ficha, setFicha] = useState<FichaTreino | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAlunoEGerarFicha = async () => {
@@ -52,7 +52,30 @@ const VisualizarFichaTreino: React.FC = () => {
     }
   };
 
-  // Agrupar exercícios por grupo muscular
+  const renderYoutubeEmbed = (videoUrl: string) => {
+    if (!videoUrl) return null;
+    
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = videoUrl.match(regex);
+    const videoId = match ? match[1] : null;
+    
+    if (!videoId) return <p className="text-red-500">URL de vídeo inválida</p>;
+    
+    return (
+      <div className="aspect-w-16 aspect-h-9">
+        <iframe
+          width="100%"
+          height="315"
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title="YouTube video player"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+      </div>
+    );
+  };
+
   const exerciciosPorGrupo = ficha?.exercicios.reduce<Record<string, CargaExercicio[]>>((grupos, exercicio) => {
     if (!grupos[exercicio.grupoMuscular]) {
       grupos[exercicio.grupoMuscular] = [];
@@ -182,6 +205,8 @@ const VisualizarFichaTreino: React.FC = () => {
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carga (kg)</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Séries</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repetições</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estratégia</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vídeo</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -191,6 +216,20 @@ const VisualizarFichaTreino: React.FC = () => {
                         <td className="px-4 py-3">{exercicio.cargaIdeal}</td>
                         <td className="px-4 py-3">{exercicio.series}</td>
                         <td className="px-4 py-3">{exercicio.repeticoes}</td>
+                        <td className="px-4 py-3">{exercicio.estrategia || "-"}</td>
+                        <td className="px-4 py-3">
+                          {exercicio.videoUrl ? (
+                            <button
+                              onClick={() => setActiveVideoUrl(exercicio.videoUrl || null)}
+                              className="text-fitness-primary hover:text-fitness-primary/80 flex items-center"
+                            >
+                              <Youtube className="h-4 w-4 mr-1" />
+                              Ver vídeo
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -200,6 +239,23 @@ const VisualizarFichaTreino: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {activeVideoUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-3xl p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Vídeo de Demonstração</h3>
+              <button
+                onClick={() => setActiveVideoUrl(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+            {renderYoutubeEmbed(activeVideoUrl)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

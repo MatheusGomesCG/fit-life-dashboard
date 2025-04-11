@@ -34,6 +34,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Mock student credentials for testing
+const STUDENT_EMAIL = "aluno@exemplo.com";
+const STUDENT_PASSWORD = "123456";
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -91,6 +95,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, senha: string, tipo: "aluno" | "professor" = "professor") => {
     try {
       setLoading(true);
+      
+      // Special handling for demo student account
+      if (email === STUDENT_EMAIL && senha === STUDENT_PASSWORD) {
+        tipo = "aluno";
+      }
       
       // Mock response for development
       const mockResponse = {

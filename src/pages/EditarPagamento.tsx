@@ -1,159 +1,160 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { listarAlunos, Aluno } from "@/services/alunosService";
+import { buscarPagamentoPorId, atualizarPagamento } from "@/services/pagamentosService";
+import { ArrowLeft, Save } from "lucide-react";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
-import { listarAlunos, Aluno } from "@/services/alunosService";
-import { buscarPagamentoPorId, atualizarPagamento, Pagamento } from "@/services/pagamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
+
+interface FormData {
+  alunoId: string;
+  valor: string;
+  dataVencimento: string;
+  dataPagamento: string;
+  status: string;
+  metodoPagamento: string;
+}
 
 const EditarPagamento: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [carregandoDados, setCarregandoDados] = useState(true);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     alunoId: "",
     valor: "",
     dataVencimento: "",
     dataPagamento: "",
-    mes: "",
-    ano: "",
-    observacao: ""
+    status: "",
+    metodoPagamento: "",
   });
-  const [errors, setErrors] = useState({
-    alunoId: "",
-    valor: "",
-    dataVencimento: "",
-    mes: "",
-    ano: ""
-  });
+
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
   useEffect(() => {
-    const fetchAlunos = async () => {
+    const carregarDados = async () => {
+      if (!id) return;
+      
       try {
-        const data = await listarAlunos();
-        setAlunos(data);
+        setCarregandoDados(true);
+        
+        // Carregar pagamento
+        const pagamento = await buscarPagamentoPorId(id);
+        
+        // Carregar alunos
+        const alunosData = await listarAlunos();
+        
+        setAlunos(alunosData);
+        setFormData({
+          alunoId: pagamento.alunoId,
+          valor: pagamento.valor.toString(),
+          dataVencimento: pagamento.dataVencimento,
+          dataPagamento: pagamento.dataPagamento || "",
+          status: pagamento.status,
+          metodoPagamento: pagamento.metodoPagamento || "",
+        });
       } catch (error) {
-        console.error("Erro ao carregar alunos:", error);
-        toast.error("Erro ao carregar lista de alunos");
+        console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar dados do pagamento.");
+        navigate("/gerenciar-pagamentos");
+      } finally {
+        setCarregandoDados(false);
       }
     };
 
-    const fetchPagamento = async () => {
-      if (id) {
-        try {
-          const pagamento = await buscarPagamentoPorId(id);
-          setFormData({
-            alunoId: pagamento.alunoId,
-            valor: String(pagamento.valor),
-            dataVencimento: pagamento.dataVencimento,
-            dataPagamento: pagamento.dataPagamento || "",
-            mes: String(pagamento.mes),
-            ano: String(pagamento.ano),
-            observacao: pagamento.observacao || ""
-          });
-        } catch (error) {
-          console.error("Erro ao carregar pagamento:", error);
-          toast.error("Erro ao carregar detalhes do pagamento");
-        }
-      }
-    };
+    carregarDados();
+  }, [id, navigate]);
 
-    Promise.all([fetchAlunos(), fetchPagamento()]).finally(() =>
-      setIsLoading(false)
-    );
-  }, [id]);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (name in errors) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    
+    // Limpar erro quando campo é alterado
+    if (formErrors[id as keyof FormData]) {
+      setFormErrors((prev) => ({ ...prev, [id]: "" }));
     }
   };
 
   const validateForm = () => {
-    let isValid = true;
-    const newErrors = { ...errors };
+    const errors: Partial<Record<keyof FormData, string>> = {};
+    let valid = true;
 
     if (!formData.alunoId) {
-      newErrors.alunoId = "Selecione um aluno";
-      isValid = false;
+      errors.alunoId = "Selecione um aluno";
+      valid = false;
     }
 
-    if (!formData.valor || Number(formData.valor) <= 0) {
-      newErrors.valor = "Informe um valor válido";
-      isValid = false;
+    if (!formData.valor) {
+      errors.valor = "Valor é obrigatório";
+      valid = false;
+    } else if (isNaN(Number(formData.valor)) || Number(formData.valor) <= 0) {
+      errors.valor = "Valor inválido";
+      valid = false;
     }
 
     if (!formData.dataVencimento) {
-      newErrors.dataVencimento = "Informe a data de vencimento";
-      isValid = false;
+      errors.dataVencimento = "Data de vencimento é obrigatória";
+      valid = false;
     }
 
-    if (!formData.mes) {
-      newErrors.mes = "Selecione o mês de referência";
-      isValid = false;
+    if (formData.status === "pago" && !formData.dataPagamento) {
+      errors.dataPagamento = "Data de pagamento é obrigatória para pagamentos realizados";
+      valid = false;
     }
 
-    if (!formData.ano) {
-      newErrors.ano = "Informe o ano de referência";
-      isValid = false;
+    if (formData.status === "pago" && !formData.metodoPagamento) {
+      errors.metodoPagamento = "Método de pagamento é obrigatório para pagamentos realizados";
+      valid = false;
     }
 
-    setErrors(newErrors);
-    return isValid;
+    setFormErrors(errors);
+    return valid;
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+
+    if (!validateForm()) {
+      toast.error("Por favor, corrija os erros no formulário.");
+      return;
+    }
+
+    if (!id) return;
 
     try {
-      setIsSaving(true);
+      setLoading(true);
       
-      await atualizarPagamento(id!, {
+      const pagamentoData = {
+        id,
         alunoId: formData.alunoId,
+        alunoNome: alunos.find(a => a.id === formData.alunoId)?.nome || "",
         valor: Number(formData.valor),
         dataVencimento: formData.dataVencimento,
-        dataPagamento: formData.dataPagamento || undefined,
-        mes: Number(formData.mes),
-        ano: Number(formData.ano),
-        observacao: formData.observacao
-      });
-      
+        dataPagamento: formData.dataPagamento || null,
+        status: formData.status as "pendente" | "pago" | "atrasado",
+        metodoPagamento: formData.metodoPagamento || null,
+      };
+
+      await atualizarPagamento(id, pagamentoData);
       toast.success("Pagamento atualizado com sucesso!");
       navigate("/gerenciar-pagamentos");
     } catch (error) {
       console.error("Erro ao atualizar pagamento:", error);
       toast.error("Erro ao atualizar pagamento. Tente novamente.");
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
-  const opcoesMes = [
-    { value: "1", label: "Janeiro" },
-    { value: "2", label: "Fevereiro" },
-    { value: "3", label: "Março" },
-    { value: "4", label: "Abril" },
-    { value: "5", label: "Maio" },
-    { value: "6", label: "Junho" },
-    { value: "7", label: "Julho" },
-    { value: "8", label: "Agosto" },
-    { value: "9", label: "Setembro" },
-    { value: "10", label: "Outubro" },
-    { value: "11", label: "Novembro" },
-    { value: "12", label: "Dezembro" }
-  ];
-
-  if (isLoading) {
+  if (carregandoDados) {
     return (
-      <div className="flex justify-center items-center h-full">
+      <div className="flex justify-center items-center h-64">
         <LoadingSpinner size="large" />
       </div>
     );
@@ -171,108 +172,115 @@ const EditarPagamento: React.FC = () => {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
-          <p className="text-gray-600 mt-1">Edite os detalhes do pagamento</p>
+          <p className="text-gray-600 mt-1">
+            Atualize as informações do pagamento
+          </p>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <FormSelect
-              id="alunoId"
-              label="Aluno"
-              value={formData.alunoId}
-              onChange={handleChange}
-              options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
-              error={errors.alunoId}
-              required
-            />
-
-            <FormInput
-              id="valor"
-              type="number"
-              step="0.01"
-              label="Valor (R$)"
-              value={formData.valor}
-              onChange={handleChange}
-              placeholder="0,00"
-              error={errors.valor}
-              required
-            />
-
-            <FormInput
-              id="dataVencimento"
-              type="date"
-              label="Data de Vencimento"
-              value={formData.dataVencimento}
-              onChange={handleChange}
-              error={errors.dataVencimento}
-              required
-            />
-
-            <FormInput
-              id="dataPagamento"
-              type="date"
-              label="Data de Pagamento (se já pago)"
-              value={formData.dataPagamento}
-              onChange={handleChange}
-            />
-
-            <FormSelect
-              id="mes"
-              label="Mês de Referência"
-              value={formData.mes}
-              onChange={handleChange}
-              options={opcoesMes}
-              error={errors.mes}
-              required
-            />
-
-            <FormInput
-              id="ano"
-              type="number"
-              label="Ano de Referência"
-              value={formData.ano}
-              onChange={handleChange}
-              error={errors.ano}
-              required
-            />
-
-            <div className="col-span-1 md:col-span-2">
-              <label htmlFor="observacao" className="fitness-label block mb-2">
-                Observações
-              </label>
-              <textarea
-                id="observacao"
-                name="observacao"
-                value={formData.observacao}
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="space-y-4">
+          <FormSelect
+            id="alunoId"
+            label="Aluno"
+            value={formData.alunoId}
+            onChange={handleChange}
+            options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
+            error={formErrors.alunoId}
+            required
+          />
+          
+          <FormInput
+            id="valor"
+            label="Valor (R$)"
+            type="number"
+            step="0.01"
+            value={formData.valor}
+            onChange={handleChange}
+            error={formErrors.valor}
+            required
+          />
+          
+          <FormInput
+            id="dataVencimento"
+            label="Data de Vencimento"
+            type="date"
+            value={formData.dataVencimento}
+            onChange={handleChange}
+            error={formErrors.dataVencimento}
+            required
+          />
+          
+          <FormSelect
+            id="status"
+            label="Status"
+            value={formData.status}
+            onChange={handleChange}
+            options={[
+              { value: "pendente", label: "Pendente" },
+              { value: "pago", label: "Pago" },
+              { value: "atrasado", label: "Atrasado" },
+            ]}
+            error={formErrors.status}
+            required
+          />
+          
+          {formData.status === "pago" && (
+            <>
+              <FormInput
+                id="dataPagamento"
+                label="Data do Pagamento"
+                type="date"
+                value={formData.dataPagamento}
                 onChange={handleChange}
-                rows={3}
-                className="fitness-input w-full"
-                placeholder="Observações adicionais sobre o pagamento..."
-              ></textarea>
-            </div>
-          </div>
+                error={formErrors.dataPagamento}
+                required
+              />
+              
+              <FormSelect
+                id="metodoPagamento"
+                label="Método de Pagamento"
+                value={formData.metodoPagamento}
+                onChange={handleChange}
+                options={[
+                  { value: "pix", label: "PIX" },
+                  { value: "dinheiro", label: "Dinheiro" },
+                  { value: "cartao_credito", label: "Cartão de Crédito" },
+                  { value: "cartao_debito", label: "Cartão de Débito" },
+                  { value: "transferencia", label: "Transferência Bancária" },
+                  { value: "boleto", label: "Boleto" },
+                ]}
+                error={formErrors.metodoPagamento}
+                required
+              />
+            </>
+          )}
+        </div>
 
-          <div className="mt-6 flex justify-end">
-            <button
-              type="button"
-              onClick={() => navigate("/gerenciar-pagamentos")}
-              className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              disabled={isSaving}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
-              disabled={isSaving}
-            >
-              {isSaving ? "Salvando..." : "Atualizar Pagamento"}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-end mt-8">
+          <button
+            type="button"
+            onClick={() => navigate("/gerenciar-pagamentos")}
+            className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <LoadingSpinner size="small" />
+            ) : (
+              <>
+                <Save className="h-5 w-5 mr-2" />
+                Salvar
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

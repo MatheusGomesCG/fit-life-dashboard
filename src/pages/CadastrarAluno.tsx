@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -19,6 +18,8 @@ interface FormData {
   altura: string;
   genero: string;
   experiencia: string;
+  valorMensalidade: string;
+  dataVencimento: string;
 }
 
 const CadastrarAluno: React.FC = () => {
@@ -35,6 +36,8 @@ const CadastrarAluno: React.FC = () => {
     altura: "",
     genero: "masculino",
     experiencia: "iniciante",
+    valorMensalidade: "",
+    dataVencimento: new Date().toISOString().substring(0, 10),
   });
 
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -42,7 +45,6 @@ const CadastrarAluno: React.FC = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
-    // Limpa o erro quando o campo é editado
     if (formErrors[id as keyof FormData]) {
       setFormErrors((prev) => ({ ...prev, [id]: "" }));
     }
@@ -52,7 +54,6 @@ const CadastrarAluno: React.FC = () => {
     const errors: Partial<Record<keyof FormData, string>> = {};
     let valid = true;
 
-    // Validação de campos obrigatórios
     if (!formData.nome.trim()) {
       errors.nome = "Nome é obrigatório";
       valid = false;
@@ -82,7 +83,6 @@ const CadastrarAluno: React.FC = () => {
       valid = false;
     }
 
-    // Validações numéricas
     if (!formData.idade) {
       errors.idade = "Idade é obrigatória";
       valid = false;
@@ -110,6 +110,19 @@ const CadastrarAluno: React.FC = () => {
       valid = false;
     }
 
+    if (!formData.valorMensalidade) {
+      errors.valorMensalidade = "Valor da mensalidade é obrigatório";
+      valid = false;
+    } else if (isNaN(Number(formData.valorMensalidade)) || Number(formData.valorMensalidade) <= 0) {
+      errors.valorMensalidade = "Valor inválido";
+      valid = false;
+    }
+
+    if (!formData.dataVencimento) {
+      errors.dataVencimento = "Data de vencimento é obrigatória";
+      valid = false;
+    }
+
     setFormErrors(errors);
     return valid;
   };
@@ -125,7 +138,6 @@ const CadastrarAluno: React.FC = () => {
     try {
       setLoading(true);
 
-      // Register student authentication credentials
       await registerAluno({
         nome: formData.nome,
         email: formData.email,
@@ -136,8 +148,6 @@ const CadastrarAluno: React.FC = () => {
         experiencia: formData.experiencia
       });
 
-      // Register student data
-      // Creating a default dobras cutaneas object since it's required
       const dobrasCutaneas = {
         triceps: 0,
         subescapular: 0,
@@ -155,7 +165,9 @@ const CadastrarAluno: React.FC = () => {
         altura: Number(formData.altura),
         genero: formData.genero as "masculino" | "feminino",
         experiencia: formData.experiencia as "iniciante" | "intermediario" | "avancado",
-        dobrasCutaneas: dobrasCutaneas
+        dobrasCutaneas: dobrasCutaneas,
+        valorMensalidade: Number(formData.valorMensalidade),
+        dataVencimento: formData.dataVencimento
       });
 
       toast.success("Aluno cadastrado com sucesso!");
@@ -231,7 +243,7 @@ const CadastrarAluno: React.FC = () => {
         <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
           Informações Físicas
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4 mb-6">
           <FormInput
             id="idade"
             label="Idade"
@@ -282,6 +294,31 @@ const CadastrarAluno: React.FC = () => {
               { value: "intermediario", label: "Intermediário" },
               { value: "avancado", label: "Avançado" },
             ]}
+            required
+          />
+        </div>
+
+        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
+          Informações de Pagamento
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+          <FormInput
+            id="valorMensalidade"
+            label="Valor da mensalidade (R$)"
+            type="number"
+            step="0.01"
+            value={formData.valorMensalidade}
+            onChange={handleChange}
+            error={formErrors.valorMensalidade}
+            required
+          />
+          <FormInput
+            id="dataVencimento"
+            label="Data de vencimento"
+            type="date"
+            value={formData.dataVencimento}
+            onChange={handleChange}
+            error={formErrors.dataVencimento}
             required
           />
         </div>

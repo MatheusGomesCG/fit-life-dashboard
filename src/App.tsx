@@ -1,64 +1,56 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Layout from "@/components/Layout";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import DashboardProfessor from "@/pages/DashboardProfessor";
-import ListarAlunos from "@/pages/ListarAlunos";
-import GerenciarAlunos from "@/pages/GerenciarAlunos";
-import CadastrarAluno from "@/pages/CadastrarAluno";
-import EditarAluno from "@/pages/EditarAluno";
-import FichaTreino from "@/pages/FichaTreino";
-import CadastrarProfessor from "@/pages/CadastrarProfessor";
-import GerenciarPagamentos from "@/pages/GerenciarPagamentos";
-import CadastrarPagamento from "@/pages/CadastrarPagamento";
-import EditarPagamento from "@/pages/EditarPagamento";
-import NotFound from "@/pages/NotFound";
-import Index from "@/pages/Index";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
+import Layout from "./components/Layout";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import DashboardProfessor from "./pages/DashboardProfessor";
+import CadastrarProfessor from "./pages/CadastrarProfessor";
+import CadastrarAluno from "./pages/CadastrarAluno";
+import GerenciarAlunos from "./pages/GerenciarAlunos";
+import ListarAlunos from "./pages/ListarAlunos";
+import EditarAluno from "./pages/EditarAluno";
+import FichaTreino from "./pages/FichaTreino";
+import CadastrarTreino from "./pages/CadastrarTreino"; // New import
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import CadastrarPagamento from "./pages/CadastrarPagamento";
+import EditarPagamento from "./pages/EditarPagamento";
+import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./contexts/AuthContext";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutos
-      retry: 1,
-    },
-  },
-});
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner richColors />
-      <BrowserRouter>
-        <AuthProvider>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/cadastrar-professor" element={<CadastrarProfessor />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard-professor" element={<DashboardProfessor />} />
-              <Route path="/alunos" element={<ListarAlunos />} />
-              <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
-              <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
-              <Route path="/editar-aluno/:id" element={<EditarAluno />} />
-              <Route path="/ficha-treino/:id" element={<FichaTreino />} />
-              <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-              <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
-              <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Toaster position="top-center" richColors />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastrar-professor" element={<CadastrarProfessor />} />
+          
+          <Route path="/" element={<Layout />}>
+            {/* Rotas para Professores e Alunos */}
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="dashboard-professor" element={<DashboardProfessor />} />
+            
+            {/* Rotas para Professores */}
+            <Route path="gerenciar-alunos" element={<GerenciarAlunos />} />
+            <Route path="cadastrar-aluno" element={<CadastrarAluno />} />
+            <Route path="editar-aluno/:id" element={<EditarAluno />} />
+            <Route path="ficha-treino/:id" element={<FichaTreino />} />
+            <Route path="cadastrar-treino/:id" element={<CadastrarTreino />} /> {/* New route */}
+            <Route path="listar-alunos" element={<ListarAlunos />} />
+            <Route path="gerenciar-pagamentos" element={<GerenciarPagamentos />} />
+            <Route path="cadastrar-pagamento" element={<CadastrarPagamento />} />
+            <Route path="editar-pagamento/:id" element={<EditarPagamento />} />
+          </Route>
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
 
 export default App;
