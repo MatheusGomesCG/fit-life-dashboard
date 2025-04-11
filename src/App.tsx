@@ -29,7 +29,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/cadastrar-professor" element={<CadastrarProfessor />} />
           
-          <Route element={<Layout />}>  {/* Fixed: Added empty children prop implicitly */}
+          <Route path="/" element={<Layout></Layout>}>  {/* Fixed: Added children explicitly */}
             {/* Rotas para Professores e Alunos */}
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="dashboard-professor" element={<DashboardProfessor />} />

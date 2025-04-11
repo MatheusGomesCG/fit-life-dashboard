@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -6,21 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { atualizarPagamento, buscarPagamentoPorId, Pagamento } from "@/services/pagamentosService";
+import { DatePicker } from "@/components/date-picker";
 
 const EditarPagamento: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [pagamento, setPagamento] = useState<Pagamento | null>(null);
   const [valor, setValor] = useState("");
-  const [dataVencimento, setDataVencimento] = useState("");
+  const [dataVencimento, setDataVencimento] = useState<Date | null>(null);
   const [status, setStatus] = useState<Pagamento["status"]>("pendente");
-  const [dataPagamento, setDataPagamento] = useState<string | undefined>(undefined);
+  const [dataPagamento, setDataPagamento] = useState<Date | null>(null);
   const [observacao, setObservacao] = useState("");
+  const [metodoPagamento, setMetodoPagamento] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -30,10 +29,19 @@ const EditarPagamento: React.FC = () => {
           const data = await buscarPagamentoPorId(id);
           setPagamento(data);
           setValor(data.valor.toString());
-          setDataVencimento(data.dataVencimento);
+          
+          // Convert string dates to Date objects
+          if (data.dataVencimento) {
+            setDataVencimento(parseISO(data.dataVencimento));
+          }
+          
+          if (data.dataPagamento) {
+            setDataPagamento(parseISO(data.dataPagamento));
+          }
+          
           setStatus(data.status);
-          setDataPagamento(data.dataPagamento);
           setObservacao(data.observacao || "");
+          setMetodoPagamento(data.metodoPagamento || "");
         } catch (error) {
           console.error("Erro ao carregar pagamento:", error);
           toast.error("Erro ao carregar dados do pagamento.");
@@ -54,16 +62,21 @@ const EditarPagamento: React.FC = () => {
         return;
       }
 
+      if (!dataVencimento) {
+        toast.error("Selecione a data de vencimento.");
+        return;
+      }
+
       // Convert string value to number
       const valorNum = parseFloat(valor);
 
-      await atualizarPagamento(id, {
+      await atualizarPagamento(id!, {
         valor: valorNum, // Converted to number
-        dataVencimento,
+        dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
         status,
-        dataPagamento: status === "pago" ? dataPagamento : undefined,
+        dataPagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         observacao,
-        // Don't include metodoPagamento since it's not in the Pagamento interface
+        metodoPagamento,
       });
 
       toast.success("Pagamento atualizado com sucesso!");
@@ -74,6 +87,11 @@ const EditarPagamento: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Helper function to safely handle status change
+  const handleStatusChange = (value: string) => {
+    setStatus(value as Pagamento["status"]);
   };
 
   return (
@@ -100,41 +118,15 @@ const EditarPagamento: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="dataVencimento">Data de Vencimento</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !dataVencimento && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataVencimento ? format(parseISO(dataVencimento), "dd/MM/yyyy") : (
-                      <span>Selecione a data</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                  <Calendar
-                    mode="single"
-                    selected={dataVencimento ? parseISO(dataVencimento) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        setDataVencimento(format(date, "yyyy-MM-dd"));
-                      }
-                    }}
-                    disabled={(date) =>
-                      date > new Date()
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <DatePicker
+                selected={dataVencimento}
+                onSelect={setDataVencimento}
+                placeholder="Selecione a data de vencimento"
+              />
             </div>
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={status} onValueChange={(value) => setStatus(value as Pagamento["status"])}>
+              <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione o status" />
                 </SelectTrigger>
@@ -148,37 +140,24 @@ const EditarPagamento: React.FC = () => {
             {status === "pago" && (
               <div>
                 <Label htmlFor="dataPagamento">Data de Pagamento</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dataPagamento && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dataPagamento ? format(parseISO(dataPagamento), "dd/MM/yyyy") : (
-                        <span>Selecione a data</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                    <Calendar
-                      mode="single"
-                      selected={dataPagamento ? parseISO(dataPagamento) : undefined}
-                      onSelect={(date) => {
-                        if (date) {
-                          setDataPagamento(format(date, "yyyy-MM-dd"));
-                        }
-                      }}
-                      max={new Date()}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DatePicker
+                  selected={dataPagamento}
+                  onSelect={setDataPagamento}
+                  placeholder="Selecione a data de pagamento"
+                  disabled={(date) => date > new Date()}
+                />
               </div>
             )}
+            <div>
+              <Label htmlFor="metodoPagamento">Método de Pagamento</Label>
+              <Input
+                type="text"
+                id="metodoPagamento"
+                value={metodoPagamento}
+                onChange={(e) => setMetodoPagamento(e.target.value)}
+                placeholder="Ex: Cartão de crédito, Boleto, Pix"
+              />
+            </div>
             <div>
               <Label htmlFor="observacao">Observação</Label>
               <Input

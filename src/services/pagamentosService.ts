@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da API
@@ -13,7 +14,7 @@ export interface Pagamento {
   mes: number; // 1-12
   ano: number;
   observacao?: string;
-  metodoPagamento?: string; // Add this field to the interface
+  metodoPagamento?: string;
 }
 
 export const listarPagamentos = async (): Promise<Pagamento[]> => {
@@ -40,6 +41,7 @@ export const buscarPagamentoPorId = async (id: string): Promise<Pagamento> => {
   }
 };
 
+// Updated to accept string dates
 export const cadastrarPagamento = async (pagamento: Omit<Pagamento, "id" | "status">): Promise<Pagamento> => {
   try {
     // Definir status baseado na data de vencimento e data de pagamento

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -6,13 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { DatePicker } from "@/components/date-picker";
 import { Aluno, listarAlunos } from "@/services/alunosService";
 import { cadastrarPagamento } from "@/services/pagamentosService";
+import { DatePicker } from "@/components/date-picker";
 
 const CadastrarPagamento: React.FC = () => {
   const navigate = useNavigate();
@@ -54,10 +52,14 @@ const CadastrarPagamento: React.FC = () => {
         return;
       }
 
+      if (!dataVencimento) {
+        toast.error("Selecione a data de vencimento.");
+        return;
+      }
+
       // Parse the date to get month and year
-      const dataVencimentoDate = new Date(dataVencimento);
-      const mes = dataVencimentoDate.getMonth() + 1; // JavaScript months are 0-indexed
-      const ano = dataVencimentoDate.getFullYear();
+      const mes = dataVencimento.getMonth() + 1; // JavaScript months are 0-indexed
+      const ano = dataVencimento.getFullYear();
 
       // Convert string value to number
       const valorNum = parseFloat(valor);
@@ -66,8 +68,8 @@ const CadastrarPagamento: React.FC = () => {
         alunoId: selectedAluno.id,
         alunoNome: selectedAluno.nome,
         valor: valorNum, // Converted to number
-        dataVencimento,
-        dataPagamento: status === "pago" ? dataPagamento : undefined,
+        dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
+        dataPagamento: status === "pago" && dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         mes, // Added mes field
         ano, // Added ano field
         observacao,
@@ -82,6 +84,11 @@ const CadastrarPagamento: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Type guard to cast status to proper type for Select
+  const handleStatusChange = (value: string) => {
+    setStatus(value as "pendente" | "pago" | "atrasado");
   };
 
   return (
@@ -135,6 +142,7 @@ const CadastrarPagamento: React.FC = () => {
             <DatePicker
               selected={dataVencimento}
               onSelect={setDataVencimento}
+              placeholder="Selecione a data de vencimento"
             />
           </div>
 
@@ -143,12 +151,13 @@ const CadastrarPagamento: React.FC = () => {
             <DatePicker
               selected={dataPagamento}
               onSelect={setDataPagamento}
+              placeholder="Selecione a data de pagamento (opcional)"
             />
           </div>
 
           <div>
             <Label htmlFor="status">Status</Label>
-            <Select onValueChange={setStatus} defaultValue={status}>
+            <Select onValueChange={handleStatusChange} defaultValue={status}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o status" />
               </SelectTrigger>
