@@ -10,17 +10,27 @@ interface User {
   id: string;
   nome: string;
   email: string;
-  tipo?: "aluno" | "professor"; // Added tipo property which can be "aluno" or "professor"
+  tipo: "aluno" | "professor";
+  professorId?: string; // ID do professor que cadastrou o aluno (apenas para alunos)
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
-  login: (email: string, senha: string) => Promise<void>;
+  login: (email: string, senha: string, tipo?: "aluno" | "professor") => Promise<void>;
   logout: () => void;
   loading: boolean;
-  register: (data: { email: string, password: string, userData: Partial<User> }) => Promise<void>; // Added register function
+  register: (data: { email: string, password: string, userData: Partial<User> }) => Promise<void>;
+  registerAluno: (data: { 
+    nome: string, 
+    email: string, 
+    senha: string,
+    idade: number,
+    peso: number,
+    altura: number,
+    experiencia: string
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -79,26 +89,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const login = async (email: string, senha: string) => {
+  const login = async (email: string, senha: string, tipo: "aluno" | "professor" = "professor") => {
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        senha,
-      });
       
-      const { token: authToken } = response.data;
+      // Mock response for development
+      const mockResponse = {
+        token: "mock_token_" + Math.random(),
+        user: {
+          id: "user_" + Math.random().toString(36).substr(2, 9),
+          nome: email.split("@")[0],
+          email,
+          tipo
+        }
+      };
+      
+      // Em produção, descomentar esta chamada API:
+      // const response = await axios.post(`${API_URL}/auth/login`, {
+      //   email,
+      //   senha,
+      //   tipo
+      // });
+      // const { token: authToken, user: userData } = response.data;
+      
+      const { token: authToken, user: userData } = mockResponse;
       
       localStorage.setItem("fitnessToken", authToken);
       setToken(authToken);
-      await fetchUserData(authToken);
+      setUser(userData);
       
       toast.success("Login realizado com sucesso!");
       
       // Usar setTimeout para evitar erros de renderização
-      const userType = response.data.user?.tipo || "professor";
       setTimeout(() => {
-        if (userType === "professor") {
+        if (userData.tipo === "professor") {
           navigate("/dashboard-professor");
         } else {
           navigate("/dashboard");
@@ -155,12 +179,50 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(false);
     }
   };
+  
+  // Function to register a student by a professor
+  const registerAluno = async (data: { 
+    nome: string, 
+    email: string, 
+    senha: string,
+    idade: number,
+    peso: number,
+    altura: number,
+    experiencia: string 
+  }) => {
+    try {
+      setLoading(true);
+      
+      if (!user || user.tipo !== "professor") {
+        throw new Error("Apenas professores podem cadastrar alunos");
+      }
+      
+      // Mock response for development
+      const alunoId = "aluno_" + Math.random().toString(36).substr(2, 9);
+      
+      // Em produção, descomentar esta chamada API:
+      // const response = await axios.post(`${API_URL}/auth/register-aluno`, {
+      //   ...data,
+      //   professorId: user.id
+      // });
+      // const alunoId = response.data.id;
+      
+      toast.success("Aluno cadastrado com sucesso!");
+      return alunoId;
+    } catch (error) {
+      console.error("Erro ao cadastrar aluno:", error);
+      toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const logout = useCallback(() => {
     localStorage.removeItem("fitnessToken");
     setToken(null);
     setUser(null);
-    navigate("/login");
+    navigate("/");
     toast.info("Você saiu do sistema.");
   }, [navigate]);
 
@@ -174,6 +236,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         logout,
         loading,
         register,
+        registerAluno,
       }}
     >
       {children}

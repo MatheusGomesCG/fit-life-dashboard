@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Activity, LogIn } from "lucide-react";
+import { Activity, LogIn, ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Login: React.FC = () => {
@@ -12,13 +12,18 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  
+  // Get user type from query string (?tipo=aluno or ?tipo=professor)
+  const searchParams = new URLSearchParams(location.search);
+  const userType = searchParams.get("tipo") || "aluno";
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, userType as "aluno" | "professor");
       toast.success("Login realizado com sucesso!");
       navigate("/");
     } catch (error) {
@@ -40,7 +45,7 @@ const Login: React.FC = () => {
             FitLife
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Sistema de Avaliação Física
+            {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}
           </p>
         </div>
 
@@ -98,13 +103,17 @@ const Login: React.FC = () => {
             </button>
           </div>
 
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">
-              É um professor novo?{" "}
-              <Link to="/cadastrar-professor" className="text-fitness-secondary hover:underline">
+          <div className="flex justify-between items-center">
+            <Link to="/" className="text-sm text-fitness-secondary hover:underline flex items-center">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              <span>Voltar</span>
+            </Link>
+            
+            {userType === "professor" && (
+              <Link to="/cadastrar-professor" className="text-sm text-fitness-secondary hover:underline">
                 Cadastre-se aqui
               </Link>
-            </p>
+            )}
           </div>
         </form>
       </div>

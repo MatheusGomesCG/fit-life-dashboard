@@ -2,7 +2,18 @@
 import React, { ReactNode, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Home, Activity, Users, DollarSign } from "lucide-react";
+import { 
+  LogOut, 
+  User, 
+  Home, 
+  Activity, 
+  Users, 
+  DollarSign, 
+  FileText, 
+  TrendingUp, 
+  MessageSquare, 
+  Calendar 
+} from "lucide-react";
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,13 +24,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Verificar se é uma rota pública (login ou cadastro de professor)
-  const isPublicRoute = ["/login", "/cadastrar-professor"].includes(location.pathname);
+  // Verificar se é uma rota pública (login, cadastro de professor ou home)
+  const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
-  // Redirecionar para login apenas se não estiver autenticado e não estiver em rota pública
+  // Redirecionar para home apenas se não estiver autenticado e não estiver em rota pública
   useEffect(() => {
     if (!isAuthenticated && !isPublicRoute) {
-      navigate("/login");
+      navigate("/");
     }
   }, [isAuthenticated, isPublicRoute, navigate]);
 
@@ -27,6 +38,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (isPublicRoute) {
     return <>{children}</>;
   }
+
+  // Define os itens de menu com base no tipo de usuário (aluno ou professor)
+  const menuItems = user?.tipo === "professor" 
+    ? [
+        { to: "/dashboard-professor", icon: Home, label: "Dashboard" },
+        { to: "/gerenciar-alunos", icon: Users, label: "Alunos" },
+        { to: "/cadastrar-aluno", icon: User, label: "Novo Aluno" },
+        { to: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagamentos" }
+      ]
+    : [
+        { to: "/dashboard", icon: Home, label: "Dashboard" },
+        { to: "/meus-treinos", icon: FileText, label: "Meus Treinos" },
+        { to: "/minhas-medidas", icon: TrendingUp, label: "Medidas" },
+        { to: "/meus-pagamentos", icon: DollarSign, label: "Pagamentos" },
+        { to: "/agendamento", icon: Calendar, label: "Agendamento" },
+        { to: "/chat", icon: MessageSquare, label: "Chat" }
+      ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -42,6 +70,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
+                <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                  {user.tipo === "professor" ? "Professor" : "Aluno"}
+                </span>
               </div>
               <button
                 onClick={logout}
@@ -60,46 +91,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         {/* Barra lateral */}
         <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
           <nav className="space-y-1">
-            <Link
-              to="/"
-              className={`flex items-center gap-2 p-3 rounded-md ${
-                location.pathname === "/" ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
-              }`}
-            >
-              <Home size={18} />
-              <span>Dashboard</span>
-            </Link>
-            <Link
-              to="/alunos"
-              className={`flex items-center gap-2 p-3 rounded-md ${
-                location.pathname === "/alunos" ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
-              }`}
-            >
-              <Users size={18} />
-              <span>Alunos</span>
-            </Link>
-            <Link
-              to="/cadastrar-aluno"
-              className={`flex items-center gap-2 p-3 rounded-md ${
-                location.pathname === "/cadastrar-aluno" ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
-              }`}
-            >
-              <User size={18} />
-              <span>Novo Aluno</span>
-            </Link>
-            <Link
-              to="/gerenciar-pagamentos"
-              className={`flex items-center gap-2 p-3 rounded-md ${
-                location.pathname === "/gerenciar-pagamentos" || 
-                location.pathname.startsWith("/cadastrar-pagamento") ||
-                location.pathname.startsWith("/editar-pagamento")
-                  ? "bg-fitness-primary text-white" 
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <DollarSign size={18} />
-              <span>Pagamentos</span>
-            </Link>
+            {menuItems.map((item) => {
+              const isActive = location.pathname === item.to || 
+                (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to));
+              
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`flex items-center gap-2 p-3 rounded-md ${
+                    isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
+                  }`}
+                >
+                  <item.icon size={18} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 

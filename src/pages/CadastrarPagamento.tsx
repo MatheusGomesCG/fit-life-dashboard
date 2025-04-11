@@ -173,7 +173,16 @@ const CadastrarPagamento: React.FC = () => {
               id="alunoId"
               label="Aluno"
               value={formData.alunoId}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  alunoId: value
+                }));
+                if (errors.alunoId) {
+                  setErrors(prev => ({ ...prev, alunoId: "" }));
+                }
+              }}
               options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
               error={errors.alunoId}
               required
@@ -184,9 +193,17 @@ const CadastrarPagamento: React.FC = () => {
               type="number"
               step="0.01"
               label="Valor (R$)"
-              name="valor"
               value={formData.valor}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  valor: value
+                }));
+                if (errors.valor) {
+                  setErrors(prev => ({ ...prev, valor: "" }));
+                }
+              }}
               placeholder="0,00"
               error={errors.valor}
               required
@@ -196,9 +213,17 @@ const CadastrarPagamento: React.FC = () => {
               id="dataVencimento"
               type="date"
               label="Data de Vencimento"
-              name="dataVencimento"
               value={formData.dataVencimento}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  dataVencimento: value
+                }));
+                if (errors.dataVencimento) {
+                  setErrors(prev => ({ ...prev, dataVencimento: "" }));
+                }
+              }}
               error={errors.dataVencimento}
               required
             />
@@ -207,16 +232,30 @@ const CadastrarPagamento: React.FC = () => {
               id="dataPagamento"
               type="date"
               label="Data de Pagamento (se já pago)"
-              name="dataPagamento"
               value={formData.dataPagamento}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  dataPagamento: value
+                }));
+              }}
             />
 
             <FormSelect
               id="mes"
               label="Mês de Referência"
               value={formData.mes}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  mes: value
+                }));
+                if (errors.mes) {
+                  setErrors(prev => ({ ...prev, mes: "" }));
+                }
+              }}
               options={opcoesMes}
               error={errors.mes}
               required
@@ -226,9 +265,17 @@ const CadastrarPagamento: React.FC = () => {
               id="ano"
               type="number"
               label="Ano de Referência"
-              name="ano"
               value={formData.ano}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  ano: value
+                }));
+                if (errors.ano) {
+                  setErrors(prev => ({ ...prev, ano: "" }));
+                }
+              }}
               error={errors.ano}
               required
             />

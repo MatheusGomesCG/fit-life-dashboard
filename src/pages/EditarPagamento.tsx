@@ -1,96 +1,79 @@
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
-import {
-  Pagamento,
-  buscarPagamentoPorId,
-  atualizarPagamento,
-  excluirPagamento
-} from "@/services/pagamentosService";
 import { listarAlunos, Aluno } from "@/services/alunosService";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { buscarPagamento, atualizarPagamento, Pagamento } from "@/services/pagamentosService";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const EditarPagamento: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   
-  // Campos do formulário
+  // Estado para o formulário
   const [formData, setFormData] = useState({
     alunoId: "",
     alunoNome: "",
     valor: "",
     dataVencimento: "",
     dataPagamento: "",
-    status: "",
     mes: "",
     ano: "",
-    observacao: ""
+    observacao: "",
+    status: "pendente" as "pendente" | "pago" | "atrasado"
   });
   
   // Estado para erros de validação
   const [errors, setErrors] = useState({
-    alunoId: "",
     valor: "",
     dataVencimento: "",
     mes: "",
     ano: ""
   });
 
-  // Carregar dados do pagamento e alunos
+  // Carregar dados do pagamento e da lista de alunos
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
       try {
-        // Carregar pagamento
+        setIsLoading(true);
+        
+        // Carrega o pagamento pelo ID
         if (id) {
-          const pagamento = await buscarPagamentoPorId(id);
-          
-          setFormData({
-            alunoId: pagamento.alunoId,
-            alunoNome: pagamento.alunoNome,
-            valor: String(pagamento.valor),
-            dataVencimento: pagamento.dataVencimento,
-            dataPagamento: pagamento.dataPagamento || "",
-            status: pagamento.status,
-            mes: String(pagamento.mes),
-            ano: String(pagamento.ano),
-            observacao: pagamento.observacao || ""
-          });
+          const pagamento = await buscarPagamento(id);
+          if (pagamento) {
+            setFormData({
+              alunoId: pagamento.alunoId || "",
+              alunoNome: pagamento.alunoNome || "",
+              valor: String(pagamento.valor),
+              dataVencimento: pagamento.dataVencimento,
+              dataPagamento: pagamento.dataPagamento || "",
+              mes: String(pagamento.mes),
+              ano: String(pagamento.ano),
+              observacao: pagamento.observacao || "",
+              status: pagamento.status || "pendente"
+            });
+          }
         }
         
-        // Carregar alunos
+        // Carrega a lista de alunos
         const alunosData = await listarAlunos();
         setAlunos(alunosData);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
         toast.error("Erro ao carregar dados do pagamento");
-        navigate("/gerenciar-pagamentos");
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchData();
-  }, [id, navigate]);
+  }, [id]);
 
   // Handler para mudança nos campos do formulário
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -99,15 +82,7 @@ const EditarPagamento: React.FC = () => {
     
     // Limpa erros ao editar campo
     if (name in errors) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-    
-    // Atualiza nome do aluno quando altera o alunoId
-    if (name === "alunoId") {
-      const alunoSelecionado = alunos.find(a => a.id === value);
-      if (alunoSelecionado) {
-        setFormData(prev => ({ ...prev, alunoNome: alunoSelecionado.nome }));
-      }
+      setErrors(prev => ({ ...prev, [name as keyof typeof errors]: "" }));
     }
   };
 
@@ -115,11 +90,6 @@ const EditarPagamento: React.FC = () => {
   const validateForm = () => {
     let isValid = true;
     const newErrors = { ...errors };
-
-    if (!formData.alunoId) {
-      newErrors.alunoId = "Selecione um aluno";
-      isValid = false;
-    }
 
     if (!formData.valor || Number(formData.valor) <= 0) {
       newErrors.valor = "Informe um valor válido";
@@ -146,27 +116,36 @@ const EditarPagamento: React.FC = () => {
   };
 
   // Handler para submissão do formulário
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm() || !id) return;
+    if (!validateForm()) return;
+    
+    if (!id) {
+      toast.error("ID do pagamento não encontrado");
+      return;
+    }
 
     try {
       setIsSaving(true);
       
-      // Se houver data de pagamento, o status é automaticamente "pago"
-      const status = formData.dataPagamento ? "pago" : formData.status;
+      // Verificar se o pagamento foi feito e atualizar o status
+      let status = formData.status;
+      if (formData.dataPagamento && !formData.dataPagamento.trim()) {
+        status = "pago";
+      }
       
       await atualizarPagamento(id, {
+        id,
         alunoId: formData.alunoId,
         alunoNome: formData.alunoNome,
         valor: Number(formData.valor),
         dataVencimento: formData.dataVencimento,
         dataPagamento: formData.dataPagamento || undefined,
-        status: status as "pendente" | "pago" | "atrasado",
         mes: Number(formData.mes),
         ano: Number(formData.ano),
-        observacao: formData.observacao
+        observacao: formData.observacao,
+        status
       });
       
       toast.success("Pagamento atualizado com sucesso!");
@@ -179,22 +158,13 @@ const EditarPagamento: React.FC = () => {
     }
   };
 
-  // Handler para excluir pagamento
-  const handleDelete = async () => {
-    if (!id) return;
-    
-    try {
-      setIsDeleting(true);
-      await excluirPagamento(id);
-      toast.success("Pagamento excluído com sucesso!");
-      navigate("/gerenciar-pagamentos");
-    } catch (error) {
-      console.error("Erro ao excluir pagamento:", error);
-      toast.error("Erro ao excluir pagamento. Tente novamente.");
-      setIsDeleting(false);
-    }
-  };
-
+  // Opções para select de status
+  const opcoesStatus = [
+    { value: "pendente", label: "Pendente" },
+    { value: "pago", label: "Pago" },
+    { value: "atrasado", label: "Atrasado" }
+  ];
+  
   // Opções para select de mês
   const opcoesMes = [
     { value: "1", label: "Janeiro" },
@@ -211,93 +181,61 @@ const EditarPagamento: React.FC = () => {
     { value: "12", label: "Dezembro" }
   ];
 
-  // Opções para select de status
-  const opcoesStatus = [
-    { value: "pendente", label: "Pendente" },
-    { value: "pago", label: "Pago" },
-    { value: "atrasado", label: "Atrasado" }
-  ];
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-pulse text-center">
-          <div className="h-8 bg-gray-200 rounded-md w-64 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded-md w-48"></div>
-        </div>
+        <LoadingSpinner size="large" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
-          <button
-            onClick={() => navigate(-1)}
-            className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-            aria-label="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
-            <p className="text-gray-600 mt-1">Atualize os detalhes do pagamento</p>
-          </div>
+      <div className="flex items-center">
+        <button
+          onClick={() => navigate(-1)}
+          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Editar Pagamento</h1>
+          <p className="text-gray-600 mt-1">Atualize as informações do pagamento</p>
         </div>
-
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <button
-              type="button"
-              className="p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-red-50"
-              disabled={isDeleting}
-              aria-label="Excluir pagamento"
-            >
-              <Trash2 className="h-5 w-5" />
-            </button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Excluir pagamento</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir este pagamento? Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
-                onClick={handleDelete}
-                className="bg-red-500 hover:bg-red-600"
-              >
-                {isDeleting ? "Excluindo..." : "Sim, excluir"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <FormSelect
-              id="alunoId"
-              label="Aluno"
-              value={formData.alunoId}
-              onChange={handleChange}
-              options={alunos.map(aluno => ({ value: aluno.id!, label: aluno.nome }))}
-              error={errors.alunoId}
-              required
-            />
+            <div className="mb-4">
+              <label className="fitness-label block mb-2">Aluno</label>
+              <input
+                className="fitness-input bg-gray-100"
+                value={formData.alunoNome}
+                disabled
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                Aluno vinculado ao pagamento (não editável)
+              </p>
+            </div>
 
             <FormInput
               id="valor"
               type="number"
               step="0.01"
               label="Valor (R$)"
-              name="valor"
               value={formData.valor}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  valor: value
+                }));
+                if (errors.valor) {
+                  setErrors(prev => ({ ...prev, valor: "" }));
+                }
+              }}
               placeholder="0,00"
               error={errors.valor}
               required
@@ -307,9 +245,17 @@ const EditarPagamento: React.FC = () => {
               id="dataVencimento"
               type="date"
               label="Data de Vencimento"
-              name="dataVencimento"
               value={formData.dataVencimento}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  dataVencimento: value
+                }));
+                if (errors.dataVencimento) {
+                  setErrors(prev => ({ ...prev, dataVencimento: "" }));
+                }
+              }}
               error={errors.dataVencimento}
               required
             />
@@ -317,17 +263,32 @@ const EditarPagamento: React.FC = () => {
             <FormInput
               id="dataPagamento"
               type="date"
-              label="Data de Pagamento (se já pago)"
-              name="dataPagamento"
+              label="Data de Pagamento (quando foi pago)"
               value={formData.dataPagamento}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  dataPagamento: value,
+                  status: value ? "pago" : "pendente"
+                }));
+              }}
             />
 
             <FormSelect
               id="mes"
               label="Mês de Referência"
               value={formData.mes}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  mes: value
+                }));
+                if (errors.mes) {
+                  setErrors(prev => ({ ...prev, mes: "" }));
+                }
+              }}
               options={opcoesMes}
               error={errors.mes}
               required
@@ -337,20 +298,37 @@ const EditarPagamento: React.FC = () => {
               id="ano"
               type="number"
               label="Ano de Referência"
-              name="ano"
               value={formData.ano}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  ano: value
+                }));
+                if (errors.ano) {
+                  setErrors(prev => ({ ...prev, ano: "" }));
+                }
+              }}
               error={errors.ano}
               required
             />
 
             <FormSelect
               id="status"
-              label="Status"
+              label="Status do Pagamento"
               value={formData.status}
-              onChange={handleChange}
+              onChange={(e) => {
+                const { value } = e.target;
+                setFormData(prev => ({
+                  ...prev,
+                  status: value as "pendente" | "pago" | "atrasado",
+                  // Se o status mudar para pago e não tiver data, coloca a data de hoje
+                  dataPagamento: value === "pago" && !prev.dataPagamento 
+                    ? new Date().toISOString().split('T')[0]
+                    : prev.dataPagamento
+                }));
+              }}
               options={opcoesStatus}
-              required
             />
 
             <div className="col-span-1 md:col-span-2">
@@ -380,10 +358,17 @@ const EditarPagamento: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
-              disabled={isSaving || isLoading}
+              className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center gap-2"
+              disabled={isSaving}
             >
-              {isSaving ? "Salvando..." : "Atualizar Pagamento"}
+              {isSaving ? (
+                <LoadingSpinner size="small" />
+              ) : (
+                <>
+                  <Save className="h-5 w-5" />
+                  <span>Salvar Alterações</span>
+                </>
+              )}
             </button>
           </div>
         </form>

@@ -2,449 +2,303 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {
-  cadastrarAluno,
-  calcularIMC,
-  calcularPercentualGordura,
-} from "@/services/alunosService";
+import { ArrowLeft, Save } from "lucide-react";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
+import { cadastrarAluno } from "@/services/alunosService";
+import { useAuth } from "@/contexts/AuthContext";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Save, ArrowLeft } from "lucide-react";
 
 interface FormData {
   nome: string;
+  email: string;
+  senha: string;
+  confirmaSenha: string;
   idade: string;
   peso: string;
   altura: string;
-  experiencia: "" | "iniciante" | "intermediario" | "avancado";
-  dobrasCutaneas: {
-    triceps: string;
-    subescapular: string;
-    axilarMedia: string;
-    peitoral: string;
-    suprailiaca: string;
-    abdominal: string;
-    coxa: string;
-  };
-}
-
-interface FormErrors {
-  nome?: string;
-  idade?: string;
-  peso?: string;
-  altura?: string;
-  experiencia?: string;
+  genero: string;
+  experiencia: string;
 }
 
 const CadastrarAluno: React.FC = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState<FormData>({
+  const { registerAluno } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
     nome: "",
+    email: "",
+    senha: "",
+    confirmaSenha: "",
     idade: "",
     peso: "",
     altura: "",
-    experiencia: "",
-    dobrasCutaneas: {
-      triceps: "",
-      subescapular: "",
-      axilarMedia: "",
-      peitoral: "",
-      suprailiaca: "",
-      abdominal: "",
-      coxa: "",
-    },
+    genero: "masculino",
+    experiencia: "iniciante",
   });
-  const [calculatedValues, setCalculatedValues] = useState({
-    imc: 0,
-    percentualGordura: 0,
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { id, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    // Limpa o erro quando o campo é editado
+    if (formErrors[id as keyof FormData]) {
+      setFormErrors((prev) => ({ ...prev, [id]: "" }));
+    }
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
+  const validateForm = () => {
+    const errors: Partial<Record<keyof FormData, string>> = {};
+    let valid = true;
 
-  const handleDobraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const fieldName = id.split("-")[1]; // Formato: "dobra-triceps"
-    
-    setForm((prev) => ({
-      ...prev,
-      dobrasCutaneas: {
-        ...prev.dobrasCutaneas,
-        [fieldName]: value,
-      },
-    }));
-  };
+    // Validação de campos obrigatórios
+    if (!formData.nome.trim()) {
+      errors.nome = "Nome é obrigatório";
+      valid = false;
+    }
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    
-    if (!form.nome.trim()) {
-      newErrors.nome = "Nome é obrigatório";
+    if (!formData.email.trim()) {
+      errors.email = "Email é obrigatório";
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email inválido";
+      valid = false;
     }
-    
-    if (!form.idade) {
-      newErrors.idade = "Idade é obrigatória";
-    } else if (parseInt(form.idade) <= 0 || parseInt(form.idade) > 120) {
-      newErrors.idade = "Idade deve estar entre 1 e 120 anos";
-    }
-    
-    if (!form.peso) {
-      newErrors.peso = "Peso é obrigatório";
-    } else if (parseFloat(form.peso) <= 0 || parseFloat(form.peso) > 300) {
-      newErrors.peso = "Peso deve estar entre 1 e 300 kg";
-    }
-    
-    if (!form.altura) {
-      newErrors.altura = "Altura é obrigatória";
-    } else if (parseInt(form.altura) <= 0 || parseInt(form.altura) > 250) {
-      newErrors.altura = "Altura deve estar entre 1 e 250 cm";
-    }
-    
-    if (!form.experiencia) {
-      newErrors.experiencia = "Nível de experiência é obrigatório";
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  const calculateMetrics = () => {
-    // Verificar se todas as dobras cutâneas estão preenchidas
-    const dobras = Object.values(form.dobrasCutaneas);
-    const allDobrasPreenchidas = dobras.every(value => value !== "");
-    
-    if (!form.peso || !form.altura || (allDobrasPreenchidas === false)) {
-      toast.error("Preencha pelo menos peso, altura e todas as dobras para calcular as métricas");
-      return;
+    if (!formData.senha) {
+      errors.senha = "Senha é obrigatória";
+      valid = false;
+    } else if (formData.senha.length < 6) {
+      errors.senha = "A senha deve ter pelo menos 6 caracteres";
+      valid = false;
     }
-    
-    // Conversão das dobras para números
-    const dobrasCutaneasNumeric = {
-      triceps: parseFloat(form.dobrasCutaneas.triceps),
-      subescapular: parseFloat(form.dobrasCutaneas.subescapular),
-      axilarMedia: parseFloat(form.dobrasCutaneas.axilarMedia),
-      peitoral: parseFloat(form.dobrasCutaneas.peitoral),
-      suprailiaca: parseFloat(form.dobrasCutaneas.suprailiaca),
-      abdominal: parseFloat(form.dobrasCutaneas.abdominal),
-      coxa: parseFloat(form.dobrasCutaneas.coxa),
-    };
-    
-    const peso = parseFloat(form.peso);
-    const altura = parseFloat(form.altura);
-    const idade = parseInt(form.idade);
-    
-    const imc = calcularIMC(peso, altura);
-    const percentualGordura = calcularPercentualGordura(dobrasCutaneasNumeric, "masculino", idade);
-    
-    setCalculatedValues({
-      imc,
-      percentualGordura,
-    });
-    
-    setShowPreview(true);
-    toast.success("Métricas calculadas com sucesso!");
+
+    if (!formData.confirmaSenha) {
+      errors.confirmaSenha = "Confirme sua senha";
+      valid = false;
+    } else if (formData.senha !== formData.confirmaSenha) {
+      errors.confirmaSenha = "As senhas não coincidem";
+      valid = false;
+    }
+
+    // Validações numéricas
+    if (!formData.idade) {
+      errors.idade = "Idade é obrigatória";
+      valid = false;
+    } else if (isNaN(Number(formData.idade)) || Number(formData.idade) <= 0) {
+      errors.idade = "Idade inválida";
+      valid = false;
+    }
+
+    if (!formData.peso) {
+      errors.peso = "Peso é obrigatório";
+      valid = false;
+    } else if (isNaN(Number(formData.peso)) || Number(formData.peso) <= 0) {
+      errors.peso = "Peso inválido";
+      valid = false;
+    }
+
+    if (!formData.altura) {
+      errors.altura = "Altura é obrigatória";
+      valid = false;
+    } else if (
+      isNaN(Number(formData.altura)) ||
+      Number(formData.altura) <= 0
+    ) {
+      errors.altura = "Altura inválida";
+      valid = false;
+    }
+
+    setFormErrors(errors);
+    return valid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      toast.error("Por favor, corrija os erros no formulário");
+      toast.error("Por favor, corrija os erros no formulário.");
       return;
     }
-    
-    // Verificar se todas as dobras cutâneas estão preenchidas
-    const dobras = Object.values(form.dobrasCutaneas);
-    if (dobras.some(value => value === "")) {
-      toast.error("Por favor, preencha todas as dobras cutâneas");
-      return;
-    }
-    
+
     try {
-      setIsSubmitting(true);
-      
-      // Converter dados do formulário para o formato esperado pela API
-      const alunoData = {
-        nome: form.nome,
-        idade: parseInt(form.idade),
-        peso: parseFloat(form.peso),
-        altura: parseInt(form.altura),
-        experiencia: form.experiencia as "iniciante" | "intermediario" | "avancado",
-        dobrasCutaneas: {
-          triceps: parseFloat(form.dobrasCutaneas.triceps),
-          subescapular: parseFloat(form.dobrasCutaneas.subescapular),
-          axilarMedia: parseFloat(form.dobrasCutaneas.axilarMedia),
-          peitoral: parseFloat(form.dobrasCutaneas.peitoral),
-          suprailiaca: parseFloat(form.dobrasCutaneas.suprailiaca),
-          abdominal: parseFloat(form.dobrasCutaneas.abdominal),
-          coxa: parseFloat(form.dobrasCutaneas.coxa),
-        },
-      };
-      
-      // Simular um delay para testar o estado de carregamento (remover em produção)
-      // await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const alunoCadastrado = await cadastrarAluno(alunoData);
+      setLoading(true);
+
+      // Register student authentication credentials
+      await registerAluno({
+        nome: formData.nome,
+        email: formData.email,
+        senha: formData.senha,
+        idade: Number(formData.idade),
+        peso: Number(formData.peso),
+        altura: Number(formData.altura),
+        experiencia: formData.experiencia
+      });
+
+      // Register student data
+      await cadastrarAluno({
+        nome: formData.nome,
+        email: formData.email,
+        idade: parseInt(formData.idade),
+        peso: parseFloat(formData.peso),
+        altura: parseFloat(formData.altura),
+        genero: formData.genero as "masculino" | "feminino",
+        experiencia: formData.experiencia as "iniciante" | "intermediario" | "avancado",
+      });
+
       toast.success("Aluno cadastrado com sucesso!");
-      navigate("/alunos");
+      navigate("/gerenciar-alunos");
     } catch (error) {
       console.error("Erro ao cadastrar aluno:", error);
-      toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");
+      toast.error("Erro ao cadastrar aluno. Tente novamente.");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const niveisExperiencia = [
-    { value: "iniciante", label: "Iniciante" },
-    { value: "intermediario", label: "Intermediário" },
-    { value: "avancado", label: "Avançado" },
-  ];
-
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
+    <div className="space-y-6">
+      <div className="flex items-center">
+        <button
+          onClick={() => navigate(-1)}
+          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Aluno</h1>
           <p className="text-gray-600 mt-1">
-            Preencha os dados do aluno para cadastro
+            Preencha os dados do novo aluno
           </p>
         </div>
-        <button
-          onClick={() => navigate("/alunos")}
-          className="flex items-center gap-1 text-gray-600 hover:text-fitness-primary"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          <span>Voltar para lista</span>
-        </button>
       </div>
-      
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Dados Pessoais</h2>
-              
-              <FormInput
-                id="nome"
-                label="Nome Completo"
-                value={form.nome}
-                onChange={handleChange}
-                required
-                error={errors.nome}
-              />
-              
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormInput
-                  id="idade"
-                  label="Idade"
-                  type="number"
-                  value={form.idade}
-                  onChange={handleChange}
-                  min={1}
-                  max={120}
-                  required
-                  error={errors.idade}
-                />
-                
-                <FormInput
-                  id="peso"
-                  label="Peso (kg)"
-                  type="number"
-                  value={form.peso}
-                  onChange={handleChange}
-                  min={1}
-                  max={300}
-                  step={0.1}
-                  required
-                  error={errors.peso}
-                />
-                
-                <FormInput
-                  id="altura"
-                  label="Altura (cm)"
-                  type="number"
-                  value={form.altura}
-                  onChange={handleChange}
-                  min={1}
-                  max={250}
-                  required
-                  error={errors.altura}
-                />
-              </div>
-              
-              <FormSelect
-                id="experiencia"
-                label="Nível de Experiência"
-                value={form.experiencia}
-                onChange={handleSelectChange}
-                options={niveisExperiencia}
-                required
-                error={errors.experiencia}
-              />
-            </div>
-            
-            <div>
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Dobras Cutâneas (mm)</h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <FormInput
-                  id="dobra-triceps"
-                  label="Tríceps"
-                  type="number"
-                  value={form.dobrasCutaneas.triceps}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-subescapular"
-                  label="Subescapular"
-                  type="number"
-                  value={form.dobrasCutaneas.subescapular}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-axilarMedia"
-                  label="Axilar Média"
-                  type="number"
-                  value={form.dobrasCutaneas.axilarMedia}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-peitoral"
-                  label="Peitoral"
-                  type="number"
-                  value={form.dobrasCutaneas.peitoral}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-suprailiaca"
-                  label="Suprailíaca"
-                  type="number"
-                  value={form.dobrasCutaneas.suprailiaca}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-abdominal"
-                  label="Abdominal"
-                  type="number"
-                  value={form.dobrasCutaneas.abdominal}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-coxa"
-                  label="Coxa"
-                  type="number"
-                  value={form.dobrasCutaneas.coxa}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-              </div>
-              
-              <button
-                type="button"
-                onClick={calculateMetrics}
-                className="mt-4 w-full py-2 bg-fitness-secondary text-white rounded-md hover:bg-fitness-secondary/90 transition-colors"
-              >
-                Calcular Métricas
-              </button>
-            </div>
-          </div>
-          
-          {showPreview && (
-            <div className="border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Métricas Calculadas</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium text-gray-700 mb-2">Índice de Massa Corporal (IMC)</h3>
-                  <p className="text-2xl font-bold text-fitness-secondary">
-                    {calculatedValues.imc.toFixed(2)}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    {calculatedValues.imc < 18.5
-                      ? "Abaixo do peso"
-                      : calculatedValues.imc < 25
-                      ? "Peso normal"
-                      : calculatedValues.imc < 30
-                      ? "Sobrepeso"
-                      : "Obesidade"}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium text-gray-700 mb-2">Percentual de Gordura</h3>
-                  <p className="text-2xl font-bold text-fitness-primary">
-                    {calculatedValues.percentualGordura.toFixed(2)}%
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Baseado na fórmula de Jackson e Pollock
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          <div className="border-t border-gray-200 pt-6 flex justify-end">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-3 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <LoadingSpinner size="small" />
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  <span>Cadastrar Aluno</span>
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
+          Informações de Conta
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-6">
+          <FormInput
+            id="nome"
+            label="Nome completo"
+            value={formData.nome}
+            onChange={handleChange}
+            error={formErrors.nome}
+            required
+          />
+          <FormInput
+            id="email"
+            label="Email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            error={formErrors.email}
+            required
+          />
+          <FormInput
+            id="senha"
+            label="Senha"
+            type="password"
+            value={formData.senha}
+            onChange={handleChange}
+            error={formErrors.senha}
+            required
+          />
+          <FormInput
+            id="confirmaSenha"
+            label="Confirmar senha"
+            type="password"
+            value={formData.confirmaSenha}
+            onChange={handleChange}
+            error={formErrors.confirmaSenha}
+            required
+          />
+        </div>
+
+        <h2 className="text-lg font-medium mb-4 text-gray-900 pb-2 border-b">
+          Informações Físicas
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+          <FormInput
+            id="idade"
+            label="Idade"
+            type="number"
+            value={formData.idade}
+            onChange={handleChange}
+            error={formErrors.idade}
+            required
+          />
+          <FormInput
+            id="peso"
+            label="Peso (kg)"
+            type="number"
+            step="0.01"
+            value={formData.peso}
+            onChange={handleChange}
+            error={formErrors.peso}
+            required
+          />
+          <FormInput
+            id="altura"
+            label="Altura (m)"
+            type="number"
+            step="0.01"
+            value={formData.altura}
+            onChange={handleChange}
+            error={formErrors.altura}
+            required
+          />
+          <FormSelect
+            id="genero"
+            label="Gênero"
+            value={formData.genero}
+            onChange={handleChange}
+            options={[
+              { value: "masculino", label: "Masculino" },
+              { value: "feminino", label: "Feminino" },
+            ]}
+            required
+          />
+          <FormSelect
+            id="experiencia"
+            label="Nível de experiência"
+            value={formData.experiencia}
+            onChange={handleChange}
+            options={[
+              { value: "iniciante", label: "Iniciante" },
+              { value: "intermediario", label: "Intermediário" },
+              { value: "avancado", label: "Avançado" },
+            ]}
+            required
+          />
+        </div>
+
+        <div className="flex justify-end mt-8">
+          <button
+            type="button"
+            onClick={() => navigate("/gerenciar-alunos")}
+            className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
+            disabled={loading}
+          >
+            {loading ? (
+              <LoadingSpinner size="small" />
+            ) : (
+              <>
+                <Save className="h-5 w-5 mr-2" />
+                Salvar
+              </>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };
