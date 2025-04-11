@@ -6,7 +6,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
 import { listarAlunos, Aluno } from "@/services/alunosService";
-import { buscarPagamento, atualizarPagamento, Pagamento } from "@/services/pagamentosService";
+import { buscarPagamentoPorId, atualizarPagamento, Pagamento } from "@/services/pagamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const EditarPagamento: React.FC = () => {
@@ -45,7 +45,7 @@ const EditarPagamento: React.FC = () => {
         
         // Carrega o pagamento pelo ID
         if (id) {
-          const pagamento = await buscarPagamento(id);
+          const pagamento = await buscarPagamentoPorId(id);
           if (pagamento) {
             setFormData({
               alunoId: pagamento.alunoId || "",
