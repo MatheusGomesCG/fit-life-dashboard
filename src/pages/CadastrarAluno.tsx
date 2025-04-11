@@ -137,14 +137,25 @@ const CadastrarAluno: React.FC = () => {
       });
 
       // Register student data
+      // Creating a default dobras cutaneas object since it's required
+      const dobrasCutaneas = {
+        triceps: 0,
+        subescapular: 0,
+        axilarMedia: 0,
+        peitoral: 0,
+        suprailiaca: 0,
+        abdominal: 0,
+        coxa: 0
+      };
+
       await cadastrarAluno({
         nome: formData.nome,
-        email: formData.email,
-        idade: parseInt(formData.idade),
-        peso: parseFloat(formData.peso),
-        altura: parseFloat(formData.altura),
+        idade: Number(formData.idade),
+        peso: Number(formData.peso),
+        altura: Number(formData.altura),
         genero: formData.genero as "masculino" | "feminino",
         experiencia: formData.experiencia as "iniciante" | "intermediario" | "avancado",
+        dobrasCutaneas: dobrasCutaneas
       });
 
       toast.success("Aluno cadastrado com sucesso!");

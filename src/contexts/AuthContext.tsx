@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -208,7 +207,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // const alunoId = response.data.id;
       
       toast.success("Aluno cadastrado com sucesso!");
-      return alunoId;
+      // Return void instead of alunoId to match the function signature
+      return;
     } catch (error) {
       console.error("Erro ao cadastrar aluno:", error);
       toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");

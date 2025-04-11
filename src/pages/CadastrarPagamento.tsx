@@ -14,18 +14,16 @@ const CadastrarPagamento: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Campos do formulário
   const [formData, setFormData] = useState({
     alunoId: "",
     valor: "",
     dataVencimento: format(new Date(), "yyyy-MM-dd"),
     dataPagamento: "",
-    mes: String(new Date().getMonth() + 1), // 1-12
+    mes: String(new Date().getMonth() + 1),
     ano: String(new Date().getFullYear()),
     observacao: ""
   });
   
-  // Estado para erros de validação
   const [errors, setErrors] = useState({
     alunoId: "",
     valor: "",
@@ -34,7 +32,6 @@ const CadastrarPagamento: React.FC = () => {
     ano: ""
   });
 
-  // Carrega alunos ao montar o componente
   useEffect(() => {
     const fetchAlunos = async () => {
       setIsLoading(true);
@@ -52,18 +49,15 @@ const CadastrarPagamento: React.FC = () => {
     fetchAlunos();
   }, []);
 
-  // Handler para mudança nos campos do formulário
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     
-    // Limpa erros ao editar campo
     if (name in errors) {
       setErrors(prev => ({ ...prev, [name]: "" }));
     }
   };
 
-  // Validação do formulário
   const validateForm = () => {
     let isValid = true;
     const newErrors = { ...errors };
@@ -97,7 +91,6 @@ const CadastrarPagamento: React.FC = () => {
     return isValid;
   };
 
-  // Handler para submissão do formulário
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -133,7 +126,6 @@ const CadastrarPagamento: React.FC = () => {
     }
   };
 
-  // Opções para select de mês
   const opcoesMes = [
     { value: "1", label: "Janeiro" },
     { value: "2", label: "Fevereiro" },

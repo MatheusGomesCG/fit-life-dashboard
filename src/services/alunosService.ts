@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
@@ -183,11 +182,118 @@ export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
   };
 };
 
+// Mock data for testing
+const mockAlunos: Aluno[] = [
+  {
+    id: "aluno_01",
+    nome: "João Silva",
+    idade: 25,
+    peso: 75.5,
+    altura: 178,
+    percentualGordura: 15.4,
+    imc: 23.8,
+    experiencia: "intermediario",
+    dobrasCutaneas: {
+      triceps: 10,
+      subescapular: 12,
+      axilarMedia: 8,
+      peitoral: 7,
+      suprailiaca: 14,
+      abdominal: 18,
+      coxa: 15
+    },
+    dataCadastro: "2025-01-15"
+  },
+  {
+    id: "aluno_02",
+    nome: "Maria Oliveira",
+    idade: 30,
+    peso: 62.0,
+    altura: 165,
+    percentualGordura: 22.7,
+    imc: 22.8,
+    experiencia: "iniciante",
+    dobrasCutaneas: {
+      triceps: 18,
+      subescapular: 15,
+      axilarMedia: 12,
+      peitoral: 10,
+      suprailiaca: 20,
+      abdominal: 22,
+      coxa: 24
+    },
+    dataCadastro: "2025-02-03"
+  },
+  {
+    id: "aluno_03",
+    nome: "Pedro Santos",
+    idade: 22,
+    peso: 82.3,
+    altura: 182,
+    percentualGordura: 12.8,
+    imc: 24.9,
+    experiencia: "avancado",
+    dobrasCutaneas: {
+      triceps: 8,
+      subescapular: 10,
+      axilarMedia: 7,
+      peitoral: 6,
+      suprailiaca: 11,
+      abdominal: 14,
+      coxa: 12
+    },
+    dataCadastro: "2025-02-20"
+  },
+  {
+    id: "aluno_04",
+    nome: "Ana Costa",
+    idade: 28,
+    peso: 58.5,
+    altura: 162,
+    percentualGordura: 24.3,
+    imc: 22.3,
+    experiencia: "iniciante",
+    dobrasCutaneas: {
+      triceps: 19,
+      subescapular: 16,
+      axilarMedia: 13,
+      peitoral: 11,
+      suprailiaca: 21,
+      abdominal: 23,
+      coxa: 25
+    },
+    dataCadastro: "2025-03-05"
+  },
+  {
+    id: "aluno_05",
+    nome: "Lucas Ferreira",
+    idade: 35,
+    peso: 88.0,
+    altura: 185,
+    percentualGordura: 18.2,
+    imc: 25.7,
+    experiencia: "intermediario",
+    dobrasCutaneas: {
+      triceps: 12,
+      subescapular: 14,
+      axilarMedia: 10,
+      peitoral: 9,
+      suprailiaca: 16,
+      abdominal: 20,
+      coxa: 17
+    },
+    dataCadastro: "2025-03-12"
+  }
+];
+
 // Serviço para listar todos os alunos
 export const listarAlunos = async (): Promise<Aluno[]> => {
   try {
-    const response = await axios.get(`${API_URL}/alunos`);
-    return response.data;
+    // Mock implementation to return test data
+    // In production, this would use axios.get(`${API_URL}/alunos`)
+    return new Promise(resolve => {
+      setTimeout(() => resolve(mockAlunos), 500); // Simulating network delay
+    });
   } catch (error) {
     console.error("Erro ao listar alunos:", error);
     throw error;
@@ -197,8 +303,13 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
 // Serviço para buscar um aluno por ID
 export const buscarAlunoPorId = async (id: string): Promise<Aluno> => {
   try {
-    const response = await axios.get(`${API_URL}/alunos/${id}`);
-    return response.data;
+    // Mock implementation
+    const aluno = mockAlunos.find(a => a.id === id);
+    if (!aluno) throw new Error(`Aluno com ID ${id} não encontrado`);
+    
+    return new Promise(resolve => {
+      setTimeout(() => resolve(aluno), 300);
+    });
   } catch (error) {
     console.error(`Erro ao buscar aluno com ID ${id}:`, error);
     throw error;
@@ -212,15 +323,20 @@ export const cadastrarAluno = async (aluno: Omit<Aluno, "id" | "percentualGordur
     const percentualGordura = calcularPercentualGordura(aluno.dobrasCutaneas, "masculino", aluno.idade);
     const imc = calcularIMC(aluno.peso, aluno.altura);
     
-    const alunoCompleto = {
+    const alunoCompleto: Aluno = {
       ...aluno,
+      id: `aluno_${Date.now().toString(36)}`,
       percentualGordura,
       imc,
       dataCadastro: new Date().toISOString(),
     };
     
-    const response = await axios.post(`${API_URL}/alunos`, alunoCompleto);
-    return response.data;
+    // Mock implementation
+    mockAlunos.push(alunoCompleto);
+    
+    return new Promise(resolve => {
+      setTimeout(() => resolve(alunoCompleto), 500);
+    });
   } catch (error) {
     console.error("Erro ao cadastrar aluno:", error);
     throw error;
@@ -230,8 +346,20 @@ export const cadastrarAluno = async (aluno: Omit<Aluno, "id" | "percentualGordur
 // Serviço para atualizar um aluno existente
 export const atualizarAluno = async (id: string, aluno: Partial<Aluno>): Promise<Aluno> => {
   try {
-    const response = await axios.put(`${API_URL}/alunos/${id}`, aluno);
-    return response.data;
+    // Mock implementation
+    const index = mockAlunos.findIndex(a => a.id === id);
+    if (index === -1) throw new Error(`Aluno com ID ${id} não encontrado`);
+    
+    const alunoAtualizado = {
+      ...mockAlunos[index],
+      ...aluno
+    };
+    
+    mockAlunos[index] = alunoAtualizado;
+    
+    return new Promise(resolve => {
+      setTimeout(() => resolve(alunoAtualizado), 500);
+    });
   } catch (error) {
     console.error(`Erro ao atualizar aluno com ID ${id}:`, error);
     throw error;
@@ -241,7 +369,15 @@ export const atualizarAluno = async (id: string, aluno: Partial<Aluno>): Promise
 // Serviço para excluir um aluno
 export const excluirAluno = async (id: string): Promise<void> => {
   try {
-    await axios.delete(`${API_URL}/alunos/${id}`);
+    // Mock implementation
+    const index = mockAlunos.findIndex(a => a.id === id);
+    if (index === -1) throw new Error(`Aluno com ID ${id} não encontrado`);
+    
+    mockAlunos.splice(index, 1);
+    
+    return new Promise(resolve => {
+      setTimeout(resolve, 300);
+    });
   } catch (error) {
     console.error(`Erro ao excluir aluno com ID ${id}:`, error);
     throw error;
