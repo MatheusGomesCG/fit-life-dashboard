@@ -5,13 +5,19 @@ const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
 export interface Aluno {
   id?: string;
   nome: string;
+  email?: string;
+  telefone?: string;
   idade: number;
+  dataNascimento?: string | null;
   peso: number;
   altura: number;
   percentualGordura?: number;
   imc?: number;
   genero: "masculino" | "feminino";
   experiencia: "iniciante" | "intermediario" | "avancado";
+  endereco?: string;
+  objetivo?: string;
+  observacoes?: string;
   dobrasCutaneas: {
     triceps: number;
     subescapular: number;
@@ -189,7 +195,7 @@ export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
       { nomeExercicio: "Elevação Frontal", grupoMuscular: "Ombros", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
       { nomeExercicio: "Rosca Direta", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
       { nomeExercicio: "Rosca Alternada", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Martelo", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
+      { nomeExercicio: "Rosca Martelo", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execuç��o controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
       { nomeExercicio: "Tríceps Pulley", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
       { nomeExercicio: "Tríceps Francês", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
       { nomeExercicio: "Tríceps Testa", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
@@ -219,7 +225,10 @@ const mockAlunos: Aluno[] = [
   {
     id: "aluno_01",
     nome: "João Silva",
+    email: "joao.silva@example.com",
+    telefone: "123-456-7890",
     idade: 25,
+    dataNascimento: "1997-01-01",
     peso: 75.5,
     altura: 178,
     percentualGordura: 15.4,
@@ -242,7 +251,10 @@ const mockAlunos: Aluno[] = [
   {
     id: "aluno_02",
     nome: "Maria Oliveira",
+    email: "maria.oliveira@example.com",
+    telefone: "987-654-3210",
     idade: 30,
+    dataNascimento: "1995-02-01",
     peso: 62.0,
     altura: 165,
     percentualGordura: 22.7,
@@ -265,7 +277,10 @@ const mockAlunos: Aluno[] = [
   {
     id: "aluno_03",
     nome: "Pedro Santos",
+    email: "pedro.santos@example.com",
+    telefone: "555-555-5555",
     idade: 22,
+    dataNascimento: "1999-02-15",
     peso: 82.3,
     altura: 182,
     percentualGordura: 12.8,
@@ -288,7 +303,10 @@ const mockAlunos: Aluno[] = [
   {
     id: "aluno_04",
     nome: "Ana Costa",
+    email: "ana.costa@example.com",
+    telefone: "111-111-1111",
     idade: 28,
+    dataNascimento: "1993-03-01",
     peso: 58.5,
     altura: 162,
     percentualGordura: 24.3,
@@ -311,7 +329,10 @@ const mockAlunos: Aluno[] = [
   {
     id: "aluno_05",
     nome: "Lucas Ferreira",
+    email: "lucas.ferreira@example.com",
+    telefone: "222-222-2222",
     idade: 35,
+    dataNascimento: "1990-03-15",
     peso: 88.0,
     altura: 185,
     percentualGordura: 18.2,

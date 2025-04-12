@@ -107,7 +107,7 @@ const EditarAluno: React.FC = () => {
           telefone: aluno.telefone || "",
           idade: aluno.idade.toString(),
           dataNascimento: aluno.dataNascimento ? new Date(aluno.dataNascimento) : null,
-          genero: aluno.genero || "",
+          genero: aluno.genero,
           endereco: aluno.endereco || "",
           objetivo: aluno.objetivo || "",
           observacoes: aluno.observacoes || "",
@@ -276,6 +276,12 @@ const EditarAluno: React.FC = () => {
     try {
       setIsSubmitting(true);
       
+      if (!form.genero) {
+        toast.error("Por favor, selecione um gênero");
+        setIsSubmitting(false);
+        return;
+      }
+
       // Converter dados do formulário para o formato esperado pela API
       const alunoData: Partial<Aluno> = {
         nome: form.nome,
