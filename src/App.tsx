@@ -17,6 +17,7 @@ import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CadastrarPagamento from "./pages/CadastrarPagamento";
 import EditarPagamento from "./pages/EditarPagamento";
 import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
+import NovoAgendamento from "./pages/NovoAgendamento";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -47,6 +48,7 @@ function App() {
             <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
             <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
             <Route path="/agendamentos" element={<GerenciarAgendamentos />} />
+            <Route path="/novo-agendamento" element={<NovoAgendamento />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

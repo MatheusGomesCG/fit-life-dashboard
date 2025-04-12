@@ -1,18 +1,29 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, User, FileText, Check, X, Plus, RefreshCw } from "lucide-react";
+import { Calendar, Clock, User, FileText, Check, X, Plus, RefreshCw, Info } from "lucide-react";
 import { toast } from "sonner";
 import { 
   listarAgendamentos, 
   formatarData, 
-  Agendamento 
+  Agendamento,
+  atualizarAgendamento 
 } from "@/services/agendamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableHead, 
+  TableRow, 
+  TableCell 
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 
 const GerenciarAgendamentos: React.FC = () => {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [detalhesAgendamento, setDetalhesAgendamento] = useState<Agendamento | null>(null);
 
   useEffect(() => {
     carregarAgendamentos();
@@ -55,6 +66,36 @@ const GerenciarAgendamentos: React.FC = () => {
     }
   };
 
+  const handleConcluirAgendamento = async (id: string) => {
+    try {
+      await atualizarAgendamento(id, { status: "concluido" });
+      toast.success("Agendamento concluído com sucesso!");
+      carregarAgendamentos();
+    } catch (error) {
+      console.error("Erro ao concluir agendamento:", error);
+      toast.error("Falha ao concluir agendamento.");
+    }
+  };
+
+  const handleCancelarAgendamento = async (id: string) => {
+    try {
+      await atualizarAgendamento(id, { status: "cancelado" });
+      toast.success("Agendamento cancelado com sucesso!");
+      carregarAgendamentos();
+    } catch (error) {
+      console.error("Erro ao cancelar agendamento:", error);
+      toast.error("Falha ao cancelar agendamento.");
+    }
+  };
+
+  const handleVerDetalhes = (agendamento: Agendamento) => {
+    setDetalhesAgendamento(agendamento);
+  };
+
+  const fecharDetalhes = () => {
+    setDetalhesAgendamento(null);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -86,47 +127,37 @@ const GerenciarAgendamentos: React.FC = () => {
         </div>
       ) : agendamentos.length > 0 ? (
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Aluno
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Tipo
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Data e Hora
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Aluno</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Data e Hora</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {agendamentos.map((agendamento) => {
                 const tipo = getTipoAgendamento(agendamento.tipo);
                 const status = getStatusAgendamento(agendamento.status);
 
                 return (
-                  <tr key={agendamento.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
+                  <TableRow key={agendamento.id} className="hover:bg-gray-50">
+                    <TableCell>
                       <div className="flex items-center">
                         <User size={18} className="text-gray-400 mr-2" />
                         <div className="text-sm font-medium text-gray-900">
                           {agendamento.alunoNome}
                         </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${tipo.color}`}>
                         {tipo.label}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>
                       <div className="text-sm text-gray-900 flex items-center">
                         <Calendar size={16} className="text-gray-400 mr-1" />
                         {formatarData(agendamento.data)}
@@ -135,24 +166,26 @@ const GerenciarAgendamentos: React.FC = () => {
                         <Clock size={16} className="text-gray-400 mr-1" />
                         {agendamento.hora}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell>
                       <span className={`px-2 py-1 inline-flex text-xs leading-5 font-medium rounded-full ${status.color}`}>
                         {status.label}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
                       {agendamento.status === "agendado" && (
                         <>
                           <button
                             title="Marcar como concluído"
-                            className="text-green-600 hover:text-green-900"
+                            className="text-green-600 hover:text-green-900 p-1"
+                            onClick={() => handleConcluirAgendamento(agendamento.id)}
                           >
                             <Check size={18} />
                           </button>
                           <button
                             title="Cancelar agendamento"
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 p-1"
+                            onClick={() => handleCancelarAgendamento(agendamento.id)}
                           >
                             <X size={18} />
                           </button>
@@ -160,16 +193,17 @@ const GerenciarAgendamentos: React.FC = () => {
                       )}
                       <button
                         title="Ver detalhes"
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-1"
+                        onClick={() => handleVerDetalhes(agendamento)}
                       >
-                        <FileText size={18} />
+                        <Info size={18} />
                       </button>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="text-center py-12 bg-white shadow-sm rounded-lg">
@@ -181,6 +215,61 @@ const GerenciarAgendamentos: React.FC = () => {
             <Plus size={16} className="mr-1" />
             <span>Criar Novo Agendamento</span>
           </Link>
+        </div>
+      )}
+
+      {/* Modal de detalhes */}
+      {detalhesAgendamento && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Detalhes do Agendamento</h3>
+              <button onClick={fecharDetalhes} className="text-gray-500 hover:text-gray-700">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-500">Aluno</p>
+                <p className="font-medium">{detalhesAgendamento.alunoNome}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Tipo</p>
+                  <p className="font-medium">
+                    {getTipoAgendamento(detalhesAgendamento.tipo).label}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-medium capitalize">
+                    {getStatusAgendamento(detalhesAgendamento.status).label}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Data</p>
+                  <p className="font-medium">{formatarData(detalhesAgendamento.data)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Hora</p>
+                  <p className="font-medium">{detalhesAgendamento.hora}</p>
+                </div>
+              </div>
+              {detalhesAgendamento.observacoes && (
+                <div>
+                  <p className="text-sm text-gray-500">Observações</p>
+                  <p className="text-sm mt-1 p-2 bg-gray-50 rounded-md">
+                    {detalhesAgendamento.observacoes}
+                  </p>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={fecharDetalhes}>Fechar</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

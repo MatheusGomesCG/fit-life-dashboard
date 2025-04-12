@@ -70,7 +70,7 @@ const AGENDAMENTOS_MOCK: Agendamento[] = [
 // Function to get all appointments
 export const listarAgendamentos = async (): Promise<Agendamento[]> => {
   return new Promise((resolve) => {
-    setTimeout(() => resolve(AGENDAMENTOS_MOCK), 500);
+    setTimeout(() => resolve([...AGENDAMENTOS_MOCK]), 500);
   });
 };
 
@@ -86,7 +86,7 @@ export const listarAgendamentosSemana = async (): Promise<Agendamento[]> => {
   });
   
   return new Promise((resolve) => {
-    setTimeout(() => resolve(agendamentosSemana), 500);
+    setTimeout(() => resolve([...agendamentosSemana]), 500);
   });
 };
 
@@ -97,6 +97,8 @@ export const criarAgendamento = async (agendamento: Omit<Agendamento, 'id'>): Pr
     id: `ag${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
   };
   
+  AGENDAMENTOS_MOCK.push(novoAgendamento);
+  
   return new Promise((resolve) => {
     setTimeout(() => resolve(novoAgendamento), 500);
   });
@@ -104,21 +106,41 @@ export const criarAgendamento = async (agendamento: Omit<Agendamento, 'id'>): Pr
 
 // Function to update an appointment
 export const atualizarAgendamento = async (id: string, dados: Partial<Agendamento>): Promise<Agendamento> => {
-  const agendamento = AGENDAMENTOS_MOCK.find(a => a.id === id);
+  const index = AGENDAMENTOS_MOCK.findIndex(a => a.id === id);
   
-  if (!agendamento) {
+  if (index === -1) {
     throw new Error('Agendamento não encontrado');
   }
   
-  const agendamentoAtualizado = { ...agendamento, ...dados };
+  const agendamentoAtualizado = { ...AGENDAMENTOS_MOCK[index], ...dados };
+  AGENDAMENTOS_MOCK[index] = agendamentoAtualizado;
   
   return new Promise((resolve) => {
     setTimeout(() => resolve(agendamentoAtualizado), 500);
   });
 };
 
+// Function to get a specific appointment
+export const obterAgendamento = async (id: string): Promise<Agendamento> => {
+  const agendamento = AGENDAMENTOS_MOCK.find(a => a.id === id);
+  
+  if (!agendamento) {
+    throw new Error('Agendamento não encontrado');
+  }
+  
+  return new Promise((resolve) => {
+    setTimeout(() => resolve({...agendamento}), 500);
+  });
+};
+
 // Function to delete an appointment
 export const excluirAgendamento = async (id: string): Promise<void> => {
+  const index = AGENDAMENTOS_MOCK.findIndex(a => a.id === id);
+  
+  if (index !== -1) {
+    AGENDAMENTOS_MOCK.splice(index, 1);
+  }
+  
   return new Promise((resolve) => {
     setTimeout(resolve, 500);
   });
