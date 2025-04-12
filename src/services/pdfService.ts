@@ -33,20 +33,20 @@ export const gerarPDFFichaTreino = (ficha: FichaTreino): jsPDF => {
   // Tabela de exercícios
   const startY = 125;
   const rowHeight = 8;
-  const colWidth = [60, 30, 25, 20, 25];
-  const colStart = [20, 80, 110, 135, 155];
+  const colWidth = [50, 40, 25, 20, 25];
+  const colStart = [15, 65, 105, 130, 150];
   
   // Cabeçalho da tabela
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text("Exercício", colStart[0], startY);
-  doc.text("Grupo", colStart[1], startY);
+  doc.text("Dia do Treino", colStart[1], startY);
   doc.text("Carga (kg)", colStart[2], startY);
   doc.text("Séries", colStart[3], startY);
   doc.text("Repetições", colStart[4], startY);
   
   // Linhas horizontais
-  doc.line(20, startY + 2, 190, startY + 2);
+  doc.line(15, startY + 2, 190, startY + 2);
   
   // Dados da tabela
   doc.setFont("helvetica", "normal");
@@ -72,12 +72,12 @@ export const gerarPDFFichaTreino = (ficha: FichaTreino): jsPDF => {
     
     doc.setFontSize(10);
     doc.text("Exercício", colStart[0], 30);
-    doc.text("Grupo", colStart[1], 30);
+    doc.text("Dia do Treino", colStart[1], 30);
     doc.text("Carga (kg)", colStart[2], 30);
     doc.text("Séries", colStart[3], 30);
     doc.text("Repetições", colStart[4], 30);
     
-    doc.line(20, 32, 190, 32);
+    doc.line(15, 32, 190, 32);
     
     return 40; // Nova posição Y após o cabeçalho
   };
@@ -92,7 +92,7 @@ export const gerarPDFFichaTreino = (ficha: FichaTreino): jsPDF => {
     }
     
     doc.setFont("helvetica", "bold");
-    doc.text(`${grupo}`, 20, currentY);
+    doc.text(`${grupo}`, 15, currentY);
     currentY += rowHeight;
     
     // Adicionar exercícios do grupo
@@ -105,7 +105,7 @@ export const gerarPDFFichaTreino = (ficha: FichaTreino): jsPDF => {
       }
       
       doc.text(exercicio.nomeExercicio, colStart[0], currentY);
-      doc.text(exercicio.grupoMuscular, colStart[1], currentY);
+      doc.text(exercicio.diaTreino || "-", colStart[1], currentY);
       doc.text(`${exercicio.cargaIdeal}`, colStart[2], currentY);
       doc.text(`${exercicio.series}`, colStart[3], currentY);
       doc.text(`${exercicio.repeticoes}`, colStart[4], currentY);

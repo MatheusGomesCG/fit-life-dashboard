@@ -36,7 +36,8 @@ const Layout: React.FC = () => {
         { to: "/dashboard-professor", icon: Home, label: "Dashboard" },
         { to: "/gerenciar-alunos", icon: Users, label: "Alunos" },
         { to: "/cadastrar-aluno", icon: User, label: "Novo Aluno" },
-        { to: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagamentos" }
+        { to: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagamentos" },
+        { to: "/agendamentos", icon: Calendar, label: "Agendamentos" }
       ]
     : [
         { to: "/dashboard", icon: Home, label: "Dashboard" },

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -203,6 +204,7 @@ const VisualizarFichaTreino: React.FC = () => {
                   <thead>
                     <tr>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercício</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dia do Treino</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carga (kg)</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Séries</th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repetições</th>
@@ -214,6 +216,7 @@ const VisualizarFichaTreino: React.FC = () => {
                     {exercicios.map((exercicio, index) => (
                       <tr key={index} className="hover:bg-gray-50">
                         <td className="px-4 py-3">{exercicio.nomeExercicio}</td>
+                        <td className="px-4 py-3">{exercicio.diaTreino || "-"}</td>
                         <td className="px-4 py-3">{exercicio.cargaIdeal}</td>
                         <td className="px-4 py-3">{exercicio.series}</td>
                         <td className="px-4 py-3">{exercicio.repeticoes}</td>

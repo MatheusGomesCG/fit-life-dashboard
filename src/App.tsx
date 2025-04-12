@@ -18,6 +18,7 @@ import CadastrarPagamento from "./pages/CadastrarPagamento";
 import EditarPagamento from "./pages/EditarPagamento";
 import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
 import NovoAgendamento from "./pages/NovoAgendamento";
+import MeusTreinos from "./pages/MeusTreinos";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
@@ -49,6 +50,9 @@ function App() {
             <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
             <Route path="/agendamentos" element={<GerenciarAgendamentos />} />
             <Route path="/novo-agendamento" element={<NovoAgendamento />} />
+            
+            {/* Rotas para Alunos */}
+            <Route path="/meus-treinos" element={<MeusTreinos />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

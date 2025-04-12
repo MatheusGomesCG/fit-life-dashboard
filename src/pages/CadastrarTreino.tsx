@@ -30,6 +30,19 @@ const gruposMusculares = [
   "Panturrilha"
 ];
 
+const diasSemana = [
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado-feira",
+  "Domingo-feira",
+  "Segunda e Quinta-feira",
+  "Terça e Sexta-feira",
+  "Quarta e Sábado-feira"
+];
+
 const CadastrarTreino: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -55,7 +68,8 @@ const CadastrarTreino: React.FC = () => {
           series: 3,
           repeticoes: 12,
           estrategia: "",
-          videoUrl: ""
+          videoUrl: "",
+          diaTreino: ""
         }]);
       } catch (error) {
         console.error("Erro ao buscar dados do aluno:", error);
@@ -88,7 +102,8 @@ const CadastrarTreino: React.FC = () => {
         series: 3,
         repeticoes: 12,
         estrategia: "",
-        videoUrl: ""
+        videoUrl: "",
+        diaTreino: ""
       }
     ]);
   };
@@ -108,8 +123,8 @@ const CadastrarTreino: React.FC = () => {
     
     for (let i = 0; i < exercicios.length; i++) {
       const exercicio = exercicios[i];
-      if (!exercicio.nomeExercicio || !exercicio.grupoMuscular) {
-        toast.error(`Preencha o nome e grupo muscular do exercício ${i + 1}.`);
+      if (!exercicio.nomeExercicio || !exercicio.grupoMuscular || !exercicio.diaTreino) {
+        toast.error(`Preencha o nome, grupo muscular e dia do treino do exercício ${i + 1}.`);
         isValid = false;
         break;
       }
@@ -263,6 +278,15 @@ const CadastrarTreino: React.FC = () => {
                   value={exercicio.grupoMuscular}
                   onChange={(e) => handleExercicioChange(index, "grupoMuscular", e.target.value)}
                   options={gruposMusculares.map(grupo => ({ value: grupo, label: grupo }))}
+                  required
+                />
+                
+                <FormSelect
+                  id={`exercicio-${index}-dia`}
+                  label="Dia do Treino"
+                  value={exercicio.diaTreino || ""}
+                  onChange={(e) => handleExercicioChange(index, "diaTreino", e.target.value)}
+                  options={diasSemana.map(dia => ({ value: dia, label: dia }))}
                   required
                 />
                 

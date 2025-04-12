@@ -40,6 +40,7 @@ export interface CargaExercicio {
   repeticoes: number;
   estrategia?: string;
   videoUrl?: string;
+  diaTreino?: string;
 }
 
 export interface FichaTreino {
@@ -154,69 +155,190 @@ export const criarOuAtualizarFichaTreino = async (
 
 // Função para gerar ficha de treino com base nas características do aluno
 export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
-  const exerciciosPorNivel: Record<Aluno["experiencia"], CargaExercicio[]> = {
-    iniciante: [
-      { nomeExercicio: "Supino Reto", grupoMuscular: "Peito", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Execução lenta e controlada", videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4" },
-      { nomeExercicio: "Puxada Alta", grupoMuscular: "Costas", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Foco na contração", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Leg Press", grupoMuscular: "Pernas", cargaIdeal: 0, series: 3, repeticoes: 15, estrategia: "Amplitude completa", videoUrl: "https://www.youtube.com/watch?v=IZxyjW7MPJQ" },
-      { nomeExercicio: "Desenvolvimento", grupoMuscular: "Ombros", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Movimento estável", videoUrl: "https://www.youtube.com/watch?v=qEwKCR5JCog" },
-      { nomeExercicio: "Rosca Direta", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Contração no topo", videoUrl: "https://www.youtube.com/watch?v=kwG2ipFRgfo" },
-      { nomeExercicio: "Tríceps Pulley", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Cotovelos junto ao corpo", videoUrl: "https://www.youtube.com/watch?v=6kALZikXxLc" },
-      { nomeExercicio: "Abdominal", grupoMuscular: "Abdômen", cargaIdeal: 0, series: 3, repeticoes: 15, estrategia: "Respiração controlada", videoUrl: "https://www.youtube.com/watch?v=1fbU_MkV7NE" },
-    ],
-    intermediario: [
-      { nomeExercicio: "Supino Reto", grupoMuscular: "Peito", cargaIdeal: 0, series: 4, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4" },
-      { nomeExercicio: "Supino Inclinado", grupoMuscular: "Peito", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Foco na contração", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Puxada Alta", grupoMuscular: "Costas", cargaIdeal: 0, series: 4, repeticoes: 10, estrategia: "Movimento estável", videoUrl: "https://www.youtube.com/watch?v=qEwKCR5JCog" },
-      { nomeExercicio: "Remada Baixa", grupoMuscular: "Costas", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Amplitude completa", videoUrl: "https://www.youtube.com/watch?v=IZxyjW7MPJQ" },
-      { nomeExercicio: "Agachamento", grupoMuscular: "Pernas", cargaIdeal: 0, series: 4, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Leg Press", grupoMuscular: "Pernas", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Movimento estável", videoUrl: "https://www.youtube.com/watch?v=qEwKCR5JCog" },
-      { nomeExercicio: "Desenvolvimento", grupoMuscular: "Ombros", cargaIdeal: 0, series: 4, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Elevação Lateral", grupoMuscular: "Ombros", cargaIdeal: 0, series: 3, repeticoes: 12, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Direta", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Alternada", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Tríceps Pulley", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Tríceps Francês", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Abdominal", grupoMuscular: "Abdômen", cargaIdeal: 0, series: 4, repeticoes: 15, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-    ],
-    avancado: [
-      { nomeExercicio: "Supino Reto", grupoMuscular: "Peito", cargaIdeal: 0, series: 5, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4" },
-      { nomeExercicio: "Supino Inclinado", grupoMuscular: "Peito", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Crucifixo", grupoMuscular: "Peito", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Puxada Alta", grupoMuscular: "Costas", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Remada Baixa", grupoMuscular: "Costas", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Pullover", grupoMuscular: "Costas", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Agachamento", grupoMuscular: "Pernas", cargaIdeal: 0, series: 5, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Leg Press", grupoMuscular: "Pernas", cargaIdeal: 0, series: 4, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Cadeira Extensora", grupoMuscular: "Pernas", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Cadeira Flexora", grupoMuscular: "Pernas", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Desenvolvimento", grupoMuscular: "Ombros", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Elevação Lateral", grupoMuscular: "Ombros", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Elevação Frontal", grupoMuscular: "Ombros", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Direta", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Alternada", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Rosca Martelo", grupoMuscular: "Bíceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execuç��o controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Tríceps Pulley", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 4, repeticoes: 8, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Tríceps Francês", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Tríceps Testa", grupoMuscular: "Tríceps", cargaIdeal: 0, series: 3, repeticoes: 10, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Abdominal", grupoMuscular: "Abdômen", cargaIdeal: 0, series: 4, repeticoes: 15, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-      { nomeExercicio: "Abdominal Infra", grupoMuscular: "Abdômen", cargaIdeal: 0, series: 4, repeticoes: 15, estrategia: "Execução controlada", videoUrl: "https://www.youtube.com/watch?v=JEb-dwU3VF4" },
-    ],
-  };
+  // Lista de exercícios baseada no nível de experiência do aluno
+  const exercicios: CargaExercicio[] = [];
+
+  // Peso base para cálculos
+  const pesoBase = aluno.peso;
   
-  // Seleciona exercícios com base no nível do aluno
-  let exercicios = [...exerciciosPorNivel[aluno.experiencia]];
-  
-  // Calcula a carga ideal para cada exercício
-  exercicios = exercicios.map((exercicio) => ({
-    ...exercicio,
-    cargaIdeal: calcularCargaIdeal(aluno.peso, aluno.experiencia, exercicio.nomeExercicio),
-  }));
+  // Gere exercícios baseados no nível do aluno
+  if (aluno.experiencia === "iniciante") {
+    exercicios.push(
+      { 
+        nomeExercicio: "Supino Reto", 
+        grupoMuscular: "Peito", 
+        cargaIdeal: Math.round(pesoBase * 0.3), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Segunda-feira",
+        videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4"
+      },
+      { 
+        nomeExercicio: "Leg Press", 
+        grupoMuscular: "Pernas", 
+        cargaIdeal: Math.round(pesoBase * 0.8), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Terça-feira"
+      },
+      { 
+        nomeExercicio: "Puxada Frontal", 
+        grupoMuscular: "Costas", 
+        cargaIdeal: Math.round(pesoBase * 0.4), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Quarta-feira",
+        videoUrl: "https://www.youtube.com/watch?v=CAwf7n6Luuc"
+      },
+      { 
+        nomeExercicio: "Desenvolvimento com Halteres", 
+        grupoMuscular: "Ombros", 
+        cargaIdeal: Math.round(pesoBase * 0.15), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Quinta-feira"
+      },
+      { 
+        nomeExercicio: "Rosca Direta", 
+        grupoMuscular: "Bíceps", 
+        cargaIdeal: Math.round(pesoBase * 0.15), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Sexta-feira",
+        videoUrl: "https://www.youtube.com/watch?v=kwG2ipFRgfo"
+      },
+      { 
+        nomeExercicio: "Tríceps Corda", 
+        grupoMuscular: "Tríceps", 
+        cargaIdeal: Math.round(pesoBase * 0.15), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Sexta-feira"
+      }
+    );
+  } else if (aluno.experiencia === "intermediario") {
+    exercicios.push(
+      { 
+        nomeExercicio: "Supino Reto", 
+        grupoMuscular: "Peito", 
+        cargaIdeal: Math.round(pesoBase * 0.5), 
+        series: 4, 
+        repeticoes: 10,
+        diaTreino: "Segunda-feira",
+        estrategia: "Drop-set na última série",
+        videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4"
+      },
+      { 
+        nomeExercicio: "Supino Inclinado", 
+        grupoMuscular: "Peito", 
+        cargaIdeal: Math.round(pesoBase * 0.4), 
+        series: 3, 
+        repeticoes: 10,
+        diaTreino: "Segunda-feira"
+      },
+      { 
+        nomeExercicio: "Agachamento Livre", 
+        grupoMuscular: "Pernas", 
+        cargaIdeal: Math.round(pesoBase * 0.8), 
+        series: 4, 
+        repeticoes: 8,
+        diaTreino: "Terça-feira",
+        estrategia: "Pausa de 2s no fundo",
+        videoUrl: "https://www.youtube.com/watch?v=ultWZbUMPL8"
+      },
+      { 
+        nomeExercicio: "Leg Press", 
+        grupoMuscular: "Pernas", 
+        cargaIdeal: Math.round(pesoBase * 1.2), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Terça-feira"
+      },
+      { 
+        nomeExercicio: "Barra Fixa", 
+        grupoMuscular: "Costas", 
+        cargaIdeal: 0, 
+        series: 3, 
+        repeticoes: 8,
+        diaTreino: "Quarta-feira",
+        estrategia: "Fazer com o peso do corpo"
+      },
+      { 
+        nomeExercicio: "Remada Curvada", 
+        grupoMuscular: "Costas", 
+        cargaIdeal: Math.round(pesoBase * 0.4), 
+        series: 4, 
+        repeticoes: 10,
+        diaTreino: "Quarta-feira",
+        videoUrl: "https://www.youtube.com/watch?v=FWJR5Ve8l2A"
+      }
+    );
+  } else { // avançado
+    exercicios.push(
+      { 
+        nomeExercicio: "Supino Reto", 
+        grupoMuscular: "Peito", 
+        cargaIdeal: Math.round(pesoBase * 0.8), 
+        series: 5, 
+        repeticoes: 5,
+        diaTreino: "Segunda e Quinta-feira",
+        estrategia: "Método 5x5",
+        videoUrl: "https://www.youtube.com/watch?v=IODxDxX7oi4" 
+      },
+      { 
+        nomeExercicio: "Fly com Cabos", 
+        grupoMuscular: "Peito", 
+        cargaIdeal: Math.round(pesoBase * 0.2), 
+        series: 3, 
+        repeticoes: 12,
+        diaTreino: "Segunda e Quinta-feira",
+        estrategia: "Contração máxima no pico"
+      },
+      { 
+        nomeExercicio: "Agachamento Livre", 
+        grupoMuscular: "Pernas", 
+        cargaIdeal: Math.round(pesoBase * 1.2), 
+        series: 5, 
+        repeticoes: 5,
+        diaTreino: "Terça e Sexta-feira",
+        estrategia: "Método 5x5",
+        videoUrl: "https://www.youtube.com/watch?v=ultWZbUMPL8" 
+      },
+      { 
+        nomeExercicio: "Levantamento Terra", 
+        grupoMuscular: "Lombar/Pernas", 
+        cargaIdeal: Math.round(pesoBase * 1.5), 
+        series: 3, 
+        repeticoes: 5,
+        diaTreino: "Terça-feira",
+        estrategia: "Aumento progressivo de carga",
+        videoUrl: "https://www.youtube.com/watch?v=op9kVnSso6Q" 
+      },
+      { 
+        nomeExercicio: "Barra Fixa Supinada", 
+        grupoMuscular: "Costas/Bíceps", 
+        cargaIdeal: Math.round(pesoBase * 0.1), // peso adicional
+        series: 4, 
+        repeticoes: 8,
+        diaTreino: "Quarta-feira",
+        estrategia: "Adicionar peso se possível"
+      },
+      { 
+        nomeExercicio: "Remada Baixa Triângulo", 
+        grupoMuscular: "Costas", 
+        cargaIdeal: Math.round(pesoBase * 0.7), 
+        series: 4, 
+        repeticoes: 8,
+        diaTreino: "Quarta e Sábado-feira",
+        estrategia: "Contração isométrica por 1s no pico"
+      }
+    );
+  }
   
   return {
     aluno,
-    dataAvaliacao: new Date().toISOString().split("T")[0],
-    exercicios,
+    dataAvaliacao: new Date().toISOString(),
+    exercicios
   };
 };
 
