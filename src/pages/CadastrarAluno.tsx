@@ -130,6 +130,9 @@ const CadastrarAluno: React.FC = () => {
         valorMensalidade: Number(dadosAluno.valorMensalidade),
         idade: Number(dadosAluno.idade),
         genero: generoValue, // Usar o valor tipado
+        // Convertendo as datas para string no formato ISO
+        dataNascimento: dadosAluno.dataNascimento ? dadosAluno.dataNascimento.toISOString() : null,
+        dataVencimento: dadosAluno.dataVencimento ? dadosAluno.dataVencimento.toISOString() : null,
       };
 
       await cadastrarAluno(alunoFormatado);
