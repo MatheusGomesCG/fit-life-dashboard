@@ -24,6 +24,18 @@ interface DadosAluno {
   peso: number;
   valorMensalidade: number;
   dataVencimento: Date | null;
+  // Adicionando campos obrigatórios que faltavam
+  idade: number;
+  experiencia: "iniciante" | "intermediario" | "avancado";
+  dobrasCutaneas: {
+    triceps: number;
+    subescapular: number;
+    axilarMedia: number;
+    peitoral: number;
+    suprailiaca: number;
+    abdominal: number;
+    coxa: number;
+  };
 }
 
 const CadastrarAluno: React.FC = () => {
@@ -41,7 +53,19 @@ const CadastrarAluno: React.FC = () => {
     altura: 0,
     peso: 0,
     valorMensalidade: 0,
-    dataVencimento: null
+    dataVencimento: null,
+    // Inicialização dos novos campos obrigatórios
+    idade: 0,
+    experiencia: "iniciante",
+    dobrasCutaneas: {
+      triceps: 0,
+      subescapular: 0,
+      axilarMedia: 0,
+      peitoral: 0,
+      suprailiaca: 0,
+      abdominal: 0,
+      coxa: 0
+    }
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -59,6 +83,25 @@ const CadastrarAluno: React.FC = () => {
     setDadosAluno(prev => ({ ...prev, [field]: date }));
   };
 
+  // Adicionando handler para campos numéricos específicos
+  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setDadosAluno(prev => ({ ...prev, [id]: Number(value) }));
+  };
+
+  // Adicionando handler para dobras cutâneas
+  const handleDobrasCutaneasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    const dobra = id.replace('dobra-', '');
+    setDadosAluno(prev => ({
+      ...prev,
+      dobrasCutaneas: {
+        ...prev.dobrasCutaneas,
+        [dobra]: Number(value)
+      }
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -70,12 +113,19 @@ const CadastrarAluno: React.FC = () => {
         return;
       }
 
-      // Convertendo as strings para números
+      // Certificando-se que idade é um número
+      if (!dadosAluno.idade || dadosAluno.idade <= 0) {
+        toast.error("Por favor, informe uma idade válida");
+        return;
+      }
+
+      // Formatando o objeto para envio
       const alunoFormatado = {
         ...dadosAluno,
         altura: Number(dadosAluno.altura),
         peso: Number(dadosAluno.peso),
-        valorMensalidade: Number(dadosAluno.valorMensalidade)
+        valorMensalidade: Number(dadosAluno.valorMensalidade),
+        idade: Number(dadosAluno.idade)
       };
 
       await cadastrarAluno(alunoFormatado);
@@ -140,6 +190,19 @@ const CadastrarAluno: React.FC = () => {
                 />
               </div>
 
+              {/* Idade - Campo Adicionado */}
+              <div>
+                <Label htmlFor="idade">Idade*</Label>
+                <Input 
+                  id="idade" 
+                  type="number" 
+                  placeholder="25" 
+                  value={dadosAluno.idade || ''}
+                  onChange={handleNumericChange}
+                  required
+                />
+              </div>
+
               {/* Data de Nascimento */}
               <div>
                 <Label htmlFor="dataNascimento">Data de Nascimento</Label>
@@ -155,6 +218,7 @@ const CadastrarAluno: React.FC = () => {
                 <Label htmlFor="genero">Gênero</Label>
                 <Select 
                   onValueChange={(value) => handleSelectChange('genero', value)}
+                  defaultValue={dadosAluno.genero}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione o gênero" />
@@ -176,6 +240,27 @@ const CadastrarAluno: React.FC = () => {
                   value={dadosAluno.endereco}
                   onChange={handleInputChange}
                 />
+              </div>
+
+              {/* Nível de Experiência - Campo Adicionado */}
+              <div>
+                <Label htmlFor="experiencia">Nível de Experiência*</Label>
+                <Select 
+                  onValueChange={(value: "iniciante" | "intermediario" | "avancado") => 
+                    handleSelectChange('experiencia', value)
+                  }
+                  defaultValue={dadosAluno.experiencia}
+                  required
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o nível" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="iniciante">Iniciante</SelectItem>
+                    <SelectItem value="intermediario">Intermediário</SelectItem>
+                    <SelectItem value="avancado">Avançado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -212,6 +297,96 @@ const CadastrarAluno: React.FC = () => {
                     peso: Number(e.target.value) 
                   }))}
                 />
+              </div>
+            </div>
+
+            {/* Dobras Cutâneas - Seção Adicionada */}
+            <div className="mt-4">
+              <h3 className="text-md font-semibold mb-3">Dobras Cutâneas (mm)*</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Triceps */}
+                <div>
+                  <Label htmlFor="dobra-triceps">Tríceps</Label>
+                  <Input 
+                    id="dobra-triceps" 
+                    type="number" 
+                    placeholder="10" 
+                    value={dadosAluno.dobrasCutaneas.triceps || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Subescapular */}
+                <div>
+                  <Label htmlFor="dobra-subescapular">Subescapular</Label>
+                  <Input 
+                    id="dobra-subescapular" 
+                    type="number" 
+                    placeholder="12" 
+                    value={dadosAluno.dobrasCutaneas.subescapular || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Axilar Média */}
+                <div>
+                  <Label htmlFor="dobra-axilarMedia">Axilar Média</Label>
+                  <Input 
+                    id="dobra-axilarMedia" 
+                    type="number" 
+                    placeholder="8" 
+                    value={dadosAluno.dobrasCutaneas.axilarMedia || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Peitoral */}
+                <div>
+                  <Label htmlFor="dobra-peitoral">Peitoral</Label>
+                  <Input 
+                    id="dobra-peitoral" 
+                    type="number" 
+                    placeholder="7" 
+                    value={dadosAluno.dobrasCutaneas.peitoral || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Supra-ilíaca */}
+                <div>
+                  <Label htmlFor="dobra-suprailiaca">Supra-ilíaca</Label>
+                  <Input 
+                    id="dobra-suprailiaca" 
+                    type="number" 
+                    placeholder="14" 
+                    value={dadosAluno.dobrasCutaneas.suprailiaca || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Abdominal */}
+                <div>
+                  <Label htmlFor="dobra-abdominal">Abdominal</Label>
+                  <Input 
+                    id="dobra-abdominal" 
+                    type="number" 
+                    placeholder="18" 
+                    value={dadosAluno.dobrasCutaneas.abdominal || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
+                
+                {/* Coxa */}
+                <div>
+                  <Label htmlFor="dobra-coxa">Coxa</Label>
+                  <Input 
+                    id="dobra-coxa" 
+                    type="number" 
+                    placeholder="15" 
+                    value={dadosAluno.dobrasCutaneas.coxa || ''}
+                    onChange={handleDobrasCutaneasChange}
+                  />
+                </div>
               </div>
             </div>
           </div>
