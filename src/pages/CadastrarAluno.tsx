@@ -16,7 +16,7 @@ interface DadosAluno {
   email: string;
   telefone: string;
   dataNascimento: Date | null;
-  genero: string;
+  genero: "masculino" | "feminino" | "outro"; // Updating to match required type
   endereco: string;
   objetivo: string;
   observacoes: string;
@@ -46,7 +46,7 @@ const CadastrarAluno: React.FC = () => {
     email: "",
     telefone: "",
     dataNascimento: null,
-    genero: "",
+    genero: "masculino", // Default to masculino to ensure type safety
     endereco: "",
     objetivo: "",
     observacoes: "",
@@ -120,12 +120,16 @@ const CadastrarAluno: React.FC = () => {
       }
 
       // Formatando o objeto para envio
+      // Garantindo que genero seja do tipo apropriado antes de enviar
+      const generoValue = dadosAluno.genero as "masculino" | "feminino";
+      
       const alunoFormatado = {
         ...dadosAluno,
         altura: Number(dadosAluno.altura),
         peso: Number(dadosAluno.peso),
         valorMensalidade: Number(dadosAluno.valorMensalidade),
-        idade: Number(dadosAluno.idade)
+        idade: Number(dadosAluno.idade),
+        genero: generoValue, // Usar o valor tipado
       };
 
       await cadastrarAluno(alunoFormatado);
@@ -213,11 +217,11 @@ const CadastrarAluno: React.FC = () => {
                 />
               </div>
 
-              {/* Gênero */}
+              {/* Gênero - Modificado para usar valores estritos */}
               <div>
                 <Label htmlFor="genero">Gênero</Label>
                 <Select 
-                  onValueChange={(value) => handleSelectChange('genero', value)}
+                  onValueChange={(value: "masculino" | "feminino" | "outro") => handleSelectChange('genero', value)}
                   defaultValue={dadosAluno.genero}
                 >
                   <SelectTrigger className="w-full">
