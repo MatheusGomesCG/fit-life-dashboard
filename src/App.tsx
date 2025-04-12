@@ -16,6 +16,7 @@ import CadastrarTreino from "./pages/CadastrarTreino";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CadastrarPagamento from "./pages/CadastrarPagamento";
 import EditarPagamento from "./pages/EditarPagamento";
+import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 
