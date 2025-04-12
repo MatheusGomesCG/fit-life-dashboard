@@ -1,6 +1,6 @@
 
-import React, { ReactNode, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   LogOut, 
@@ -15,11 +15,7 @@ import {
   Calendar 
 } from "lucide-react";
 
-interface LayoutProps {
-  children: ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,11 +29,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       navigate("/");
     }
   }, [isAuthenticated, isPublicRoute, navigate]);
-
-  // Se for uma rota pública, não exibir o layout completo
-  if (isPublicRoute) {
-    return <>{children}</>;
-  }
 
   // Define os itens de menu com base no tipo de usuário (aluno ou professor)
   const menuItems = user?.tipo === "professor" 
@@ -112,7 +103,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </aside>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 p-6">{children}</main>
+        <main className="flex-1 p-6">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

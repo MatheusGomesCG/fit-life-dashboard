@@ -25,27 +25,27 @@ function App() {
       <AuthProvider>
         <Toaster position="top-center" richColors />
         <Routes>
+          {/* Rotas públicas */}
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastrar-professor" element={<CadastrarProfessor />} />
           
-          <Route path="/" element={<Layout>{/* Esta é a correção: adicionando children explicitamente */}
-            <Routes>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="dashboard-professor" element={<DashboardProfessor />} />
-              
-              {/* Rotas para Professores */}
-              <Route path="gerenciar-alunos" element={<GerenciarAlunos />} />
-              <Route path="cadastrar-aluno" element={<CadastrarAluno />} />
-              <Route path="editar-aluno/:id" element={<EditarAluno />} />
-              <Route path="ficha-treino/:id" element={<FichaTreino />} />
-              <Route path="cadastrar-treino/:id" element={<CadastrarTreino />} />
-              <Route path="listar-alunos" element={<ListarAlunos />} />
-              <Route path="gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-              <Route path="cadastrar-pagamento" element={<CadastrarPagamento />} />
-              <Route path="editar-pagamento/:id" element={<EditarPagamento />} />
-            </Routes>
-          </Layout>} />
+          {/* Rotas protegidas (com Layout) */}
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard-professor" element={<DashboardProfessor />} />
+            
+            {/* Rotas para Professores */}
+            <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
+            <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
+            <Route path="/editar-aluno/:id" element={<EditarAluno />} />
+            <Route path="/ficha-treino/:id" element={<FichaTreino />} />
+            <Route path="/cadastrar-treino/:id" element={<CadastrarTreino />} />
+            <Route path="/listar-alunos" element={<ListarAlunos />} />
+            <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
+            <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
+            <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
+          </Route>
           
           <Route path="*" element={<NotFound />} />
         </Routes>
