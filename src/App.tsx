@@ -45,6 +45,7 @@ function App() {
             <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
             <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
             <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
+            <Route path="/agendamentos" element={<GerenciarAgendamentos />} />
           </Route>
           
           <Route path="*" element={<NotFound />} />

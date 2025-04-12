@@ -9,6 +9,11 @@ import {
   calcularTotalRecebido, 
   calcularTotalPendente 
 } from "@/services/pagamentosService";
+import { 
+  contarAvaliacoesSemana,
+  listarAgendamentosSemana,
+  Agendamento
+} from "@/services/agendamentosService";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { 
   Tabs, 
@@ -21,6 +26,8 @@ import PagamentosAnuais from "@/components/pagamentos/PagamentosAnuais";
 const DashboardProfessor: React.FC = () => {
   const { user } = useAuth();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
+  const [avaliacoesSemana, setAvaliacoesSemana] = useState(0);
+  const [agendamentosSemana, setAgendamentosSemana] = useState<Agendamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   
@@ -29,20 +36,27 @@ const DashboardProfessor: React.FC = () => {
   const [alunosAtivos] = useState(12); // Mock value
 
   useEffect(() => {
-    carregarPagamentos();
+    const carregarDados = async () => {
+      try {
+        setIsLoading(true);
+        const [pagamentosData, numAvaliacoes, agendamentos] = await Promise.all([
+          listarPagamentos(),
+          contarAvaliacoesSemana(),
+          listarAgendamentosSemana()
+        ]);
+        
+        setPagamentos(pagamentosData);
+        setAvaliacoesSemana(numAvaliacoes);
+        setAgendamentosSemana(agendamentos);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    carregarDados();
   }, []);
-
-  const carregarPagamentos = async () => {
-    try {
-      setIsLoading(true);
-      const data = await listarPagamentos();
-      setPagamentos(data);
-    } catch (error) {
-      console.error("Erro ao carregar pagamentos:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Calcular valores totais
   const totalRecebido = calcularTotalRecebido(pagamentos);
@@ -160,7 +174,11 @@ const DashboardProfessor: React.FC = () => {
                 <h2 className="text-lg font-semibold ml-3">Avaliações esta semana</h2>
               </div>
               
-              <p className="text-2xl font-bold text-purple-600">3</p>
+              {isLoading ? (
+                <div className="animate-pulse h-8 bg-gray-200 rounded w-24"></div>
+              ) : (
+                <p className="text-2xl font-bold text-purple-600">{avaliacoesSemana}</p>
+              )}
               
               <Link to="/agendamentos" className="mt-4 flex items-center text-purple-600 font-medium">
                 <span>Ver agendamentos</span>
@@ -229,9 +247,9 @@ const DashboardProfessor: React.FC = () => {
             </Link>
           </div>
 
-          {/* Próximos vencimentos */}
+          {/* Próximos agendamentos */}
           <div className="mt-8 bg-white border border-gray-200 rounded-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Próximos Vencimentos</h2>
+            <h2 className="text-xl font-bold mb-4">Próximos Agendamentos</h2>
             
             {isLoading ? (
               <div className="space-y-3">
@@ -239,29 +257,38 @@ const DashboardProfessor: React.FC = () => {
                   <div key={i} className="animate-pulse h-14 bg-gray-100 rounded"></div>
                 ))}
               </div>
-            ) : proximosVencimentos.length > 0 ? (
+            ) : agendamentosSemana.length > 0 ? (
               <div className="space-y-3">
-                {proximosVencimentos.map((pagamento) => (
-                  <div key={pagamento.id} className="border-b border-gray-100 pb-3">
+                {agendamentosSemana.slice(0, 5).map((agendamento) => (
+                  <div key={agendamento.id} className="border-b border-gray-100 pb-3">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">{pagamento.alunoNome}</p>
-                        <p className="text-sm text-gray-500">
-                          Vence em {format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}
-                        </p>
+                        <p className="font-medium">{agendamento.alunoNome}</p>
+                        <div className="flex items-center text-sm text-gray-500">
+                          <Calendar className="h-4 w-4 mr-1 text-gray-400" />
+                          <span>{format(new Date(agendamento.data), "dd/MM/yyyy")}</span>
+                          <Clock className="h-4 w-4 ml-2 mr-1 text-gray-400" />
+                          <span>{agendamento.hora}</span>
+                        </div>
                       </div>
-                      <p className="font-semibold">R$ {pagamento.valor.toFixed(2)}</p>
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        agendamento.tipo === 'avaliacao' 
+                          ? 'bg-purple-100 text-purple-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {agendamento.tipo === 'avaliacao' ? 'Avaliação' : 'Consulta'}
+                      </span>
                     </div>
                   </div>
                 ))}
                 
-                <Link to="/gerenciar-pagamentos" className="flex items-center text-blue-600 font-medium pt-2">
-                  <span>Ver todos os pagamentos</span>
+                <Link to="/agendamentos" className="flex items-center text-purple-600 font-medium pt-2">
+                  <span>Ver todos os agendamentos</span>
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </Link>
               </div>
             ) : (
-              <p className="text-gray-500">Não há pagamentos próximos ao vencimento.</p>
+              <p className="text-gray-500">Não há agendamentos esta semana.</p>
             )}
           </div>
         </TabsContent>
