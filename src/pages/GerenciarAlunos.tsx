@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { Search, Plus, Edit, Trash2, FileText, Dumbbell } from "lucide-react";
+import { Search, Plus, Edit, Trash2 } from "lucide-react";
 import { listarAlunos, Aluno, excluirAluno } from "@/services/alunosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { format } from "date-fns";
@@ -178,20 +177,6 @@ const GerenciarAlunos: React.FC = () => {
                         : "-"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <Link
-                        to={`/ficha-treino/${aluno.id}`}
-                        className="text-blue-600 hover:text-blue-800 inline-flex items-center mr-2"
-                        title="Ver ficha de treino"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        to={`/cadastrar-treino/${aluno.id}`}
-                        className="text-green-600 hover:text-green-800 inline-flex items-center mr-2"
-                        title="Cadastrar treino"
-                      >
-                        <Dumbbell className="h-4 w-4" />
-                      </Link>
                       <Link
                         to={`/editar-aluno/${aluno.id}`}
                         className="text-amber-600 hover:text-amber-800 inline-flex items-center mr-2"

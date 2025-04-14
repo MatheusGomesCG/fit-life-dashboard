@@ -1,10 +1,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { listarAlunos, Aluno, gerarFichaTreino } from "@/services/alunosService";
-import { gerarPDFFichaTreino, downloadPDF } from "@/services/pdfService";
+import { listarAlunos, Aluno } from "@/services/alunosService";
 import { toast } from "sonner";
-import { Search, UserPlus, Download, Printer, ArrowUpDown, FileText } from "lucide-react";
+import { Search, UserPlus, ArrowUpDown } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const ListarAlunos: React.FC = () => {
@@ -42,18 +41,6 @@ const ListarAlunos: React.FC = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
-  };
-
-  const handleGerarFichaTreino = (aluno: Aluno) => {
-    try {
-      const ficha = gerarFichaTreino(aluno);
-      const doc = gerarPDFFichaTreino(ficha);
-      downloadPDF(doc, `ficha_treino_${aluno.nome.replace(/\s+/g, "_")}.pdf`);
-      toast.success("Ficha de treino gerada com sucesso!");
-    } catch (error) {
-      console.error("Erro ao gerar ficha de treino:", error);
-      toast.error("Erro ao gerar ficha de treino.");
-    }
   };
 
   // Filtrar alunos com base no termo de busca
@@ -172,7 +159,6 @@ const ListarAlunos: React.FC = () => {
                     </div>
                   </th>
                   <th className="px-6 py-3">Experiência</th>
-                  <th className="px-6 py-3">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,16 +176,6 @@ const ListarAlunos: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">{aluno.imc?.toFixed(2)}</td>
                     <td className="px-6 py-4 capitalize">{aluno.experiencia}</td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleGerarFichaTreino(aluno)}
-                        className="text-fitness-secondary hover:text-fitness-primary flex items-center gap-1"
-                        title="Gerar Ficha de Treino"
-                      >
-                        <FileText className="h-5 w-5" />
-                        <span>Ficha</span>
-                      </button>
-                    </td>
                   </tr>
                 ))}
               </tbody>
