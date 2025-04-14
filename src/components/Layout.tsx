@@ -86,7 +86,9 @@ const Layout: React.FC = () => {
           <nav className="space-y-1">
             {menuItems.map((item) => {
               const isActive = location.pathname === item.to || 
-                (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to));
+                (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to)) ||
+                (item.to === "/gerenciar-fichas" && 
+                  (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
               
               return (
                 <Link

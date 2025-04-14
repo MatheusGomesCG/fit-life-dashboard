@@ -32,7 +32,7 @@ const VisualizarFichaTreino: React.FC = () => {
       } catch (error) {
         console.error("Erro ao buscar dados do aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
-        navigate("/gerenciar-alunos");
+        navigate("/gerenciar-fichas");
       } finally {
         setLoading(false);
       }
@@ -99,10 +99,10 @@ const VisualizarFichaTreino: React.FC = () => {
       <div className="text-center py-8">
         <p className="text-red-500">Erro ao carregar ficha de treino.</p>
         <button
-          onClick={() => navigate("/gerenciar-alunos")}
+          onClick={() => navigate("/gerenciar-fichas")}
           className="mt-4 text-fitness-primary hover:underline"
         >
-          Voltar para lista de alunos
+          Voltar para gerenciamento de fichas
         </button>
       </div>
     );
@@ -119,7 +119,7 @@ const VisualizarFichaTreino: React.FC = () => {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate("/gerenciar-alunos")}
+            onClick={() => navigate("/gerenciar-fichas")}
             className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
