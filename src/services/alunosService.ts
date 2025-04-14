@@ -2,6 +2,13 @@ import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
 
+export interface FotoAluno {
+  id?: string;
+  url: string;
+  data: string; // ISO date string
+  descricao?: string;
+}
+
 export interface Aluno {
   id?: string;
   nome: string;
@@ -30,6 +37,7 @@ export interface Aluno {
   dataCadastro?: string;
   valorMensalidade?: number;
   dataVencimento?: string;
+  fotos?: FotoAluno[]; // Array de fotos do aluno
 }
 
 export interface CargaExercicio {
@@ -342,6 +350,63 @@ export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
   };
 };
 
+// Function to add student photo
+export const adicionarFotoAluno = async (
+  alunoId: string,
+  fotoData: { url: string, descricao?: string }
+): Promise<FotoAluno> => {
+  try {
+    const novaFoto: FotoAluno = {
+      url: fotoData.url,
+      data: new Date().toISOString().split('T')[0],
+      descricao: fotoData.descricao
+    };
+    
+    // In a real API, you would send this to your backend
+    // const response = await axios.post(`${API_URL}/alunos/${alunoId}/fotos`, novaFoto);
+    // return response.data;
+    
+    // For development, we'll update our mock data
+    const aluno = await buscarAlunoPorId(alunoId);
+    if (!aluno.fotos) {
+      aluno.fotos = [];
+    }
+    
+    const fotoComId: FotoAluno = {
+      ...novaFoto,
+      id: `foto_${Date.now()}`
+    };
+    
+    aluno.fotos.push(fotoComId);
+    
+    // Update the aluno with the new photo
+    await atualizarAluno(alunoId, { fotos: aluno.fotos });
+    
+    return fotoComId;
+  } catch (error) {
+    console.error(`Erro ao adicionar foto para o aluno ${alunoId}:`, error);
+    throw error;
+  }
+};
+
+// Function to remove student photo
+export const removerFotoAluno = async (alunoId: string, fotoId: string): Promise<void> => {
+  try {
+    // In a real API, you would send a delete request
+    // await axios.delete(`${API_URL}/alunos/${alunoId}/fotos/${fotoId}`);
+    
+    // For development, we'll update our mock data
+    const aluno = await buscarAlunoPorId(alunoId);
+    if (aluno.fotos) {
+      aluno.fotos = aluno.fotos.filter(foto => foto.id !== fotoId);
+      await atualizarAluno(alunoId, { fotos: aluno.fotos });
+    }
+  } catch (error) {
+    console.error(`Erro ao remover foto ${fotoId} do aluno ${alunoId}:`, error);
+    throw error;
+  }
+};
+
 // Mock data for testing
 const mockAlunos: Aluno[] = [
   {
@@ -368,7 +433,21 @@ const mockAlunos: Aluno[] = [
     },
     dataCadastro: "2025-01-15",
     valorMensalidade: 150.00,
-    dataVencimento: "2025-05-15"
+    dataVencimento: "2025-05-15",
+    fotos: [
+      {
+        id: "foto_1",
+        url: "https://placehold.co/400?text=Foto+1",
+        data: "2025-01-15",
+        descricao: "Foto frontal"
+      },
+      {
+        id: "foto_2",
+        url: "https://placehold.co/400?text=Foto+2",
+        data: "2025-01-15",
+        descricao: "Foto lateral"
+      }
+    ]
   },
   {
     id: "aluno_02",

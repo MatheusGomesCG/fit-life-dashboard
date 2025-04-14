@@ -1,5 +1,4 @@
-
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -22,45 +21,100 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import MeusTreinos from "./pages/MeusTreinos";
 import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
+import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        path: "/",
+        element: <Index />
+      },
+      {
+        path: "/login",
+        element: <Login />
+      },
+      {
+        path: "/cadastrar-professor",
+        element: <CadastrarProfessor />
+      },
+      {
+        path: "/dashboard",
+        element: <Dashboard />
+      },
+      {
+        path: "/dashboard-professor",
+        element: <DashboardProfessor />
+      },
+      {
+        path: "/gerenciar-alunos",
+        element: <GerenciarAlunos />
+      },
+      {
+        path: "/cadastrar-aluno",
+        element: <CadastrarAluno />
+      },
+      {
+        path: "/editar-aluno/:id",
+        element: <EditarAluno />
+      },
+      {
+        path: "/gerenciar-fichas",
+        element: <GerenciarFichaTreino />
+      },
+      {
+        path: "/ficha-treino/:id",
+        element: <FichaTreino />
+      },
+      {
+        path: "/cadastrar-treino/:id",
+        element: <CadastrarTreino />
+      },
+      {
+        path: "/listar-alunos",
+        element: <ListarAlunos />
+      },
+      {
+        path: "/gerenciar-pagamentos",
+        element: <GerenciarPagamentos />
+      },
+      {
+        path: "/cadastrar-pagamento",
+        element: <CadastrarPagamento />
+      },
+      {
+        path: "/editar-pagamento/:id",
+        element: <EditarPagamento />
+      },
+      {
+        path: "/agendamentos",
+        element: <GerenciarAgendamentos />
+      },
+      {
+        path: "/novo-agendamento",
+        element: <NovoAgendamento />
+      },
+      {
+        path: "/meus-treinos",
+        element: <MeusTreinos />
+      },
+      {
+        path: "/fotos-aluno/:id",
+        element: <GerenciarFotosAluno />
+      }
+    ]
+  },
+  {
+    path: "*",
+    element: <NotFound />
+  }
+]);
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <Toaster position="top-center" richColors />
-        <Routes>
-          {/* Rotas públicas */}
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/cadastrar-professor" element={<CadastrarProfessor />} />
-          
-          {/* Rotas protegidas (com Layout) */}
-          <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard-professor" element={<DashboardProfessor />} />
-            
-            {/* Rotas para Professores */}
-            <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
-            <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
-            <Route path="/editar-aluno/:id" element={<EditarAluno />} />
-            <Route path="/gerenciar-fichas" element={<GerenciarFichaTreino />} />
-            <Route path="/ficha-treino/:id" element={<FichaTreino />} />
-            <Route path="/cadastrar-treino/:id" element={<CadastrarTreino />} />
-            <Route path="/listar-alunos" element={<ListarAlunos />} />
-            <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-            <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
-            <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
-            <Route path="/agendamentos" element={<GerenciarAgendamentos />} />
-            <Route path="/novo-agendamento" element={<NovoAgendamento />} />
-            
-            {/* Rotas para Alunos */}
-            <Route path="/meus-treinos" element={<MeusTreinos />} />
-          </Route>
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+    <RouterProvider router={router} />
   );
 }
 

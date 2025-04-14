@@ -1,16 +1,41 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Search, Plus, Edit, Trash2 } from "lucide-react";
-import { listarAlunos, Aluno, excluirAluno } from "@/services/alunosService";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { format } from "date-fns";
+import {
+  listarAlunos,
+  excluirAluno,
+  Aluno,
+} from "@/services/alunosService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Edit, Trash, UserPlus, Search, FileText, Camera } from "lucide-react";
 
 const GerenciarAlunos: React.FC = () => {
+  const navigate = useNavigate();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [alunoToDelete, setAlunoToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     carregarAlunos();
@@ -18,206 +43,167 @@ const GerenciarAlunos: React.FC = () => {
 
   const carregarAlunos = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       const data = await listarAlunos();
       setAlunos(data);
     } catch (error) {
       console.error("Erro ao carregar alunos:", error);
-      toast.error("Erro ao carregar alunos. Tente novamente.");
+      toast.error("Erro ao carregar lista de alunos.");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleExcluirAluno = async (id: string) => {
-    try {
-      setLoading(true);
-      await excluirAluno(id);
-      setAlunos((prev) => prev.filter((aluno) => aluno.id !== id));
-      toast.success("Aluno excluído com sucesso!");
-      setConfirmDelete(null);
-    } catch (error) {
-      console.error("Erro ao excluir aluno:", error);
-      toast.error("Erro ao excluir aluno. Tente novamente.");
-    } finally {
-      setLoading(false);
+  const handleEdit = (id: string) => {
+    navigate(`/editar-aluno/${id}`);
+  };
+
+  const handleDelete = (id: string) => {
+    setAlunoToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (alunoToDelete) {
+      try {
+        await excluirAluno(alunoToDelete);
+        toast.success("Aluno excluído com sucesso!");
+        carregarAlunos();
+      } catch (error) {
+        console.error("Erro ao excluir aluno:", error);
+        toast.error("Erro ao excluir aluno.");
+      } finally {
+        setAlunoToDelete(null);
+      }
     }
+  };
+
+  const cancelDelete = () => {
+    setAlunoToDelete(null);
+  };
+
+  const navegarParaFicha = (alunoId: string) => {
+    navigate(`/ficha-treino/${alunoId}`);
   };
 
   const alunosFiltrados = alunos.filter((aluno) =>
-    aluno.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    aluno.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gerenciar Alunos</h1>
           <p className="text-gray-600 mt-1">
-            Visualize, edite e organize seus alunos cadastrados
+            Visualize, edite ou exclua alunos cadastrados
           </p>
         </div>
-        <Link
-          to="/cadastrar-aluno"
-          className="flex items-center px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors w-full md:w-auto justify-center"
+        <Button
+          onClick={() => navigate("/cadastrar-aluno")}
+          className="flex items-center gap-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
         >
-          <Plus className="h-5 w-5 mr-2" />
-          Cadastrar Novo Aluno
-        </Link>
+          <UserPlus className="h-4 w-4" />
+          Novo Aluno
+        </Button>
       </div>
 
-      <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input
+      <div className="bg-white p-4 rounded-md shadow-sm border border-gray-200">
+        <div className="mb-4 flex items-center relative">
+          <Search className="h-5 w-5 absolute left-3 text-gray-400" />
+          <Input
             type="text"
-            placeholder="Buscar alunos por nome..."
-            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-fitness-primary"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por nome do aluno..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="pl-10 pr-4 py-2 w-full"
           />
         </div>
-      </div>
 
-      {loading && !alunos.length ? (
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner size="large" />
-        </div>
-      ) : alunosFiltrados.length === 0 ? (
-        <div className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm text-center">
-          <p className="text-gray-500">
-            {searchTerm
-              ? "Nenhum aluno encontrado com esse nome."
-              : "Nenhum aluno cadastrado. Adicione um novo aluno para começar."}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <LoadingSpinner size="large" />
+          </div>
+        ) : alunosFiltrados.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            Nenhum aluno encontrado.
+          </div>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Nome
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Idade
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Peso/Altura
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    IMC
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Data Cadastro
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Ações
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Telefone</TableHead>
+                  <TableHead>Idade</TableHead>
+                  <TableHead className="text-center">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {alunosFiltrados.map((aluno) => (
-                  <tr
-                    key={aluno.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-gray-900">
-                        {aluno.nome}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {aluno.experiencia === "iniciante"
-                          ? "Iniciante"
-                          : aluno.experiencia === "intermediario"
-                          ? "Intermediário"
-                          : "Avançado"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {aluno.idade} anos
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>{aluno.peso} kg</div>
-                      <div className="text-sm text-gray-500">
-                        {aluno.altura} cm
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div>{aluno.imc?.toFixed(1)}</div>
-                      <div className="text-sm text-gray-500">
-                        {aluno.percentualGordura?.toFixed(1)}% gordura
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {aluno.dataCadastro
-                        ? format(
-                            new Date(aluno.dataCadastro),
-                            "dd/MM/yyyy"
-                          )
-                        : "-"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap space-x-2">
-                      <Link
-                        to={`/editar-aluno/${aluno.id}`}
-                        className="text-amber-600 hover:text-amber-800 inline-flex items-center mr-2"
-                        title="Editar aluno"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Link>
-                      {confirmDelete === aluno.id ? (
-                        <>
-                          <button
-                            onClick={() => handleExcluirAluno(aluno.id!)}
-                            className="text-red-600 hover:text-red-800"
-                            title="Confirmar exclusão"
-                          >
-                            Confirmar
-                          </button>
-                          <button
-                            onClick={() => setConfirmDelete(null)}
-                            className="text-gray-600 hover:text-gray-800 ml-2"
-                            title="Cancelar exclusão"
-                          >
-                            Cancelar
-                          </button>
-                        </>
-                      ) : (
+                  <TableRow key={aluno.id}>
+                    <TableCell className="font-medium">{aluno.nome}</TableCell>
+                    <TableCell>{aluno.email}</TableCell>
+                    <TableCell>{aluno.telefone}</TableCell>
+                    <TableCell>{aluno.idade} anos</TableCell>
+                    <TableCell>
+                      <div className="flex justify-center space-x-2">
                         <button
-                          onClick={() => setConfirmDelete(aluno.id!)}
-                          className="text-red-600 hover:text-red-800"
+                          onClick={() => handleEdit(aluno.id!)}
+                          className="p-1 text-blue-600 hover:text-blue-800"
+                          title="Editar aluno"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => navegarParaFicha(aluno.id!)}
+                          className="p-1 text-green-600 hover:text-green-800"
+                          title="Ficha de treino"
+                        >
+                          <FileText className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => navigate(`/fotos-aluno/${aluno.id}`)}
+                          className="p-1 text-yellow-600 hover:text-yellow-800"
+                          title="Gerenciar fotos"
+                        >
+                          <Camera className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(aluno.id!)}
+                          className="p-1 text-red-600 hover:text-red-800"
                           title="Excluir aluno"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash className="h-5 w-5" />
                         </button>
-                      )}
-                    </td>
-                  </tr>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
+
+      <AlertDialog open={alunoToDelete !== null} onOpenChange={(open) => !open && cancelDelete()}>
+        <AlertDialogTrigger asChild>
+          <Button variant="ghost" className="hidden" />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá excluir o aluno permanentemente. Tem certeza que
+              deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
