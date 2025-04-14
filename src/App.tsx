@@ -13,6 +13,7 @@ import ListarAlunos from "./pages/ListarAlunos";
 import EditarAluno from "./pages/EditarAluno";
 import FichaTreino from "./pages/FichaTreino";
 import CadastrarTreino from "./pages/CadastrarTreino";
+import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import CadastrarPagamento from "./pages/CadastrarPagamento";
 import EditarPagamento from "./pages/EditarPagamento";
@@ -42,6 +43,7 @@ function App() {
             <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
             <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
             <Route path="/editar-aluno/:id" element={<EditarAluno />} />
+            <Route path="/gerenciar-fichas" element={<GerenciarFichaTreino />} />
             <Route path="/ficha-treino/:id" element={<FichaTreino />} />
             <Route path="/cadastrar-treino/:id" element={<CadastrarTreino />} />
             <Route path="/listar-alunos" element={<ListarAlunos />} />

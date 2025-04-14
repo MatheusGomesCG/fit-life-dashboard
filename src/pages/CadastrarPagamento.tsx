@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Aluno, listarAlunos } from "@/services/alunosService";
 import { cadastrarPagamento } from "@/services/pagamentosService";
@@ -15,7 +14,7 @@ import { DatePicker } from "@/components/date-picker";
 const CadastrarPagamento: React.FC = () => {
   const navigate = useNavigate();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [selectedAluno, setSelectedAluno] = useState<Aluno | null>(null);
+  const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
   const [valor, setValor] = useState("");
   const [dataVencimento, setDataVencimento] = useState<Date | null>(null);
   const [dataPagamento, setDataPagamento] = useState<Date | null>(null);
@@ -47,13 +46,24 @@ const CadastrarPagamento: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      if (!selectedAluno) {
+      if (!selectedAlunoId) {
         toast.error("Selecione um aluno para cadastrar o pagamento.");
+        setIsSubmitting(false);
         return;
       }
 
       if (!dataVencimento) {
         toast.error("Selecione a data de vencimento.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Find selected aluno data
+      const selectedAluno = alunos.find(aluno => aluno.id === selectedAlunoId);
+      
+      if (!selectedAluno) {
+        toast.error("Aluno não encontrado. Por favor, selecione um aluno válido.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -63,17 +73,23 @@ const CadastrarPagamento: React.FC = () => {
 
       // Convert string value to number
       const valorNum = parseFloat(valor);
+      
+      if (isNaN(valorNum) || valorNum <= 0) {
+        toast.error("Digite um valor válido para o pagamento.");
+        setIsSubmitting(false);
+        return;
+      }
 
       await cadastrarPagamento({
         alunoId: selectedAluno.id,
         alunoNome: selectedAluno.nome,
-        valor: valorNum, // Converted to number
+        valor: valorNum,
         dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
         dataPagamento: status === "pago" && dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
-        mes, // Added mes field
-        ano, // Added ano field
+        mes,
+        ano,
         observacao,
-        metodoPagamento // This field was added but needs to be included in the interface
+        metodoPagamento
       });
 
       toast.success("Pagamento cadastrado com sucesso!");
@@ -104,10 +120,10 @@ const CadastrarPagamento: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="aluno">Aluno</Label>
-            <Select onValueChange={(value) => {
-              const alunoSelecionado = alunos.find(aluno => aluno.id === value);
-              setSelectedAluno(alunoSelecionado || null);
-            }}>
+            <Select 
+              onValueChange={setSelectedAlunoId}
+              value={selectedAlunoId || ""}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione um aluno" />
               </SelectTrigger>
@@ -147,15 +163,6 @@ const CadastrarPagamento: React.FC = () => {
           </div>
 
           <div>
-            <Label htmlFor="dataPagamento">Data de Pagamento</Label>
-            <DatePicker
-              selected={dataPagamento}
-              onSelect={setDataPagamento}
-              placeholder="Selecione a data de pagamento (opcional)"
-            />
-          </div>
-
-          <div>
             <Label htmlFor="status">Status</Label>
             <Select onValueChange={handleStatusChange} defaultValue={status}>
               <SelectTrigger className="w-full">
@@ -168,6 +175,17 @@ const CadastrarPagamento: React.FC = () => {
               </SelectContent>
             </Select>
           </div>
+
+          {status === "pago" && (
+            <div>
+              <Label htmlFor="dataPagamento">Data de Pagamento</Label>
+              <DatePicker
+                selected={dataPagamento}
+                onSelect={setDataPagamento}
+                placeholder="Selecione a data de pagamento"
+              />
+            </div>
+          )}
           
           <div>
             <Label htmlFor="metodoPagamento">Método de Pagamento</Label>

@@ -573,3 +573,31 @@ export const excluirAluno = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+// Add this function to check if an aluno has a ficha de treino
+export const buscarFichaTreinoAluno = async (alunoId: string) => {
+  try {
+    // In a real API this would make a request to check if the student has a training sheet
+    // For now, we'll simulate with mock data
+    const mockFichas: Record<string, boolean> = {
+      "1": true,
+      "2": true,
+      "3": false,
+      "4": true,
+      "5": false,
+    };
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    if (mockFichas[alunoId] === undefined) {
+      // For any IDs not in our mock, randomly decide (30% chance of having a sheet)
+      return Math.random() < 0.3;
+    }
+    
+    return mockFichas[alunoId];
+  } catch (error) {
+    console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
+    return false;
+  }
+};
