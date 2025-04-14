@@ -7,11 +7,40 @@ import {
   gerarFichaTreino,
   FichaTreino,
   CargaExercicio,
+  criarOuAtualizarFichaTreino
 } from "@/services/alunosService";
 import { gerarPDFFichaTreino, downloadPDF } from "@/services/pdfService";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { ArrowLeft, Download, Video, Youtube } from "lucide-react";
+import { ArrowLeft, Download, Video, Youtube, Save, Edit, X } from "lucide-react";
 import { FileText } from "lucide-react";
+import FormInput from "@/components/FormInput";
+import FormSelect from "@/components/FormSelect";
+
+const gruposMusculares = [
+  "Peito",
+  "Costas",
+  "Pernas",
+  "Ombros",
+  "Bíceps",
+  "Tríceps",
+  "Abdômen",
+  "Glúteos",
+  "Antebraço",
+  "Panturrilha"
+];
+
+const diasSemana = [
+  "Segunda-feira",
+  "Terça-feira",
+  "Quarta-feira",
+  "Quinta-feira",
+  "Sexta-feira",
+  "Sábado-feira",
+  "Domingo-feira",
+  "Segunda e Quinta-feira",
+  "Terça e Sexta-feira",
+  "Quarta e Sábado-feira"
+];
 
 const VisualizarFichaTreino: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +48,9 @@ const VisualizarFichaTreino: React.FC = () => {
   const [ficha, setFicha] = useState<FichaTreino | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editableExercicios, setEditableExercicios] = useState<CargaExercicio[]>([]);
 
   useEffect(() => {
     const fetchAlunoEGerarFicha = async () => {
@@ -29,6 +61,7 @@ const VisualizarFichaTreino: React.FC = () => {
         const aluno = await buscarAlunoPorId(id);
         const fichaTreino = gerarFichaTreino(aluno);
         setFicha(fichaTreino);
+        setEditableExercicios([...fichaTreino.exercicios]);
       } catch (error) {
         console.error("Erro ao buscar dados do aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
@@ -51,6 +84,38 @@ const VisualizarFichaTreino: React.FC = () => {
     } catch (error) {
       console.error("Erro ao gerar PDF da ficha de treino:", error);
       toast.error("Erro ao gerar PDF da ficha de treino.");
+    }
+  };
+
+  const handleExercicioChange = (index: number, field: keyof CargaExercicio, value: string | number) => {
+    const updatedExercicios = [...editableExercicios];
+    updatedExercicios[index] = {
+      ...updatedExercicios[index],
+      [field]: value
+    };
+    setEditableExercicios(updatedExercicios);
+  };
+
+  const salvarFichaTreino = async () => {
+    if (!id || !ficha) return;
+    
+    try {
+      setSaving(true);
+      await criarOuAtualizarFichaTreino(id, editableExercicios);
+      
+      // Update the ficha with edited exercises
+      setFicha({
+        ...ficha,
+        exercicios: editableExercicios
+      });
+      
+      setEditMode(false);
+      toast.success("Ficha de treino atualizada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar ficha de treino:", error);
+      toast.error("Erro ao atualizar ficha de treino.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -85,6 +150,14 @@ const VisualizarFichaTreino: React.FC = () => {
     grupos[exercicio.grupoMuscular].push(exercicio);
     return grupos;
   }, {}) || {};
+
+  const editableExerciciosPorGrupo = editableExercicios.reduce<Record<string, CargaExercicio[]>>((grupos, exercicio) => {
+    if (!grupos[exercicio.grupoMuscular]) {
+      grupos[exercicio.grupoMuscular] = [];
+    }
+    grupos[exercicio.grupoMuscular].push(exercicio);
+    return grupos;
+  }, {});
 
   if (loading) {
     return (
@@ -125,13 +198,49 @@ const VisualizarFichaTreino: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             <span>Voltar</span>
           </button>
-          <button
-            onClick={handleDownloadPDF}
-            className="flex items-center gap-1 px-3 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            <span>Baixar PDF</span>
-          </button>
+          {!editMode && (
+            <>
+              <button
+                onClick={() => setEditMode(true)}
+                className="flex items-center gap-1 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                <Edit className="h-4 w-4" />
+                <span>Editar</span>
+              </button>
+              <button
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-1 px-3 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                <span>Baixar PDF</span>
+              </button>
+            </>
+          )}
+          {editMode && (
+            <>
+              <button
+                onClick={() => setEditMode(false)}
+                className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <X className="h-4 w-4" />
+                <span>Cancelar</span>
+              </button>
+              <button
+                onClick={salvarFichaTreino}
+                disabled={saving}
+                className="flex items-center gap-1 px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+              >
+                {saving ? (
+                  <LoadingSpinner size="small" />
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Salvar</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -196,51 +305,141 @@ const VisualizarFichaTreino: React.FC = () => {
         <div className="p-6">
           <h3 className="text-lg font-bold mb-4 text-gray-800">Treinos Recomendados</h3>
           
-          {Object.entries(exerciciosPorGrupo).map(([grupo, exercicios]) => (
-            <div key={grupo} className="mb-6">
-              <h4 className="bg-fitness-primary/10 text-fitness-primary font-semibold p-2 rounded-md mb-2">{grupo}</h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercício</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dia do Treino</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carga (kg)</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Séries</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repetições</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estratégia</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vídeo</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {exercicios.map((exercicio, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">{exercicio.nomeExercicio}</td>
-                        <td className="px-4 py-3">{exercicio.diaTreino || "-"}</td>
-                        <td className="px-4 py-3">{exercicio.cargaIdeal}</td>
-                        <td className="px-4 py-3">{exercicio.series}</td>
-                        <td className="px-4 py-3">{exercicio.repeticoes}</td>
-                        <td className="px-4 py-3">{exercicio.estrategia || "-"}</td>
-                        <td className="px-4 py-3">
-                          {exercicio.videoUrl ? (
-                            <button
-                              onClick={() => setActiveVideoUrl(exercicio.videoUrl || null)}
-                              className="text-fitness-primary hover:text-fitness-primary/80 flex items-center"
-                            >
-                              <Youtube className="h-4 w-4 mr-1" />
-                              Ver vídeo
-                            </button>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {editMode ? (
+            // Modo de edição
+            Object.entries(editableExerciciosPorGrupo).map(([grupo, exercicios]) => (
+              <div key={grupo} className="mb-6">
+                <h4 className="bg-fitness-primary/10 text-fitness-primary font-semibold p-2 rounded-md mb-2">{grupo}</h4>
+                <div className="space-y-4">
+                  {exercicios.map((exercicio, index) => {
+                    const globalIndex = editableExercicios.findIndex(ex => 
+                      ex.nomeExercicio === exercicio.nomeExercicio && 
+                      ex.grupoMuscular === exercicio.grupoMuscular
+                    );
+                    return (
+                      <div key={index} className="bg-gray-50 p-4 rounded-md">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                          <FormInput
+                            id={`exercicio-${index}-nome`}
+                            label="Nome do Exercício"
+                            value={exercicio.nomeExercicio}
+                            onChange={(e) => handleExercicioChange(globalIndex, "nomeExercicio", e.target.value)}
+                            required
+                          />
+                          
+                          <FormSelect
+                            id={`exercicio-${index}-grupo`}
+                            label="Grupo Muscular"
+                            value={exercicio.grupoMuscular}
+                            onChange={(e) => handleExercicioChange(globalIndex, "grupoMuscular", e.target.value)}
+                            options={gruposMusculares.map(grupo => ({ value: grupo, label: grupo }))}
+                            required
+                          />
+                          
+                          <FormSelect
+                            id={`exercicio-${index}-dia`}
+                            label="Dia do Treino"
+                            value={exercicio.diaTreino || ""}
+                            onChange={(e) => handleExercicioChange(globalIndex, "diaTreino", e.target.value)}
+                            options={diasSemana.map(dia => ({ value: dia, label: dia }))}
+                            required
+                          />
+                          
+                          <FormInput
+                            id={`exercicio-${index}-carga`}
+                            label="Carga (kg)"
+                            type="number"
+                            value={exercicio.cargaIdeal.toString()}
+                            onChange={(e) => handleExercicioChange(globalIndex, "cargaIdeal", Number(e.target.value))}
+                            required
+                          />
+                          
+                          <FormInput
+                            id={`exercicio-${index}-series`}
+                            label="Séries"
+                            type="number"
+                            value={exercicio.series.toString()}
+                            onChange={(e) => handleExercicioChange(globalIndex, "series", Number(e.target.value))}
+                            required
+                          />
+                          
+                          <FormInput
+                            id={`exercicio-${index}-repeticoes`}
+                            label="Repetições"
+                            type="number"
+                            value={exercicio.repeticoes.toString()}
+                            onChange={(e) => handleExercicioChange(globalIndex, "repeticoes", Number(e.target.value))}
+                            required
+                          />
+                          
+                          <FormInput
+                            id={`exercicio-${index}-estrategia`}
+                            label="Estratégia/Técnica"
+                            value={exercicio.estrategia || ""}
+                            onChange={(e) => handleExercicioChange(globalIndex, "estrategia", e.target.value)}
+                          />
+                          
+                          <FormInput
+                            id={`exercicio-${index}-video`}
+                            label="Link do Vídeo (YouTube)"
+                            value={exercicio.videoUrl || ""}
+                            onChange={(e) => handleExercicioChange(globalIndex, "videoUrl", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            // Modo de visualização
+            Object.entries(exerciciosPorGrupo).map(([grupo, exercicios]) => (
+              <div key={grupo} className="mb-6">
+                <h4 className="bg-fitness-primary/10 text-fitness-primary font-semibold p-2 rounded-md mb-2">{grupo}</h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Exercício</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dia do Treino</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carga (kg)</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Séries</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repetições</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estratégia</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vídeo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {exercicios.map((exercicio, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">{exercicio.nomeExercicio}</td>
+                          <td className="px-4 py-3">{exercicio.diaTreino || "-"}</td>
+                          <td className="px-4 py-3">{exercicio.cargaIdeal}</td>
+                          <td className="px-4 py-3">{exercicio.series}</td>
+                          <td className="px-4 py-3">{exercicio.repeticoes}</td>
+                          <td className="px-4 py-3">{exercicio.estrategia || "-"}</td>
+                          <td className="px-4 py-3">
+                            {exercicio.videoUrl ? (
+                              <button
+                                onClick={() => setActiveVideoUrl(exercicio.videoUrl || null)}
+                                className="text-fitness-primary hover:text-fitness-primary/80 flex items-center"
+                              >
+                                <Youtube className="h-4 w-4 mr-1" />
+                                Ver vídeo
+                              </button>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
