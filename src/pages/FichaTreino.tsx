@@ -1,12 +1,14 @@
-
 import React from 'react';
-import { CalendarDays, Clock4, User, Youtube } from 'lucide-react';
+import { CalendarDays, Clock4, Download, User, Youtube } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { downloadPDF, gerarPDFFichaTreino } from '@/services/pdfService';
+import { toast } from 'sonner';
 
 const FichaTreino: React.FC = () => {
   // Mock data for demonstration
@@ -62,23 +64,69 @@ const FichaTreino: React.FC = () => {
     return acc;
   }, {} as Record<string, typeof treino.exercicios>);
 
+  const handleDownloadPDF = () => {
+    try {
+      const ficha = {
+        aluno: {
+          nome: aluno.nome,
+          idade: aluno.idade,
+          peso: 70, // Valores mockados para exemplo
+          altura: 170,
+          imc: 24.2,
+          percentualGordura: 15,
+          experiencia: "intermediario"
+        },
+        dataAvaliacao: new Date(),
+        exercicios: treino.exercicios.map(ex => ({
+          nomeExercicio: ex.nome,
+          grupoMuscular: "Grupo", // Mockado para exemplo
+          series: ex.series,
+          repeticoes: Number(ex.repeticoes.split('-')[0]),
+          cargaIdeal: 20, // Mockado para exemplo
+          diaTreino: ex.diaTreino,
+          estrategia: ex.estrategia || "",
+          videoUrl: ex.videoUrl || ""
+        }))
+      };
+
+      const doc = gerarPDFFichaTreino(ficha);
+      downloadPDF(doc, `ficha-treino-${aluno.nome.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+      toast.success('PDF da ficha de treino baixado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      toast.error('Erro ao gerar o PDF da ficha de treino');
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-2">Ficha de Treino</h1>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex items-center gap-1 text-gray-600">
-            <User className="h-5 w-5" />
-            <span>{aluno.nome}</span>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Ficha de Treino</h1>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-1 text-gray-600">
+                <User className="h-5 w-5" />
+                <span>{aluno.nome}</span>
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <CalendarDays className="h-5 w-5" />
+                <span>{aluno.idade} anos</span>
+              </div>
+              <div className="flex items-center gap-1 text-gray-600">
+                <Clock4 className="h-5 w-5" />
+                <span>Objetivo: {aluno.objetivo}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-gray-600">
-            <CalendarDays className="h-5 w-5" />
-            <span>{aluno.idade} anos</span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-600">
-            <Clock4 className="h-5 w-5" />
-            <span>Objetivo: {aluno.objetivo}</span>
-          </div>
+          <Button
+            onClick={handleDownloadPDF}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Baixar PDF
+          </Button>
         </div>
       </div>
 
