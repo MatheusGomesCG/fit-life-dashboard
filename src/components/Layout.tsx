@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { 
   LogOut, 
   User, 
@@ -15,7 +16,7 @@ import {
   Calendar 
 } from "lucide-react";
 
-const Layout: React.FC = () => {
+const LayoutContent: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -112,6 +113,14 @@ const Layout: React.FC = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const Layout: React.FC = () => {
+  return (
+    <AuthProvider>
+      <LayoutContent />
+    </AuthProvider>
   );
 };
 
