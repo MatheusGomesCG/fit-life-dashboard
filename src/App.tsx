@@ -1,5 +1,4 @@
 
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -22,9 +21,9 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import MeusTreinos from "./pages/MeusTreinos";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
-import AuthContextWrapper from "./contexts/AuthContextWrapper";
 
-const router = createBrowserRouter([
+// Export the router configuration for use in AuthContextWrapper
+export const routes = [
   {
     path: "/",
     element: <Layout />,
@@ -111,12 +110,11 @@ const router = createBrowserRouter([
     path: "*",
     element: <NotFound />
   }
-]);
+];
 
 function App() {
   return (
     <>
-      <RouterProvider router={router} />
       <Toaster position="top-right" />
     </>
   );
