@@ -1,3 +1,4 @@
+
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import Layout from "./components/Layout";
@@ -114,7 +115,10 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+      <Toaster position="top-right" />
+    </AuthProvider>
   );
 }
 
