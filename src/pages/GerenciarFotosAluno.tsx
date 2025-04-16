@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Save } from "lucide-react";
-import { buscarAlunoPorId, Aluno, atualizarAluno, FotoAluno } from "@/services/alunosService";
-import AlunoFotos from "@/components/AlunoFotos";
+import { ArrowLeft } from "lucide-react";
+import { buscarAlunoPorId, Aluno, FotoAluno } from "@/services/alunosService";
+import AlunoFotosTracking from "@/components/AlunoFotosTracking";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const GerenciarFotosAluno: React.FC = () => {
@@ -37,7 +37,6 @@ const GerenciarFotosAluno: React.FC = () => {
 
   const handleUpdateFotos = (fotosAtualizadas: FotoAluno[]) => {
     setFotos(fotosAtualizadas);
-    
     // No need to call atualizarAluno here, since adicionarFotoAluno and removerFotoAluno
     // already update the aluno record directly
   };
@@ -75,7 +74,7 @@ const GerenciarFotosAluno: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Fotos</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Acompanhamento Fotográfico</h1>
           <p className="text-gray-600 mt-1">
             {aluno.nome}
           </p>
@@ -104,7 +103,7 @@ const GerenciarFotosAluno: React.FC = () => {
 
         <hr className="my-6" />
 
-        <AlunoFotos 
+        <AlunoFotosTracking 
           alunoId={aluno.id!} 
           fotos={fotos} 
           onUpdate={handleUpdateFotos} 
