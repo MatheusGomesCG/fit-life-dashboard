@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import FormInput from "@/components/FormInput";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -22,7 +22,6 @@ interface FormErrors {
 }
 
 const CadastrarProfessor: React.FC = () => {
-  const navigate = useNavigate();
   const { register } = useAuth();
   const [form, setForm] = useState<FormData>({
     nome: "",
@@ -91,8 +90,10 @@ const CadastrarProfessor: React.FC = () => {
       });
       
       toast.success("Professor cadastrado com sucesso!");
-      // Aguardamos um breve momento antes de navegar para evitar problemas de rendering
-      setTimeout(() => navigate("/dashboard-professor"), 100);
+      // After successful registration, redirect
+      setTimeout(() => {
+        window.location.href = "/dashboard-professor";
+      }, 100);
     } catch (error) {
       console.error("Erro ao cadastrar professor:", error);
       toast.error("Erro ao cadastrar professor. Por favor, tente novamente.");

@@ -1,6 +1,5 @@
 
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import axios from "axios";
 
@@ -47,9 +46,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const location = useLocation();
-
+  
+  // Remove direct useNavigate and useLocation calls here
+  // We'll use window.location for navigation instead
+  
   // Carregar token do localStorage na inicialização
   useEffect(() => {
     const storedToken = localStorage.getItem("fitnessToken");
@@ -149,13 +149,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       toast.success("Login realizado com sucesso!");
       
-      // Usar setTimeout para evitar erros de renderização
+      // Use window.location instead of navigate
       setTimeout(() => {
-        if (userData.tipo === "professor") {
-          navigate("/dashboard-professor");
-        } else {
-          navigate("/dashboard");
-        }
+        const route = userData.tipo === "professor" ? "/dashboard-professor" : "/dashboard";
+        window.location.href = route;
       }, 100);
     } catch (error) {
       console.error("Erro no login:", error);
@@ -254,9 +251,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem("fitnessUser");
     setToken(null);
     setUser(null);
-    navigate("/");
+    
+    // Use window.location instead of navigate
+    window.location.href = "/";
     toast.info("Você saiu do sistema.");
-  }, [navigate]);
+  }, []);
 
   return (
     <AuthContext.Provider

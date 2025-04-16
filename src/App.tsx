@@ -1,4 +1,3 @@
-
 import { Toaster } from "sonner";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -113,11 +112,7 @@ export const routes = [
 ];
 
 function App() {
-  return (
-    <>
-      <Toaster position="top-right" />
-    </>
-  );
+  return <Toaster position="top-right" />;
 }
 
 export default App;

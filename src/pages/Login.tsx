@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Activity, LogIn, ArrowLeft } from "lucide-react";
@@ -11,7 +10,6 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   
   // Get user type from query string (?tipo=aluno or ?tipo=professor)
@@ -25,7 +23,6 @@ const Login: React.FC = () => {
     try {
       await login(email, password, userType as "aluno" | "professor");
       toast.success("Login realizado com sucesso!");
-      navigate("/");
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Credenciais inválidas. Por favor, tente novamente.");

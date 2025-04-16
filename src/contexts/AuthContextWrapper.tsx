@@ -12,7 +12,6 @@ const AuthContextWrapper: React.FC = () => {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
-      <App />
     </AuthProvider>
   );
 };
