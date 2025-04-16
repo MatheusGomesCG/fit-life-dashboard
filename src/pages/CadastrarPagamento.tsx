@@ -129,7 +129,7 @@ const CadastrarPagamento: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {isLoading ? (
-                  <SelectItem value="" disabled>Carregando...</SelectItem>
+                  <SelectItem value="loading">Carregando...</SelectItem>
                 ) : (
                   alunos.map((aluno) => (
                     <SelectItem key={aluno.id} value={aluno.id}>
