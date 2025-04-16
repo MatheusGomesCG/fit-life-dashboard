@@ -1,7 +1,6 @@
 
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -23,6 +22,7 @@ import NovoAgendamento from "./pages/NovoAgendamento";
 import MeusTreinos from "./pages/MeusTreinos";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+import AuthContextWrapper from "./contexts/AuthContextWrapper";
 
 const router = createBrowserRouter([
   {
@@ -115,10 +115,10 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <AuthProvider>
+    <>
       <RouterProvider router={router} />
       <Toaster position="top-right" />
-    </AuthProvider>
+    </>
   );
 }
 
