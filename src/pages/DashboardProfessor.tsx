@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock } from "lucide-react";
@@ -22,6 +21,7 @@ import {
   TabsContent 
 } from "@/components/ui/tabs";
 import PagamentosAnuais from "@/components/pagamentos/PagamentosAnuais";
+import AlunosMensais from "@/components/alunos/AlunosMensais";
 
 const DashboardProfessor: React.FC = () => {
   const { user } = useAuth();
@@ -31,7 +31,6 @@ const DashboardProfessor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   
-  // Count of total students 
   const [totalAlunos] = useState(15); // Mock value
   const [alunosAtivos] = useState(12); // Mock value
 
@@ -58,11 +57,9 @@ const DashboardProfessor: React.FC = () => {
     carregarDados();
   }, []);
 
-  // Calcular valores totais
   const totalRecebido = calcularTotalRecebido(pagamentos);
   const totalPendente = calcularTotalPendente(pagamentos);
 
-  // Filtrar pagamentos próximos ao vencimento (próximos 7 dias)
   const hoje = new Date();
   const proximosVencimentos = pagamentos
     .filter(p => p.status !== "pago")
@@ -89,10 +86,10 @@ const DashboardProfessor: React.FC = () => {
         <TabsList className="mb-6">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
           <TabsTrigger value="pagamentos-anuais">Pagamentos Anuais</TabsTrigger>
+          <TabsTrigger value="alunos-mensais">Alunos Mensais</TabsTrigger>
         </TabsList>
         
         <TabsContent value="resumo">
-          {/* Resumo de Alunos */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
@@ -117,7 +114,6 @@ const DashboardProfessor: React.FC = () => {
               </Link>
             </div>
           
-            {/* Resumo Financeiro */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-green-100 rounded-full">
@@ -141,7 +137,6 @@ const DashboardProfessor: React.FC = () => {
             </div>
           </div>
 
-          {/* Pagamentos Pendentes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
@@ -165,7 +160,6 @@ const DashboardProfessor: React.FC = () => {
               </Link>
             </div>
             
-            {/* Novas avaliações esta semana */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
                 <div className="p-3 bg-purple-100 rounded-full">
@@ -187,7 +181,6 @@ const DashboardProfessor: React.FC = () => {
             </div>
           </div>
 
-          {/* Acesso rápido */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Link
               to="/gerenciar-alunos"
@@ -247,7 +240,6 @@ const DashboardProfessor: React.FC = () => {
             </Link>
           </div>
 
-          {/* Próximos agendamentos */}
           <div className="mt-8 bg-white border border-gray-200 rounded-lg p-6">
             <h2 className="text-xl font-bold mb-4">Próximos Agendamentos</h2>
             
@@ -299,6 +291,13 @@ const DashboardProfessor: React.FC = () => {
             isLoading={isLoading} 
             anoSelecionado={anoSelecionado} 
             setAnoSelecionado={setAnoSelecionado}
+          />
+        </TabsContent>
+
+        <TabsContent value="alunos-mensais">
+          <AlunosMensais 
+            alunosAtivos={alunosAtivos}
+            anoSelecionado={anoSelecionado}
           />
         </TabsContent>
       </Tabs>
