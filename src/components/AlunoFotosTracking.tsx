@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -105,11 +104,11 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
       // Create a date for the current month view
       const photoDate = new Date(activeYear, activeMonth, 15); // middle of the month
 
-      // Add the photo to the student's record
+      // Add the photo to the student's record - FIX: Removed the data property from this object
+      // and keep the photoDate separate to be used when we create the FotoAluno in the service
       const novaFoto = await adicionarFotoAluno(alunoId, {
         url: imageUrl,
-        descricao: `${monthNames[activeMonth]} ${activeYear}`,
-        data: photoDate.toISOString() // Use the current month view date
+        descricao: `${monthNames[activeMonth]} ${activeYear}`
       });
 
       // Update the local state
