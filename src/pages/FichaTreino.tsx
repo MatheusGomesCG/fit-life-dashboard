@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CalendarDays, Clock4, Download, User, Youtube } from 'lucide-react';
 import {
@@ -74,7 +75,18 @@ const FichaTreino: React.FC = () => {
           altura: 170,
           imc: 24.2,
           percentualGordura: 15,
-          experiencia: "intermediario"
+          experiencia: "intermediario",
+          // Adding the missing required properties
+          genero: "masculino", // Default value
+          dobrasCutaneas: {
+            triceps: 10,
+            subescapular: 12,
+            axilarMedia: 8,
+            peitoral: 7,
+            suprailiaca: 14,
+            abdominal: 18,
+            coxa: 15
+          }
         },
         dataAvaliacao: new Date(),
         exercicios: treino.exercicios.map(ex => ({
