@@ -75,9 +75,9 @@ const FichaTreino: React.FC = () => {
           altura: 170,
           imc: 24.2,
           percentualGordura: 15,
-          experiencia: "intermediario",
+          experiencia: "intermediario" as const, // Using a type assertion to ensure this matches the expected type
           // Adding the missing required properties
-          genero: "masculino", // Default value
+          genero: "masculino" as const, // Using a type assertion to ensure this is one of the allowed literal values
           dobrasCutaneas: {
             triceps: 10,
             subescapular: 12,
