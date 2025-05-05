@@ -88,7 +88,7 @@ const FichaTreino: React.FC = () => {
             coxa: 15
           }
         },
-        dataAvaliacao: new Date(),
+        dataAvaliacao: new Date().toISOString(), // Convert Date to ISO string format
         exercicios: treino.exercicios.map(ex => ({
           nomeExercicio: ex.nome,
           grupoMuscular: "Grupo", // Mockado para exemplo
