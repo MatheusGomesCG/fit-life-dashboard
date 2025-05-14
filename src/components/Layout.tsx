@@ -23,8 +23,8 @@ const Layout: React.FC = () => {
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
   
-  // Verificar se é a página inicial
-  const isHomePage = location.pathname === "/";
+  // Verificar se é a página inicial ou login
+  const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
 
   // Redirecionar para home apenas se não estiver autenticado e não estiver em rota pública
   useEffect(() => {
@@ -84,8 +84,8 @@ const Layout: React.FC = () => {
 
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
-        {/* Barra lateral - Esconder na página inicial */}
-        {!isHomePage && (
+        {/* Barra lateral - Esconder na página inicial e de login */}
+        {!shouldHideSidebar && (
           <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map((item) => {
@@ -111,8 +111,8 @@ const Layout: React.FC = () => {
           </aside>
         )}
 
-        {/* Conteúdo principal - Expandir para tela inteira na página inicial */}
-        <main className={`${isHomePage ? "flex-1" : "flex-1"} p-6`}>
+        {/* Conteúdo principal - Expandir para tela inteira em rotas públicas */}
+        <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>
