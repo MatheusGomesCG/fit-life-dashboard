@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { 
   listarAlunos,
   Aluno,
@@ -65,6 +65,10 @@ const GerenciarFichaTreino: React.FC = () => {
   };
 
   const navegarParaCadastrarFicha = (alunoId: string) => {
+    navigate(`/cadastrar-treino/${alunoId}`);
+  };
+  
+  const navegarParaEditarFicha = (alunoId: string) => {
     navigate(`/cadastrar-treino/${alunoId}`);
   };
 
@@ -135,14 +139,24 @@ const GerenciarFichaTreino: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       {fichasStatus[aluno.id] ? (
-                        <Button
-                          variant="ghost"
-                          onClick={() => navegarParaFicha(aluno.id)}
-                          className="flex gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        >
-                          <FileText className="h-4 w-4" />
-                          <span>Ver/Editar Ficha</span>
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            onClick={() => navegarParaFicha(aluno.id)}
+                            className="flex gap-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          >
+                            <FileText className="h-4 w-4" />
+                            <span>Ver Ficha</span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            onClick={() => navegarParaEditarFicha(aluno.id)}
+                            className="flex gap-1 text-green-600 hover:text-green-800 hover:bg-green-50"
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                            <span>Editar Ficha</span>
+                          </Button>
+                        </div>
                       ) : (
                         <Button
                           variant="ghost"
