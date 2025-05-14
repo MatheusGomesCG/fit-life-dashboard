@@ -58,83 +58,6 @@ export interface FichaTreino {
   exercicios: CargaExercicio[];
 }
 
-// Função para calcular o percentual de gordura usando a fórmula de Jackson e Pollock
-export const calcularPercentualGordura = (
-  dobrasCutaneas: Aluno["dobrasCutaneas"],
-  genero: "masculino" | "feminino" = "masculino",
-  idade: number
-): number => {
-  // Soma das 7 dobras
-  const somaDobras =
-    dobrasCutaneas.triceps +
-    dobrasCutaneas.subescapular +
-    dobrasCutaneas.axilarMedia +
-    dobrasCutaneas.peitoral +
-    dobrasCutaneas.suprailiaca +
-    dobrasCutaneas.abdominal +
-    dobrasCutaneas.coxa;
-
-  // Cálculo da densidade corporal
-  let densidadeCorporal;
-  
-  if (genero === "masculino") {
-    densidadeCorporal = 1.112 - (0.00043499 * somaDobras) + 
-      (0.00000055 * Math.pow(somaDobras, 2)) - (0.00028826 * idade);
-  } else {
-    densidadeCorporal = 1.097 - (0.00046971 * somaDobras) + 
-      (0.00000056 * Math.pow(somaDobras, 2)) - (0.00012828 * idade);
-  }
-  
-  // Cálculo do percentual de gordura usando a equação de Siri
-  const percentualGordura = (495 / densidadeCorporal) - 450;
-  
-  return Number(percentualGordura.toFixed(2));
-};
-
-// Função para calcular o IMC
-export const calcularIMC = (peso: number, altura: number): number => {
-  const alturaMetros = altura / 100; // Convertendo cm para metros
-  const imc = peso / Math.pow(alturaMetros, 2);
-  return Number(imc.toFixed(2));
-};
-
-// Função para calcular a carga ideal para exercícios
-export const calcularCargaIdeal = (
-  peso: number,
-  experiencia: Aluno["experiencia"],
-  exercicio: string
-): number => {
-  // Fatores de multiplicação baseados na experiência
-  const fatores = {
-    iniciante: 0.4,
-    intermediario: 0.6,
-    avancado: 0.8,
-  };
-  
-  // Ajustes específicos para diferentes exercícios
-  const ajustesExercicio: Record<string, number> = {
-    "Supino Reto": 1.0,
-    "Agachamento": 1.2,
-    "Levantamento Terra": 1.3,
-    "Desenvolvimento": 0.6,
-    "Rosca Direta": 0.3,
-    "Tríceps Pulley": 0.35,
-    "Puxada Alta": 0.7,
-    "Remada Baixa": 0.75,
-    "Leg Press": 2.0,
-    "Cadeira Extensora": 0.5,
-    "Cadeira Flexora": 0.45,
-    "Panturrilha": 1.0,
-    "Abdominal": 0.0,
-  };
-  
-  const fator = fatores[experiencia];
-  const ajuste = ajustesExercicio[exercicio] || 0.5;
-  
-  const cargaIdeal = peso * fator * ajuste;
-  return Math.round(cargaIdeal);
-};
-
 // Mock data for testing
 const mockAlunos: Aluno[] = [
   {
@@ -283,18 +206,82 @@ const mockAlunos: Aluno[] = [
   }
 ];
 
-// Dados fictícios para simulação de fichas de treino
-const mockFichasTreino: Record<string, FichaTreino> = {};
+// Função para calcular o percentual de gordura usando a fórmula de Jackson e Pollock
+export const calcularPercentualGordura = (
+  dobrasCutaneas: Aluno["dobrasCutaneas"],
+  genero: "masculino" | "feminino" = "masculino",
+  idade: number
+): number => {
+  // Soma das 7 dobras
+  const somaDobras =
+    dobrasCutaneas.triceps +
+    dobrasCutaneas.subescapular +
+    dobrasCutaneas.axilarMedia +
+    dobrasCutaneas.peitoral +
+    dobrasCutaneas.suprailiaca +
+    dobrasCutaneas.abdominal +
+    dobrasCutaneas.coxa;
 
-// Generate and add some mock training sheets
-mockAlunos.forEach(aluno => {
-  if (aluno.id) {
-    const shouldHaveFicha = Math.random() < 0.7; // 70% de chance de ter ficha
-    if (shouldHaveFicha) {
-      mockFichasTreino[aluno.id] = gerarFichaTreino(aluno);
-    }
+  // Cálculo da densidade corporal
+  let densidadeCorporal;
+  
+  if (genero === "masculino") {
+    densidadeCorporal = 1.112 - (0.00043499 * somaDobras) + 
+      (0.00000055 * Math.pow(somaDobras, 2)) - (0.00028826 * idade);
+  } else {
+    densidadeCorporal = 1.097 - (0.00046971 * somaDobras) + 
+      (0.00000056 * Math.pow(somaDobras, 2)) - (0.00012828 * idade);
   }
-});
+  
+  // Cálculo do percentual de gordura usando a equação de Siri
+  const percentualGordura = (495 / densidadeCorporal) - 450;
+  
+  return Number(percentualGordura.toFixed(2));
+};
+
+// Função para calcular o IMC
+export const calcularIMC = (peso: number, altura: number): number => {
+  const alturaMetros = altura / 100; // Convertendo cm para metros
+  const imc = peso / Math.pow(alturaMetros, 2);
+  return Number(imc.toFixed(2));
+};
+
+// Função para calcular a carga ideal para exercícios
+export const calcularCargaIdeal = (
+  peso: number,
+  experiencia: Aluno["experiencia"],
+  exercicio: string
+): number => {
+  // Fatores de multiplicação baseados na experiência
+  const fatores = {
+    iniciante: 0.4,
+    intermediario: 0.6,
+    avancado: 0.8,
+  };
+  
+  // Ajustes específicos para diferentes exercícios
+  const ajustesExercicio: Record<string, number> = {
+    "Supino Reto": 1.0,
+    "Agachamento": 1.2,
+    "Levantamento Terra": 1.3,
+    "Desenvolvimento": 0.6,
+    "Rosca Direta": 0.3,
+    "Tríceps Pulley": 0.35,
+    "Puxada Alta": 0.7,
+    "Remada Baixa": 0.75,
+    "Leg Press": 2.0,
+    "Cadeira Extensora": 0.5,
+    "Cadeira Flexora": 0.45,
+    "Panturrilha": 1.0,
+    "Abdominal": 0.0,
+  };
+  
+  const fator = fatores[experiencia];
+  const ajuste = ajustesExercicio[exercicio] || 0.5;
+  
+  const cargaIdeal = peso * fator * ajuste;
+  return Math.round(cargaIdeal);
+};
 
 // Função para gerar ficha de treino com base nas características do aluno
 export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
@@ -484,6 +471,19 @@ export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
     exercicios
   };
 };
+
+// Dados fictícios para simulação de fichas de treino
+const mockFichasTreino: Record<string, FichaTreino> = {};
+
+// Generate and add some mock training sheets
+mockAlunos.forEach(aluno => {
+  if (aluno.id) {
+    const shouldHaveFicha = Math.random() < 0.7; // 70% de chance de ter ficha
+    if (shouldHaveFicha) {
+      mockFichasTreino[aluno.id] = gerarFichaTreino(aluno);
+    }
+  }
+});
 
 // Add this function to check if an aluno has a ficha de treino
 export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
