@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
@@ -134,6 +135,154 @@ export const calcularCargaIdeal = (
   return Math.round(cargaIdeal);
 };
 
+// Mock data for testing
+const mockAlunos: Aluno[] = [
+  {
+    id: "aluno_01",
+    nome: "João Silva",
+    email: "joao.silva@example.com",
+    telefone: "123-456-7890",
+    idade: 25,
+    dataNascimento: "1997-01-01",
+    peso: 75.5,
+    altura: 178,
+    percentualGordura: 15.4,
+    imc: 23.8,
+    genero: "masculino",
+    experiencia: "intermediario",
+    dobrasCutaneas: {
+      triceps: 10,
+      subescapular: 12,
+      axilarMedia: 8,
+      peitoral: 7,
+      suprailiaca: 14,
+      abdominal: 18,
+      coxa: 15
+    },
+    dataCadastro: "2025-01-15",
+    valorMensalidade: 150.00,
+    dataVencimento: "2025-05-15",
+    fotos: [
+      {
+        id: "foto_1",
+        url: "https://placehold.co/400?text=Foto+1",
+        data: "2025-01-15",
+        descricao: "Foto frontal"
+      },
+      {
+        id: "foto_2",
+        url: "https://placehold.co/400?text=Foto+2",
+        data: "2025-01-15",
+        descricao: "Foto lateral"
+      }
+    ]
+  },
+  {
+    id: "aluno_02",
+    nome: "Maria Oliveira",
+    email: "maria.oliveira@example.com",
+    telefone: "987-654-3210",
+    idade: 30,
+    dataNascimento: "1995-02-01",
+    peso: 62.0,
+    altura: 165,
+    percentualGordura: 22.7,
+    imc: 22.8,
+    genero: "feminino",
+    experiencia: "iniciante",
+    dobrasCutaneas: {
+      triceps: 18,
+      subescapular: 15,
+      axilarMedia: 12,
+      peitoral: 10,
+      suprailiaca: 20,
+      abdominal: 22,
+      coxa: 24
+    },
+    dataCadastro: "2025-02-03",
+    valorMensalidade: 120.00,
+    dataVencimento: "2025-05-03"
+  },
+  {
+    id: "aluno_03",
+    nome: "Pedro Santos",
+    email: "pedro.santos@example.com",
+    telefone: "555-555-5555",
+    idade: 22,
+    dataNascimento: "1999-02-15",
+    peso: 82.3,
+    altura: 182,
+    percentualGordura: 12.8,
+    imc: 24.9,
+    genero: "masculino",
+    experiencia: "avancado",
+    dobrasCutaneas: {
+      triceps: 8,
+      subescapular: 10,
+      axilarMedia: 7,
+      peitoral: 6,
+      suprailiaca: 11,
+      abdominal: 14,
+      coxa: 12
+    },
+    dataCadastro: "2025-02-20",
+    valorMensalidade: 180.00,
+    dataVencimento: "2025-05-20"
+  },
+  {
+    id: "aluno_04",
+    nome: "Ana Costa",
+    email: "ana.costa@example.com",
+    telefone: "111-111-1111",
+    idade: 28,
+    dataNascimento: "1993-03-01",
+    peso: 58.5,
+    altura: 162,
+    percentualGordura: 24.3,
+    imc: 22.3,
+    genero: "feminino",
+    experiencia: "iniciante",
+    dobrasCutaneas: {
+      triceps: 19,
+      subescapular: 16,
+      axilarMedia: 13,
+      peitoral: 11,
+      suprailiaca: 21,
+      abdominal: 23,
+      coxa: 25
+    },
+    dataCadastro: "2025-03-05",
+    valorMensalidade: 110.00,
+    dataVencimento: "2025-05-05"
+  },
+  {
+    id: "aluno_05",
+    nome: "Lucas Ferreira",
+    email: "lucas.ferreira@example.com",
+    telefone: "222-222-2222",
+    idade: 35,
+    dataNascimento: "1990-03-15",
+    peso: 88.0,
+    altura: 185,
+    percentualGordura: 18.2,
+    imc: 25.7,
+    genero: "masculino",
+    experiencia: "intermediario",
+    dobrasCutaneas: {
+      triceps: 12,
+      subescapular: 14,
+      axilarMedia: 10,
+      peitoral: 9,
+      suprailiaca: 16,
+      abdominal: 20,
+      coxa: 17
+    },
+    dataCadastro: "2025-03-12",
+    valorMensalidade: 170.00,
+    dataVencimento: "2025-05-12"
+  }
+];
+
 // Dados fictícios para simulação de fichas de treino
 const mockFichasTreino: Record<string, FichaTreino> = {};
 
@@ -146,51 +295,6 @@ mockAlunos.forEach(aluno => {
     }
   }
 });
-
-// Add this function to check if an aluno has a ficha de treino
-export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
-  try {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // If the student ID exists in mockFichasTreino, return the data
-    if (mockFichasTreino[alunoId]) {
-      return mockFichasTreino[alunoId];
-    }
-    
-    // If no training sheet exists, return null
-    return null;
-  } catch (error) {
-    console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
-    return null;
-  }
-};
-
-// Function to create or update a training plan for a student
-export const criarOuAtualizarFichaTreino = async (
-  alunoId: string,
-  exercicios: CargaExercicio[]
-): Promise<FichaTreino> => {
-  try {
-    // Get the student data
-    const aluno = await buscarAlunoPorId(alunoId);
-    
-    const fichaTreino: FichaTreino = {
-      aluno,
-      dataAvaliacao: new Date().toISOString(),
-      exercicios
-    };
-    
-    // Store the training sheet in our mock data
-    mockFichasTreino[alunoId] = fichaTreino;
-    
-    // In a real implementation, save this to your backend
-    return fichaTreino;
-  } catch (error) {
-    console.error(`Erro ao criar ficha de treino para aluno ${alunoId}:`, error);
-    throw error;
-  }
-};
 
 // Função para gerar ficha de treino com base nas características do aluno
 export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
@@ -381,6 +485,51 @@ export const gerarFichaTreino = (aluno: Aluno): FichaTreino => {
   };
 };
 
+// Add this function to check if an aluno has a ficha de treino
+export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
+  try {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // If the student ID exists in mockFichasTreino, return the data
+    if (mockFichasTreino[alunoId]) {
+      return mockFichasTreino[alunoId];
+    }
+    
+    // If no training sheet exists, return null
+    return null;
+  } catch (error) {
+    console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
+    return null;
+  }
+};
+
+// Function to create or update a training plan for a student
+export const criarOuAtualizarFichaTreino = async (
+  alunoId: string,
+  exercicios: CargaExercicio[]
+): Promise<FichaTreino> => {
+  try {
+    // Get the student data
+    const aluno = await buscarAlunoPorId(alunoId);
+    
+    const fichaTreino: FichaTreino = {
+      aluno,
+      dataAvaliacao: new Date().toISOString(),
+      exercicios
+    };
+    
+    // Store the training sheet in our mock data
+    mockFichasTreino[alunoId] = fichaTreino;
+    
+    // In a real implementation, save this to your backend
+    return fichaTreino;
+  } catch (error) {
+    console.error(`Erro ao criar ficha de treino para aluno ${alunoId}:`, error);
+    throw error;
+  }
+};
+
 // Function to add student photo
 export const adicionarFotoAluno = async (
   alunoId: string,
@@ -437,154 +586,6 @@ export const removerFotoAluno = async (alunoId: string, fotoId: string): Promise
     throw error;
   }
 };
-
-// Mock data for testing
-const mockAlunos: Aluno[] = [
-  {
-    id: "aluno_01",
-    nome: "João Silva",
-    email: "joao.silva@example.com",
-    telefone: "123-456-7890",
-    idade: 25,
-    dataNascimento: "1997-01-01",
-    peso: 75.5,
-    altura: 178,
-    percentualGordura: 15.4,
-    imc: 23.8,
-    genero: "masculino",
-    experiencia: "intermediario",
-    dobrasCutaneas: {
-      triceps: 10,
-      subescapular: 12,
-      axilarMedia: 8,
-      peitoral: 7,
-      suprailiaca: 14,
-      abdominal: 18,
-      coxa: 15
-    },
-    dataCadastro: "2025-01-15",
-    valorMensalidade: 150.00,
-    dataVencimento: "2025-05-15",
-    fotos: [
-      {
-        id: "foto_1",
-        url: "https://placehold.co/400?text=Foto+1",
-        data: "2025-01-15",
-        descricao: "Foto frontal"
-      },
-      {
-        id: "foto_2",
-        url: "https://placehold.co/400?text=Foto+2",
-        data: "2025-01-15",
-        descricao: "Foto lateral"
-      }
-    ]
-  },
-  {
-    id: "aluno_02",
-    nome: "Maria Oliveira",
-    email: "maria.oliveira@example.com",
-    telefone: "987-654-3210",
-    idade: 30,
-    dataNascimento: "1995-02-01",
-    peso: 62.0,
-    altura: 165,
-    percentualGordura: 22.7,
-    imc: 22.8,
-    genero: "feminino",
-    experiencia: "iniciante",
-    dobrasCutaneas: {
-      triceps: 18,
-      subescapular: 15,
-      axilarMedia: 12,
-      peitoral: 10,
-      suprailiaca: 20,
-      abdominal: 22,
-      coxa: 24
-    },
-    dataCadastro: "2025-02-03",
-    valorMensalidade: 120.00,
-    dataVencimento: "2025-05-03"
-  },
-  {
-    id: "aluno_03",
-    nome: "Pedro Santos",
-    email: "pedro.santos@example.com",
-    telefone: "555-555-5555",
-    idade: 22,
-    dataNascimento: "1999-02-15",
-    peso: 82.3,
-    altura: 182,
-    percentualGordura: 12.8,
-    imc: 24.9,
-    genero: "masculino",
-    experiencia: "avancado",
-    dobrasCutaneas: {
-      triceps: 8,
-      subescapular: 10,
-      axilarMedia: 7,
-      peitoral: 6,
-      suprailiaca: 11,
-      abdominal: 14,
-      coxa: 12
-    },
-    dataCadastro: "2025-02-20",
-    valorMensalidade: 180.00,
-    dataVencimento: "2025-05-20"
-  },
-  {
-    id: "aluno_04",
-    nome: "Ana Costa",
-    email: "ana.costa@example.com",
-    telefone: "111-111-1111",
-    idade: 28,
-    dataNascimento: "1993-03-01",
-    peso: 58.5,
-    altura: 162,
-    percentualGordura: 24.3,
-    imc: 22.3,
-    genero: "feminino",
-    experiencia: "iniciante",
-    dobrasCutaneas: {
-      triceps: 19,
-      subescapular: 16,
-      axilarMedia: 13,
-      peitoral: 11,
-      suprailiaca: 21,
-      abdominal: 23,
-      coxa: 25
-    },
-    dataCadastro: "2025-03-05",
-    valorMensalidade: 110.00,
-    dataVencimento: "2025-05-05"
-  },
-  {
-    id: "aluno_05",
-    nome: "Lucas Ferreira",
-    email: "lucas.ferreira@example.com",
-    telefone: "222-222-2222",
-    idade: 35,
-    dataNascimento: "1990-03-15",
-    peso: 88.0,
-    altura: 185,
-    percentualGordura: 18.2,
-    imc: 25.7,
-    genero: "masculino",
-    experiencia: "intermediario",
-    dobrasCutaneas: {
-      triceps: 12,
-      subescapular: 14,
-      axilarMedia: 10,
-      peitoral: 9,
-      suprailiaca: 16,
-      abdominal: 20,
-      coxa: 17
-    },
-    dataCadastro: "2025-03-12",
-    valorMensalidade: 170.00,
-    dataVencimento: "2025-05-12"
-  }
-];
 
 // Serviço para listar todos os alunos
 export const listarAlunos = async (): Promise<Aluno[]> => {
