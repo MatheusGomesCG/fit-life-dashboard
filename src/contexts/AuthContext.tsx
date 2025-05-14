@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import axios from "axios";
@@ -105,9 +104,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const login = async (email: string, senha: string, tipo: "aluno" | "professor" = "professor") => {
+  const login = async (email: string, senha: string, tipo: "aluno" | "professor" = "aluno") => {
     try {
       setLoading(true);
+      
+      console.log("Login attempt with type:", tipo);
       
       // Mock login for professor account
       if (email === PROFESSOR_EMAIL && senha === PROFESSOR_PASSWORD) {

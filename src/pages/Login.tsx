@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,11 +17,17 @@ const Login: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
   
+  // Log to debug the userType
+  useEffect(() => {
+    console.log("Current userType:", userType);
+  }, [userType]);
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Pass the userType to login function
       await login(email, password, userType as "aluno" | "professor");
       toast.success("Login realizado com sucesso!");
     } catch (error) {
