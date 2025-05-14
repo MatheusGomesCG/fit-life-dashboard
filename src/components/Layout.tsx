@@ -22,6 +22,9 @@ const Layout: React.FC = () => {
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
+  
+  // Verificar se é a página inicial
+  const isHomePage = location.pathname === "/";
 
   // Redirecionar para home apenas se não estiver autenticado e não estiver em rota pública
   useEffect(() => {
@@ -81,33 +84,35 @@ const Layout: React.FC = () => {
 
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
-        {/* Barra lateral */}
-        <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
-          <nav className="space-y-1">
-            {menuItems.map((item) => {
-              const isActive = location.pathname === item.to || 
-                (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to)) ||
-                (item.to === "/gerenciar-fichas" && 
-                  (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
-              
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-2 p-3 rounded-md ${
-                    isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
-                  }`}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
-        </aside>
+        {/* Barra lateral - Esconder na página inicial */}
+        {!isHomePage && (
+          <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
+            <nav className="space-y-1">
+              {menuItems.map((item) => {
+                const isActive = location.pathname === item.to || 
+                  (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to)) ||
+                  (item.to === "/gerenciar-fichas" && 
+                    (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
+                
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`flex items-center gap-2 p-3 rounded-md ${
+                      isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"
+                    }`}
+                  >
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+        )}
 
-        {/* Conteúdo principal */}
-        <main className="flex-1 p-6">
+        {/* Conteúdo principal - Expandir para tela inteira na página inicial */}
+        <main className={`${isHomePage ? "flex-1" : "flex-1"} p-6`}>
           <Outlet />
         </main>
       </div>
