@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/use-toast";
 import { 
   listarAlunos,
   Aluno,
@@ -54,7 +54,11 @@ const GerenciarFichaTreino: React.FC = () => {
       setFichasStatus(statusFichas);
     } catch (error) {
       console.error("Erro ao carregar alunos:", error);
-      toast.error("Erro ao carregar lista de alunos.");
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar lista de alunos.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
