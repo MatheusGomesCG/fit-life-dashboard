@@ -7,7 +7,8 @@ import {
   buscarAlunoPorId,
   criarOuAtualizarFichaTreino,
   CargaExercicio,
-  Aluno
+  Aluno,
+  buscarFichaTreinoAluno
 } from "@/services/alunosService";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
@@ -50,9 +51,10 @@ const CadastrarTreino: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exercicios, setExercicios] = useState<ExercicioForm[]>([]);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   useEffect(() => {
-    const fetchAluno = async () => {
+    const fetchData = async () => {
       if (!id) return;
       
       try {
@@ -60,17 +62,33 @@ const CadastrarTreino: React.FC = () => {
         const alunoData = await buscarAlunoPorId(id);
         setAluno(alunoData);
         
-        // Initialize with one empty exercise
-        setExercicios([{
-          nomeExercicio: "",
-          grupoMuscular: "",
-          cargaIdeal: "0",
-          series: 3,
-          repeticoes: 12,
-          estrategia: "",
-          videoUrl: "",
-          diaTreino: ""
-        }]);
+        // Verificar se existe ficha de treino para carregar
+        const fichaTreino = await buscarFichaTreinoAluno(id);
+        
+        if (fichaTreino && fichaTreino.exercicios && fichaTreino.exercicios.length > 0) {
+          // Converter os exercícios para o formato do formulário
+          const exerciciosForm = fichaTreino.exercicios.map(ex => ({
+            ...ex,
+            cargaIdeal: ex.cargaIdeal.toString()
+          }));
+          
+          setExercicios(exerciciosForm);
+          setIsEditMode(true);
+          console.log("Exercícios carregados:", exerciciosForm);
+        } else {
+          // Inicializar com um exercício vazio
+          setExercicios([{
+            nomeExercicio: "",
+            grupoMuscular: "",
+            cargaIdeal: "0",
+            series: 3,
+            repeticoes: 12,
+            estrategia: "",
+            videoUrl: "",
+            diaTreino: ""
+          }]);
+          setIsEditMode(false);
+        }
       } catch (error) {
         console.error("Erro ao buscar dados do aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
@@ -80,7 +98,7 @@ const CadastrarTreino: React.FC = () => {
       }
     };
 
-    fetchAluno();
+    fetchData();
   }, [id, navigate]);
 
   const handleExercicioChange = (index: number, field: keyof ExercicioForm, value: string | number) => {
@@ -153,11 +171,11 @@ const CadastrarTreino: React.FC = () => {
       
       await criarOuAtualizarFichaTreino(id, exerciciosFormatted);
       
-      toast.success("Ficha de treino cadastrada com sucesso!");
+      toast.success(isEditMode ? "Ficha de treino atualizada com sucesso!" : "Ficha de treino cadastrada com sucesso!");
       navigate(`/ficha-treino/${id}`);
     } catch (error) {
-      console.error("Erro ao cadastrar ficha de treino:", error);
-      toast.error("Erro ao cadastrar ficha de treino. Tente novamente.");
+      console.error("Erro ao salvar ficha de treino:", error);
+      toast.error("Erro ao salvar ficha de treino. Tente novamente.");
     } finally {
       setSaving(false);
     }
@@ -196,9 +214,11 @@ const CadastrarTreino: React.FC = () => {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Treino</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isEditMode ? "Editar Ficha de Treino" : "Cadastrar Treino"}
+          </h1>
           <p className="text-gray-600 mt-1">
-            {aluno.nome} - {aluno.experiencia === "iniciante" ? "Iniciante" : aluno.experiencia === "intermediario" ? "Intermediário" : "Avançado"}
+            {aluno?.nome} - {aluno?.experiencia === "iniciante" ? "Iniciante" : aluno?.experiencia === "intermediario" ? "Intermediário" : "Avançado"}
           </p>
         </div>
       </div>

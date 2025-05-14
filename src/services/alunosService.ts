@@ -134,6 +134,38 @@ export const calcularCargaIdeal = (
   return Math.round(cargaIdeal);
 };
 
+// Dados fictícios para simulação de fichas de treino
+const mockFichasTreino: Record<string, FichaTreino> = {};
+
+// Generate and add some mock training sheets
+mockAlunos.forEach(aluno => {
+  if (aluno.id) {
+    const shouldHaveFicha = Math.random() < 0.7; // 70% de chance de ter ficha
+    if (shouldHaveFicha) {
+      mockFichasTreino[aluno.id] = gerarFichaTreino(aluno);
+    }
+  }
+});
+
+// Add this function to check if an aluno has a ficha de treino
+export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
+  try {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // If the student ID exists in mockFichasTreino, return the data
+    if (mockFichasTreino[alunoId]) {
+      return mockFichasTreino[alunoId];
+    }
+    
+    // If no training sheet exists, return null
+    return null;
+  } catch (error) {
+    console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
+    return null;
+  }
+};
+
 // Function to create or update a training plan for a student
 export const criarOuAtualizarFichaTreino = async (
   alunoId: string,
@@ -145,15 +177,14 @@ export const criarOuAtualizarFichaTreino = async (
     
     const fichaTreino: FichaTreino = {
       aluno,
-      dataAvaliacao: new Date().toISOString().split("T")[0],
-      exercicios: exercicios.map(exercicio => ({
-        ...exercicio,
-        cargaIdeal: exercicio.cargaIdeal || calcularCargaIdeal(aluno.peso, aluno.experiencia, exercicio.nomeExercicio)
-      }))
+      dataAvaliacao: new Date().toISOString(),
+      exercicios
     };
     
+    // Store the training sheet in our mock data
+    mockFichasTreino[alunoId] = fichaTreino;
+    
     // In a real implementation, save this to your backend
-    // For now, just return the generated plan
     return fichaTreino;
   } catch (error) {
     console.error(`Erro ao criar ficha de treino para aluno ${alunoId}:`, error);
@@ -650,33 +681,5 @@ export const excluirAluno = async (id: string): Promise<void> => {
   } catch (error) {
     console.error(`Erro ao excluir aluno com ID ${id}:`, error);
     throw error;
-  }
-};
-
-// Add this function to check if an aluno has a ficha de treino
-export const buscarFichaTreinoAluno = async (alunoId: string) => {
-  try {
-    // In a real API this would make a request to check if the student has a training sheet
-    // For now, we'll simulate with mock data
-    const mockFichas: Record<string, boolean> = {
-      "1": true,
-      "2": true,
-      "3": false,
-      "4": true,
-      "5": false,
-    };
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (mockFichas[alunoId] === undefined) {
-      // For any IDs not in our mock, randomly decide (30% chance of having a sheet)
-      return Math.random() < 0.3;
-    }
-    
-    return mockFichas[alunoId];
-  } catch (error) {
-    console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
-    return false;
   }
 };
