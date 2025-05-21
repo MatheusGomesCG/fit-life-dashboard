@@ -98,7 +98,7 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({
                 )}
               </TableCell>
               <TableCell>
-                {onEnviarComprovante && (pagamento.status !== "pago") && (
+                {onEnviarComprovante && pagamento.status !== "pago" && (
                   <Button 
                     variant="outline" 
                     size="sm"

@@ -160,7 +160,7 @@ export const enviarComprovantePagamento = async (pagamentoId: string, comprovant
     const pagamentoAtualizado = {
       ...pagamento,
       comprovante: comprovanteUrl,
-      status: "pendente" as "pendente" // Explicitly cast as the literal type
+      status: "pendente" as "pendente" // Usando type assertion para corrigir o erro
     };
     
     // Atualiza o pagamento nos dados mock
