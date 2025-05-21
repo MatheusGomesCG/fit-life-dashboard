@@ -87,6 +87,7 @@ const Agendamento: React.FC = () => {
           alunoId: user.id,
           data: dataFormatada,
           horario,
+          hora: horario, // Add this line to fix the error
           tipo,
           descricao,
           status: "pendente"

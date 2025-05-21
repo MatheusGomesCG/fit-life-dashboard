@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -13,7 +12,7 @@ import {
 } from "lucide-react";
 import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 
 const MeusPagamentos: React.FC = () => {
   const { user } = useAuth();
@@ -157,13 +156,13 @@ const MeusPagamentos: React.FC = () => {
                         <span className="bg-blue-100 p-2 rounded-full text-blue-700 mr-3">
                           <Receipt className="h-4 w-4" />
                         </span>
-                        <span>{pagamento.descricao}</span>
+                        <span>{pagamento.descricao || "Mensalidade"}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-col">
                         <span className="text-xs text-gray-500">Vencimento</span>
-                        <span>{format(new Date(pagamento.dataVencimento), "dd/MM/yyyy")}</span>
+                        <span>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right font-medium">

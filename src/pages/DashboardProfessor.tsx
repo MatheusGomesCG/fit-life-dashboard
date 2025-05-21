@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock } from "lucide-react";
@@ -13,7 +14,7 @@ import {
   listarAgendamentosSemana,
   Agendamento
 } from "@/services/agendamentosService";
-import { format } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
 import { 
   Tabs, 
   TabsList, 
