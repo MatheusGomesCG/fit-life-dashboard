@@ -15,6 +15,7 @@ export interface Pagamento {
   ano: number;
   observacao?: string;
   metodoPagamento?: string;
+  descricao?: string; // Added the missing property
 }
 
 export const listarPagamentos = async (): Promise<Pagamento[]> => {
@@ -148,7 +149,8 @@ const dadosMock: Pagamento[] = [
     mes: 4,
     ano: 2025,
     observacao: "Pagamento antecipado",
-    metodoPagamento: "Cartão de crédito"
+    metodoPagamento: "Cartão de crédito",
+    descricao: "Mensalidade Abril 2025"
   },
   {
     id: "pag_2",
@@ -159,7 +161,8 @@ const dadosMock: Pagamento[] = [
     status: "pendente",
     mes: 4,
     ano: 2025,
-    metodoPagamento: "Boleto bancário"
+    metodoPagamento: "Boleto bancário",
+    descricao: "Mensalidade Abril 2025"
   },
   {
     id: "pag_3",
@@ -170,7 +173,8 @@ const dadosMock: Pagamento[] = [
     status: "atrasado",
     mes: 3,
     ano: 2025,
-    metodoPagamento: "Pix"
+    metodoPagamento: "Pix",
+    descricao: "Mensalidade Março 2025"
   },
   {
     id: "pag_4",
@@ -182,7 +186,8 @@ const dadosMock: Pagamento[] = [
     status: "pago",
     mes: 4,
     ano: 2025,
-    metodoPagamento: "Transferência bancária"
+    metodoPagamento: "Transferência bancária",
+    descricao: "Mensalidade Abril 2025"
   },
   {
     id: "pag_5",
@@ -193,6 +198,7 @@ const dadosMock: Pagamento[] = [
     status: "pendente",
     mes: 4,
     ano: 2025,
-    metodoPagamento: "Dinheiro"
+    metodoPagamento: "Dinheiro",
+    descricao: "Mensalidade Abril 2025"
   }
 ];
