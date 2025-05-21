@@ -1,3 +1,4 @@
+
 import { Toaster } from "sonner";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
@@ -18,6 +19,10 @@ import EditarPagamento from "./pages/EditarPagamento";
 import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
 import NovoAgendamento from "./pages/NovoAgendamento";
 import MeusTreinos from "./pages/MeusTreinos";
+import MinhasMedidas from "./pages/MinhasMedidas";
+import MeusPagamentos from "./pages/MeusPagamentos";
+import Agendamento from "./pages/Agendamento";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
 
@@ -98,6 +103,22 @@ export const routes = [
       {
         path: "/meus-treinos",
         element: <MeusTreinos />
+      },
+      {
+        path: "/minhas-medidas",
+        element: <MinhasMedidas />
+      },
+      {
+        path: "/meus-pagamentos",
+        element: <MeusPagamentos />
+      },
+      {
+        path: "/agendamento",
+        element: <Agendamento />
+      },
+      {
+        path: "/chat",
+        element: <Chat />
       },
       {
         path: "/fotos-aluno/:id",

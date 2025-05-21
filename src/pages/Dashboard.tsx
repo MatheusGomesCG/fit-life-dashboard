@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Users, 
   FileText, 
@@ -16,16 +16,16 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
 import { format } from "date-fns";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
-      carregarPagamentos();
-    }
+    carregarPagamentos();
   }, [user]);
 
   const carregarPagamentos = async () => {
@@ -174,9 +174,8 @@ const Dashboard: React.FC = () => {
           </h2>
           
           {isLoading ? (
-            <div className="animate-pulse space-y-2">
-              <div className="h-6 bg-gray-100 rounded"></div>
-              <div className="h-6 bg-gray-100 rounded"></div>
+            <div className="flex justify-center py-6">
+              <LoadingSpinner size="small" />
             </div>
           ) : proximoPagamento ? (
             <>
@@ -217,6 +216,11 @@ const Dashboard: React.FC = () => {
                     </>
                   )}
                 </span>
+              </div>
+              <div className="text-center mt-4">
+                <Link to="/meus-pagamentos" className="text-fitness-primary hover:underline font-medium">
+                  Ver todos os pagamentos
+                </Link>
               </div>
             </>
           ) : (
