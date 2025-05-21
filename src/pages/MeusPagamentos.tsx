@@ -10,15 +10,20 @@ import {
   Calendar,
   Receipt
 } from "lucide-react";
-import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
+import { buscarPagamentosPorAluno, Pagamento, enviarComprovantePagamento } from "@/services/pagamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { format, parseISO } from "date-fns";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Upload } from "lucide-react";
 
 const MeusPagamentos: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [filtro, setFiltro] = useState<"todos" | "pendentes" | "pagos" | "atrasados">("todos");
+  const [selectedPagamentoId, setSelectedPagamentoId] = useState<string | null>(null);
 
   useEffect(() => {
     const carregarPagamentos = async () => {
@@ -146,6 +151,7 @@ const MeusPagamentos: React.FC = () => {
                   <th className="px-4 py-3 text-left font-medium text-gray-500">Data</th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500">Valor</th>
                   <th className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
+                  <th className="px-4 py-3 text-center font-medium text-gray-500">Comprovante</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -171,6 +177,33 @@ const MeusPagamentos: React.FC = () => {
                     <td className="px-4 py-3 text-center">
                       {statusBadge(pagamento.status)}
                     </td>
+                    {pagamento.status !== "pago" && (
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => setSelectedPagamentoId(pagamento.id)}
+                          className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
+                        >
+                          <span>Enviar comprovante</span>
+                        </button>
+                      </td>
+                    )}
+                    {pagamento.status === "pago" && pagamento.comprovante && (
+                      <td className="px-4 py-3">
+                        <a
+                          href={pagamento.comprovante}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-600 hover:text-green-800 font-medium text-sm flex items-center gap-1"
+                        >
+                          <span>Ver comprovante</span>
+                        </a>
+                      </td>
+                    )}
+                    {pagamento.status === "pago" && !pagamento.comprovante && (
+                      <td className="px-4 py-3">
+                        <span className="text-gray-400 text-sm">Não necessário</span>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -220,7 +253,112 @@ const MeusPagamentos: React.FC = () => {
           </div>
         </div>
       </div>
+      {selectedPagamentoId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Enviar Comprovante de Pagamento</h3>
+            <EnviarComprovante 
+              pagamentoId={selectedPagamentoId}
+              onSuccess={() => {
+                setSelectedPagamentoId(null);
+                carregarPagamentos();
+              }}
+            />
+            <Button 
+              variant="outline" 
+              onClick={() => setSelectedPagamentoId(null)}
+              className="mt-4 w-full"
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
+  );
+};
+
+interface EnviarComprovanteProps {
+  pagamentoId: string;
+  onSuccess?: () => void;
+}
+
+const EnviarComprovante: React.FC<EnviarComprovanteProps> = ({ pagamentoId, onSuccess }) => {
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      if (!file.type.match('image.*') && !file.type.match('application/pdf')) {
+        toast.error("Por favor, selecione uma imagem ou um arquivo PDF.");
+        return;
+      }
+      
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("O arquivo é muito grande. O tamanho máximo permitido é 5MB.");
+        return;
+      }
+      
+      setArquivo(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!arquivo) {
+      toast.error("Por favor, selecione um arquivo para enviar.");
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      await enviarComprovantePagamento(pagamentoId, arquivo);
+      toast.success("Comprovante enviado com sucesso!");
+      
+      setArquivo(null);
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Erro ao enviar comprovante:", error);
+      toast.error("Erro ao enviar o comprovante. Por favor, tente novamente.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="comprovante">Anexar Comprovante</Label>
+        <div className="mt-1 flex items-center">
+          <label 
+            htmlFor="comprovante" 
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+          >
+            <Upload className="h-4 w-4 text-gray-600" />
+            <span>{arquivo ? arquivo.name : "Selecionar arquivo"}</span>
+          </label>
+          <Input
+            id="comprovante"
+            type="file"
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,application/pdf"
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Formatos aceitos: imagens (JPG, PNG) e PDF. Tamanho máximo: 5MB.
+        </p>
+      </div>
+      <Button type="submit" disabled={!arquivo || isUploading} className="w-full">
+        {isUploading ? "Enviando..." : "Enviar Comprovante"}
+      </Button>
+    </form>
   );
 };
 

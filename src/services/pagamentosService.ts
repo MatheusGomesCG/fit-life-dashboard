@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da API
@@ -15,7 +14,8 @@ export interface Pagamento {
   ano: number;
   observacao?: string;
   metodoPagamento?: string;
-  descricao?: string; // Added the missing property
+  descricao?: string;
+  comprovante?: string; // URL para o comprovante de pagamento
 }
 
 export const listarPagamentos = async (): Promise<Pagamento[]> => {
@@ -133,6 +133,42 @@ export const buscarPagamentosPorAluno = async (alunoId: string): Promise<Pagamen
     console.error(`Erro ao buscar pagamentos do aluno ${alunoId}:`, error);
     // Para desenvolvimento, retornamos dados mockados filtrados
     return dadosMock.filter(p => p.alunoId === alunoId);
+  }
+};
+
+// Nova função para enviar comprovante de pagamento
+export const enviarComprovantePagamento = async (pagamentoId: string, comprovante: File): Promise<Pagamento> => {
+  try {
+    // Em um ambiente real, enviaríamos o arquivo para um servidor
+    // Simulando upload para desenvolvimento
+    const formData = new FormData();
+    formData.append('comprovante', comprovante);
+    
+    const response = await axios.post(`${API_URL}/pagamentos/${pagamentoId}/comprovante`, formData);
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao enviar comprovante:", error);
+    
+    // Para desenvolvimento, simulamos o retorno
+    const pagamento = dadosMock.find(p => p.id === pagamentoId);
+    if (!pagamento) throw new Error("Pagamento não encontrado");
+    
+    // Simulando URL para o comprovante
+    const comprovanteUrl = `comprovante_${Date.now()}.jpg`;
+    
+    const pagamentoAtualizado = {
+      ...pagamento,
+      comprovante: comprovanteUrl,
+      status: "pendente" // Status muda para pendente até confirmação
+    };
+    
+    // Atualiza o pagamento nos dados mock
+    const index = dadosMock.findIndex(p => p.id === pagamentoId);
+    if (index !== -1) {
+      dadosMock[index] = pagamentoAtualizado;
+    }
+    
+    return pagamentoAtualizado;
   }
 };
 
