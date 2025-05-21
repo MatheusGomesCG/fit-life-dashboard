@@ -14,7 +14,8 @@ import {
 import { 
   Pagamento, 
   listarPagamentos, 
-  atualizarPagamento 
+  atualizarPagamento,
+  buscarPagamentosPorAluno 
 } from "@/services/pagamentosService";
 import { 
   CheckCircle, 
@@ -23,14 +24,21 @@ import {
   Search, 
   PlusCircle, 
   Edit, 
-  DollarSign 
+  DollarSign,
+  FileText,
+  History
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import HistoricoPagamentosAluno from "@/components/pagamentos/HistoricoPagamentosAluno";
 
 const GerenciarPagamentos: React.FC = () => {
   const navigate = useNavigate();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [filtro, setFiltro] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedAlunoId, setSelectedAlunoId] = useState<string | null>(null);
+  const [selectedAlunoNome, setSelectedAlunoNome] = useState<string>("");
+  const [historicoPagamentosDialogOpen, setHistoricoPagamentosDialogOpen] = useState(false);
 
   useEffect(() => {
     carregarPagamentos();
@@ -62,6 +70,12 @@ const GerenciarPagamentos: React.FC = () => {
       console.error("Erro ao registrar pagamento:", error);
       toast.error("Erro ao registrar pagamento.");
     }
+  };
+
+  const visualizarHistoricoPagamentosAluno = (alunoId: string, alunoNome: string) => {
+    setSelectedAlunoId(alunoId);
+    setSelectedAlunoNome(alunoNome);
+    setHistoricoPagamentosDialogOpen(true);
   };
 
   const getStatusIcon = (status: Pagamento["status"]) => {
@@ -130,13 +144,22 @@ const GerenciarPagamentos: React.FC = () => {
                   <TableHead>Status</TableHead>
                   <TableHead>Mês/Ano</TableHead>
                   <TableHead>Pagamento</TableHead>
+                  <TableHead>Comprovante</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {pagamentosFiltrados.map((pagamento) => (
                   <TableRow key={pagamento.id}>
-                    <TableCell className="font-medium">{pagamento.alunoNome}</TableCell>
+                    <TableCell className="font-medium">
+                      <button 
+                        onClick={() => visualizarHistoricoPagamentosAluno(pagamento.alunoId, pagamento.alunoNome)}
+                        className="text-left text-blue-600 hover:underline flex items-center gap-1"
+                      >
+                        {pagamento.alunoNome}
+                        <History className="h-4 w-4" />
+                      </button>
+                    </TableCell>
                     <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
                     <TableCell>
                       {format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}
@@ -168,6 +191,21 @@ const GerenciarPagamentos: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell>
+                      {pagamento.comprovante ? (
+                        <a 
+                          href={pagamento.comprovante} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span>Ver</span>
+                        </a>
+                      ) : (
+                        <span className="text-gray-400">Não enviado</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-2">
                         {pagamento.status !== "pago" && (
                           <button
@@ -194,6 +232,20 @@ const GerenciarPagamentos: React.FC = () => {
           </div>
         )}
       </div>
+
+      <Dialog 
+        open={historicoPagamentosDialogOpen} 
+        onOpenChange={setHistoricoPagamentosDialogOpen}
+      >
+        <DialogContent className="sm:max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Histórico de Pagamentos - {selectedAlunoNome}</DialogTitle>
+          </DialogHeader>
+          {selectedAlunoId && (
+            <HistoricoPagamentosAluno alunoId={selectedAlunoId} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

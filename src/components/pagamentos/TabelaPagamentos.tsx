@@ -2,43 +2,40 @@
 import React from "react";
 import { format, parseISO } from "date-fns";
 import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableHead, 
+  TableRow, 
+  TableCell 
+} from "@/components/ui/table";
+import { 
   CheckCircle, 
-  XCircle, 
   Clock, 
-  Receipt
+  AlertCircle, 
+  FileText,
+  Upload
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Pagamento } from "@/services/pagamentosService";
 
 interface TabelaPagamentosProps {
   pagamentos: Pagamento[];
-  onEnviarComprovante: (pagamentoId: string) => void;
+  onEnviarComprovante?: (pagamentoId: string) => void;
 }
 
-const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({ pagamentos, onEnviarComprovante }) => {
-  
-  const statusBadge = (status: string) => {
+const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({ 
+  pagamentos,
+  onEnviarComprovante
+}) => {
+  const getStatusIcon = (status: Pagamento["status"]) => {
     switch (status) {
       case "pago":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-800">
-            <CheckCircle className="h-3 w-3" />
-            Pago
-          </span>
-        );
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "pendente":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-xs font-semibold text-yellow-800">
-            <Clock className="h-3 w-3" />
-            Pendente
-          </span>
-        );
+        return <Clock className="h-5 w-5 text-amber-500" />;
       case "atrasado":
-        return (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-800">
-            <XCircle className="h-3 w-3" />
-            Atrasado
-          </span>
-        );
+        return <AlertCircle className="h-5 w-5 text-red-500" />;
       default:
         return null;
     }
@@ -46,78 +43,77 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({ pagamentos, onEnvia
 
   if (pagamentos.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        Nenhum pagamento encontrado com o filtro selecionado.
+      <div className="py-8 text-center text-gray-500">
+        Nenhum pagamento encontrado.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Descrição</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Data</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-500">Valor</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-500">Status</th>
-            <th className="px-4 py-3 text-center font-medium text-gray-500">Comprovante</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
+    <div className="overflow-x-auto mt-4">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+            <TableHead>Valor</TableHead>
+            <TableHead>Vencimento</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Comprovante</TableHead>
+            <TableHead>Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {pagamentos.map((pagamento) => (
-            <tr key={pagamento.id} className="hover:bg-gray-50">
-              <td className="px-4 py-3">
-                <div className="flex items-center">
-                  <span className="bg-blue-100 p-2 rounded-full text-blue-700 mr-3">
-                    <Receipt className="h-4 w-4" />
+            <TableRow key={pagamento.id}>
+              <TableCell>{pagamento.descricao || `Mensalidade ${pagamento.mes}/${pagamento.ano}`}</TableCell>
+              <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
+              <TableCell>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-1">
+                  {getStatusIcon(pagamento.status)}
+                  <span
+                    className={`capitalize ${
+                      pagamento.status === "pago" ? "text-green-600" : 
+                      pagamento.status === "pendente" ? "text-amber-600" : 
+                      "text-red-600"
+                    }`}
+                  >
+                    {pagamento.status}
                   </span>
-                  <span>{pagamento.descricao || "Mensalidade"}</span>
                 </div>
-              </td>
-              <td className="px-4 py-3">
-                <div className="flex flex-col">
-                  <span className="text-xs text-gray-500">Vencimento</span>
-                  <span>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</span>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-right font-medium">
-                R$ {pagamento.valor.toFixed(2)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {statusBadge(pagamento.status)}
-              </td>
-              {pagamento.status !== "pago" && (
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => onEnviarComprovante(pagamento.id!)}
-                    className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center gap-1"
-                  >
-                    <span>Enviar comprovante</span>
-                  </button>
-                </td>
-              )}
-              {pagamento.status === "pago" && pagamento.comprovante && (
-                <td className="px-4 py-3">
-                  <a
-                    href={pagamento.comprovante}
-                    target="_blank"
+              </TableCell>
+              <TableCell>
+                {pagamento.comprovante ? (
+                  <a 
+                    href={pagamento.comprovante} 
+                    target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-green-600 hover:text-green-800 font-medium text-sm flex items-center gap-1"
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
                   >
-                    <span>Ver comprovante</span>
+                    <FileText className="h-4 w-4" />
+                    <span>Ver</span>
                   </a>
-                </td>
-              )}
-              {pagamento.status === "pago" && !pagamento.comprovante && (
-                <td className="px-4 py-3">
-                  <span className="text-gray-400 text-sm">Não necessário</span>
-                </td>
-              )}
-            </tr>
+                ) : (
+                  <span className="text-gray-400">Não enviado</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {onEnviarComprovante && (pagamento.status !== "pago") && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="flex items-center gap-1"
+                    onClick={() => onEnviarComprovante(pagamento.id!)}
+                  >
+                    <Upload className="h-4 w-4" />
+                    <span>Enviar Comprovante</span>
+                  </Button>
+                )}
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
