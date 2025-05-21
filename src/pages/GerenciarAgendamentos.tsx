@@ -61,6 +61,8 @@ const GerenciarAgendamentos: React.FC = () => {
         return { label: "Concluído", color: "bg-green-100 text-green-800" };
       case "cancelado":
         return { label: "Cancelado", color: "bg-red-100 text-red-800" };
+      case "pendente":
+        return { label: "Pendente", color: "bg-amber-100 text-amber-800" };
       default:
         return { label: "Desconhecido", color: "bg-gray-100 text-gray-800" };
     }
@@ -173,7 +175,7 @@ const GerenciarAgendamentos: React.FC = () => {
                       </span>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      {agendamento.status === "agendado" && (
+                      {(agendamento.status === "agendado" || agendamento.status === "pendente") && (
                         <>
                           <button
                             title="Marcar como concluído"

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -80,6 +79,7 @@ const NovoAgendamento: React.FC = () => {
         alunoNome: alunoSelecionado.nome,
         tipo: formData.tipo as "avaliacao" | "consulta" | "outro",
         data: dataFormatada,
+        horario: formData.hora,
         hora: formData.hora,
         status: "agendado",
         observacoes: formData.observacoes
@@ -118,7 +118,7 @@ const NovoAgendamento: React.FC = () => {
                   id="alunoId"
                   name="alunoId"
                   value={formData.alunoId}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData(prev => ({ ...prev, alunoId: e.target.value }))}
                   className="pl-10 w-full border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-fitness-primary"
                   required
                 >
@@ -140,7 +140,7 @@ const NovoAgendamento: React.FC = () => {
                 id="tipo"
                 name="tipo"
                 value={formData.tipo}
-                onChange={handleChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value }))}
                 className="w-full border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-fitness-primary"
               >
                 <option value="avaliacao">Avaliação Física</option>
@@ -170,7 +170,7 @@ const NovoAgendamento: React.FC = () => {
                   id="hora"
                   name="hora"
                   value={formData.hora}
-                  onChange={handleChange}
+                  onChange={(e) => setFormData(prev => ({ ...prev, hora: e.target.value }))}
                   className="pl-10 w-full border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-fitness-primary"
                 >
                   {["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", 
@@ -192,7 +192,7 @@ const NovoAgendamento: React.FC = () => {
                 id="observacoes"
                 name="observacoes"
                 value={formData.observacoes}
-                onChange={handleChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                 placeholder="Detalhes adicionais sobre o agendamento..."
                 className="pl-10 w-full border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-fitness-primary min-h-[100px]"
               />

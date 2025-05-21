@@ -1,6 +1,8 @@
 
 import axios from "axios";
 import { Aluno } from "./alunosService";
+import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
 
@@ -10,10 +12,13 @@ export interface Agendamento {
   professorId?: string;
   data: string; // Formato ISO YYYY-MM-DD
   horario: string; // Formato HH:MM
+  hora: string; // Alias para horario para compatibilidade
   tipo: "avaliacao" | "consulta" | "treino" | string;
   descricao?: string;
-  status: "pendente" | "concluido" | "cancelado";
+  observacoes?: string;
+  status: "pendente" | "concluido" | "cancelado" | "agendado";
   aluno?: Aluno;
+  alunoNome?: string;
 }
 
 export const horariosPossiveis = [
@@ -29,27 +34,44 @@ export const horariosPossiveis = [
   "19:00", "19:30"
 ];
 
+// Formatar data para exibição
+export const formatarData = (dataString: string): string => {
+  try {
+    const data = parseISO(dataString);
+    return format(data, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  } catch (error) {
+    console.error("Erro ao formatar data:", error);
+    return dataString;
+  }
+};
+
 // Mock data para agendamentos
 const mockAgendamentos: Record<string, Agendamento[]> = {
   "aluno_01": [
     {
       id: "agd_001",
       alunoId: "aluno_01",
+      alunoNome: "João Silva",
       professorId: "prof_01",
       data: "2025-05-25",
       horario: "10:00",
+      hora: "10:00",
       tipo: "avaliacao",
       descricao: "Avaliação física mensal",
-      status: "pendente"
+      observacoes: "Avaliação física mensal",
+      status: "agendado"
     },
     {
       id: "agd_002",
       alunoId: "aluno_01",
+      alunoNome: "João Silva",
       professorId: "prof_01",
       data: "2025-04-15",
       horario: "16:30",
+      hora: "16:30",
       tipo: "consulta",
       descricao: "Ajuste de plano alimentar",
+      observacoes: "Ajuste de plano alimentar",
       status: "concluido"
     }
   ],
@@ -57,26 +79,85 @@ const mockAgendamentos: Record<string, Agendamento[]> = {
     {
       id: "agd_003",
       alunoId: "aluno_02",
+      alunoNome: "Maria Oliveira",
       professorId: "prof_01",
       data: "2025-05-18",
       horario: "09:30",
+      hora: "09:30",
       tipo: "treino",
       descricao: "Acompanhamento de treino de pernas",
-      status: "pendente"
+      observacoes: "Acompanhamento de treino de pernas",
+      status: "agendado"
     }
   ],
   "aluno_03": [
     {
       id: "agd_004",
       alunoId: "aluno_03",
+      alunoNome: "Pedro Santos",
       professorId: "prof_01",
       data: "2025-05-20",
       horario: "17:00",
+      hora: "17:00",
       tipo: "avaliacao",
       descricao: "Reavaliação após 3 meses",
-      status: "pendente"
+      observacoes: "Reavaliação após 3 meses",
+      status: "agendado"
     }
   ]
+};
+
+// Listar todos os agendamentos
+export const listarAgendamentos = async (): Promise<Agendamento[]> => {
+  try {
+    // Em produção, usar axios para buscar da API real
+    // const response = await axios.get(`${API_URL}/agendamentos`);
+    // return response.data;
+    
+    // Para desenvolvimento, retornar todos os agendamentos mockados
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const todosAgendamentos: Agendamento[] = [];
+    Object.values(mockAgendamentos).forEach(agendamentos => {
+      todosAgendamentos.push(...agendamentos);
+    });
+    
+    return todosAgendamentos;
+  } catch (error) {
+    console.error("Erro ao listar agendamentos:", error);
+    throw error;
+  }
+};
+
+// Listar agendamentos da semana atual
+export const listarAgendamentosSemana = async (): Promise<Agendamento[]> => {
+  try {
+    const agendamentos = await listarAgendamentos();
+    const hoje = new Date();
+    const inicioSemana = startOfWeek(hoje);
+    const fimSemana = endOfWeek(hoje);
+    
+    return agendamentos.filter(agendamento => {
+      const dataAgendamento = parseISO(agendamento.data);
+      return isWithinInterval(dataAgendamento, { start: inicioSemana, end: fimSemana });
+    });
+  } catch (error) {
+    console.error("Erro ao listar agendamentos da semana:", error);
+    throw error;
+  }
+};
+
+// Contar avaliações da semana
+export const contarAvaliacoesSemana = async (): Promise<number> => {
+  try {
+    const agendamentosSemana = await listarAgendamentosSemana();
+    return agendamentosSemana.filter(
+      agendamento => agendamento.tipo === "avaliacao" && agendamento.status !== "cancelado"
+    ).length;
+  } catch (error) {
+    console.error("Erro ao contar avaliações da semana:", error);
+    throw error;
+  }
 };
 
 // Buscar todos os agendamentos de um aluno
@@ -131,6 +212,7 @@ export const criarAgendamento = async (agendamento: Omit<Agendamento, "id">): Pr
     const novoAgendamento: Agendamento = {
       id: `agd_${Date.now().toString(36)}`,
       professorId: "prof_01", // Definindo um professor padrão para mock
+      hora: agendamento.horario, // Copiar horário para hora (compatibilidade)
       ...agendamento
     };
     
@@ -168,6 +250,11 @@ export const atualizarAgendamento = async (id: string, agendamento: Partial<Agen
           ...mockAgendamentos[alunoId][index],
           ...agendamento
         };
+        
+        // Se atualizou horario, também atualiza hora
+        if (agendamento.horario) {
+          mockAgendamentos[alunoId][index].hora = agendamento.horario;
+        }
         
         agendamentoAtualizado = mockAgendamentos[alunoId][index];
       }

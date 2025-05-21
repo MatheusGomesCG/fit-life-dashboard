@@ -13,7 +13,7 @@ import {
   listarAgendamentosSemana,
   Agendamento
 } from "@/services/agendamentosService";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { 
   Tabs, 
   TabsList, 
