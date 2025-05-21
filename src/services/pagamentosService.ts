@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da API
@@ -159,7 +160,7 @@ export const enviarComprovantePagamento = async (pagamentoId: string, comprovant
     const pagamentoAtualizado = {
       ...pagamento,
       comprovante: comprovanteUrl,
-      status: "pendente" as "pendente" // Status muda para pendente até confirmação
+      status: "pendente" as "pendente" // Explicitly cast as the literal type
     };
     
     // Atualiza o pagamento nos dados mock
