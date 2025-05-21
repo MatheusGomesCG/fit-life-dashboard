@@ -159,7 +159,7 @@ export const enviarComprovantePagamento = async (pagamentoId: string, comprovant
     const pagamentoAtualizado = {
       ...pagamento,
       comprovante: comprovanteUrl,
-      status: "pendente" // Status muda para pendente até confirmação
+      status: "pendente" as "pendente" // Status muda para pendente até confirmação
     };
     
     // Atualiza o pagamento nos dados mock
