@@ -110,28 +110,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       console.log("Login attempt with type:", tipo);
       
-      // Mock login for professor account
+      // Mock response for development - usando ID específico para aluno@exemplo.com
+      let mockResponse;
+      
       if (email === PROFESSOR_EMAIL && senha === PROFESSOR_PASSWORD) {
-        tipo = "professor";
+        mockResponse = {
+          token: "mock_token_professor_" + Math.random(),
+          user: {
+            id: "prof_" + Math.random().toString(36).substr(2, 9),
+            nome: "Professor Silva",
+            email,
+            tipo: "professor" as const
+          }
+        };
+      } else if (email === STUDENT_EMAIL && senha === STUDENT_PASSWORD) {
+        mockResponse = {
+          token: "mock_token_aluno_" + Math.random(),
+          user: {
+            id: "user_exemplo_123", // ID específico que corresponde aos pagamentos mock
+            nome: "Aluno Exemplo",
+            email,
+            tipo: "aluno" as const
+          }
+        };
+      } else {
+        // Para outros emails, gerar ID aleatório
+        mockResponse = {
+          token: "mock_token_" + Math.random(),
+          user: {
+            id: "user_" + Math.random().toString(36).substr(2, 9),
+            nome: email.split("@")[0],
+            email,
+            tipo
+          }
+        };
       }
-      
-      // Mock login for student account
-      if (email === STUDENT_EMAIL && senha === STUDENT_PASSWORD) {
-        tipo = "aluno";
-      }
-      
-      // Mock response for development
-      const mockResponse = {
-        token: "mock_token_" + Math.random(),
-        user: {
-          id: "user_" + Math.random().toString(36).substr(2, 9),
-          nome: email === PROFESSOR_EMAIL ? "Professor Silva" : 
-                email === STUDENT_EMAIL ? "Aluno Carlos" :
-                email.split("@")[0],
-          email,
-          tipo
-        }
-      };
       
       // Em produção, descomentar esta chamada API:
       // const response = await axios.post(`${API_URL}/auth/login`, {

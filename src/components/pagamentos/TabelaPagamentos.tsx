@@ -41,6 +41,10 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({
     }
   };
 
+  // Debug: Log para verificar se onEnviarComprovante está sendo passado
+  console.log("TabelaPagamentos - onEnviarComprovante existe:", !!onEnviarComprovante);
+  console.log("TabelaPagamentos - número de pagamentos:", pagamentos.length);
+
   if (pagamentos.length === 0) {
     return (
       <div className="py-8 text-center text-gray-500">
@@ -63,55 +67,63 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {pagamentos.map((pagamento) => (
-            <TableRow key={pagamento.id}>
-              <TableCell>{pagamento.descricao || `Mensalidade ${pagamento.mes}/${pagamento.ano}`}</TableCell>
-              <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
-              <TableCell>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  {getStatusIcon(pagamento.status)}
-                  <span
-                    className={`capitalize ${
-                      pagamento.status === "pago" ? "text-green-600" : 
-                      pagamento.status === "pendente" ? "text-amber-600" : 
-                      "text-red-600"
-                    }`}
-                  >
-                    {pagamento.status}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                {pagamento.comprovante ? (
-                  <a 
-                    href={pagamento.comprovante} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span>Ver</span>
-                  </a>
-                ) : (
-                  <span className="text-gray-400">Não enviado</span>
-                )}
-              </TableCell>
-              <TableCell>
-                {onEnviarComprovante && pagamento.status !== "pago" && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="flex items-center gap-1"
-                    onClick={() => onEnviarComprovante(pagamento.id!)}
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Enviar Comprovante</span>
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
+          {pagamentos.map((pagamento) => {
+            // Debug: Log para cada pagamento
+            console.log("Pagamento:", pagamento.id, "Status:", pagamento.status, "Deveria mostrar botão:", !!onEnviarComprovante && pagamento.status !== "pago");
+            
+            return (
+              <TableRow key={pagamento.id}>
+                <TableCell>{pagamento.descricao || `Mensalidade ${pagamento.mes}/${pagamento.ano}`}</TableCell>
+                <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
+                <TableCell>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-1">
+                    {getStatusIcon(pagamento.status)}
+                    <span
+                      className={`capitalize ${
+                        pagamento.status === "pago" ? "text-green-600" : 
+                        pagamento.status === "pendente" ? "text-amber-600" : 
+                        "text-red-600"
+                      }`}
+                    >
+                      {pagamento.status}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {pagamento.comprovante ? (
+                    <a 
+                      href={pagamento.comprovante} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Ver</span>
+                    </a>
+                  ) : (
+                    <span className="text-gray-400">Não enviado</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {onEnviarComprovante && pagamento.status !== "pago" && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="flex items-center gap-1"
+                      onClick={() => {
+                        console.log("Clicou no botão enviar comprovante para pagamento:", pagamento.id);
+                        onEnviarComprovante(pagamento.id!);
+                      }}
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span>Enviar Comprovante</span>
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

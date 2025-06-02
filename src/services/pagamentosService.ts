@@ -173,8 +173,9 @@ export const enviarComprovantePagamento = async (pagamentoId: string, comprovant
   }
 };
 
-// Dados mock para desenvolvimento
+// Dados mock para desenvolvimento - incluindo dados para aluno@exemplo.com
 const dadosMock: Pagamento[] = [
+  // Pagamentos do Carlos Silva (ID genérico)
   {
     id: "pag_1",
     alunoId: "1",
@@ -189,6 +190,58 @@ const dadosMock: Pagamento[] = [
     metodoPagamento: "Cartão de crédito",
     descricao: "Mensalidade Abril 2025"
   },
+  // Pagamentos para o usuário aluno@exemplo.com (ID: user_exemplo_123)
+  {
+    id: "pag_exemplo_1",
+    alunoId: "user_exemplo_123",
+    alunoNome: "Aluno Exemplo",
+    valor: 150,
+    dataVencimento: "2025-06-10",
+    status: "pendente",
+    mes: 6,
+    ano: 2025,
+    metodoPagamento: "Boleto bancário",
+    descricao: "Mensalidade Junho 2025"
+  },
+  {
+    id: "pag_exemplo_2", 
+    alunoId: "user_exemplo_123",
+    alunoNome: "Aluno Exemplo",
+    valor: 150,
+    dataVencimento: "2025-05-10",
+    status: "atrasado",
+    mes: 5,
+    ano: 2025,
+    metodoPagamento: "Pix",
+    descricao: "Mensalidade Maio 2025"
+  },
+  {
+    id: "pag_exemplo_3",
+    alunoId: "user_exemplo_123", 
+    alunoNome: "Aluno Exemplo",
+    valor: 150,
+    dataVencimento: "2025-04-10",
+    dataPagamento: "2025-04-08",
+    status: "pago",
+    mes: 4,
+    ano: 2025,
+    metodoPagamento: "Cartão de crédito",
+    descricao: "Mensalidade Abril 2025",
+    comprovante: "comprovante_abril_2025.jpg"
+  },
+  {
+    id: "pag_exemplo_4",
+    alunoId: "user_exemplo_123",
+    alunoNome: "Aluno Exemplo", 
+    valor: 150,
+    dataVencimento: "2025-07-10",
+    status: "pendente",
+    mes: 7,
+    ano: 2025,
+    metodoPagamento: "Transferência bancária",
+    descricao: "Mensalidade Julho 2025"
+  },
+  // Outros pagamentos existentes
   {
     id: "pag_2",
     alunoId: "2",
