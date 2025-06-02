@@ -1,6 +1,6 @@
 
 import { createRoot } from 'react-dom/client';
-import AuthContextWrapper from './contexts/AuthContextWrapper';
+import App from './App';
 import './index.css';
 
-createRoot(document.getElementById("root")!).render(<AuthContextWrapper />);
+createRoot(document.getElementById("root")!).render(<App />);
