@@ -2,12 +2,15 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import FiltrosPagamento from "@/components/pagamentos/FiltrosPagamento";
 import TabelaPagamentos from "@/components/pagamentos/TabelaPagamentos";
 import InformacoesPagamento from "@/components/pagamentos/InformacoesPagamento";
 import ModalComprovante from "@/components/pagamentos/ModalComprovante";
+import ModalRegistrarPagamento from "@/components/pagamentos/ModalRegistrarPagamento";
 
 const MeusPagamentos: React.FC = () => {
   const { user } = useAuth();
@@ -15,6 +18,7 @@ const MeusPagamentos: React.FC = () => {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [filtro, setFiltro] = useState<"todos" | "pendentes" | "pagos" | "atrasados">("todos");
   const [selectedPagamentoId, setSelectedPagamentoId] = useState<string | null>(null);
+  const [showRegistrarModal, setShowRegistrarModal] = useState(false);
 
   const carregarPagamentos = async () => {
     try {
@@ -53,6 +57,11 @@ const MeusPagamentos: React.FC = () => {
     carregarPagamentos();
   };
 
+  const handleRegistrarSuccess = () => {
+    setShowRegistrarModal(false);
+    carregarPagamentos();
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -63,11 +72,20 @@ const MeusPagamentos: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Meus Pagamentos</h1>
-        <p className="text-gray-600 mt-1">
-          Visualize o histórico e status das suas mensalidades
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Meus Pagamentos</h1>
+          <p className="text-gray-600 mt-1">
+            Visualize o histórico e status das suas mensalidades
+          </p>
+        </div>
+        <Button 
+          onClick={() => setShowRegistrarModal(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Registrar Pagamento
+        </Button>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
@@ -85,6 +103,13 @@ const MeusPagamentos: React.FC = () => {
           pagamentoId={selectedPagamentoId}
           onClose={() => setSelectedPagamentoId(null)}
           onSuccess={handleComprovanteSuccess}
+        />
+      )}
+
+      {showRegistrarModal && (
+        <ModalRegistrarPagamento
+          onClose={() => setShowRegistrarModal(false)}
+          onSuccess={handleRegistrarSuccess}
         />
       )}
     </div>
