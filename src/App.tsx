@@ -1,5 +1,8 @@
 
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
+import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -26,114 +29,42 @@ import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
 
-// Export the router configuration for use in AuthContextWrapper
-export const routes = [
-  {
-    path: "/",
-    element: <Layout />,
-    children: [
-      {
-        path: "/",
-        element: <Index />
-      },
-      {
-        path: "/login",
-        element: <Login />
-      },
-      {
-        path: "/cadastrar-professor",
-        element: <CadastrarProfessor />
-      },
-      {
-        path: "/dashboard",
-        element: <Dashboard />
-      },
-      {
-        path: "/dashboard-professor",
-        element: <DashboardProfessor />
-      },
-      {
-        path: "/gerenciar-alunos",
-        element: <GerenciarAlunos />
-      },
-      {
-        path: "/cadastrar-aluno",
-        element: <CadastrarAluno />
-      },
-      {
-        path: "/editar-aluno/:id",
-        element: <EditarAluno />
-      },
-      {
-        path: "/gerenciar-fichas",
-        element: <GerenciarFichaTreino />
-      },
-      {
-        path: "/ficha-treino/:id",
-        element: <FichaTreino />
-      },
-      {
-        path: "/cadastrar-treino/:id",
-        element: <CadastrarTreino />
-      },
-      {
-        path: "/listar-alunos",
-        element: <ListarAlunos />
-      },
-      {
-        path: "/gerenciar-pagamentos",
-        element: <GerenciarPagamentos />
-      },
-      {
-        path: "/cadastrar-pagamento",
-        element: <CadastrarPagamento />
-      },
-      {
-        path: "/editar-pagamento/:id",
-        element: <EditarPagamento />
-      },
-      {
-        path: "/agendamentos",
-        element: <GerenciarAgendamentos />
-      },
-      {
-        path: "/novo-agendamento",
-        element: <NovoAgendamento />
-      },
-      {
-        path: "/meus-treinos",
-        element: <MeusTreinos />
-      },
-      {
-        path: "/minhas-medidas",
-        element: <MinhasMedidas />
-      },
-      {
-        path: "/meus-pagamentos",
-        element: <MeusPagamentos />
-      },
-      {
-        path: "/agendamento",
-        element: <Agendamento />
-      },
-      {
-        path: "/chat",
-        element: <Chat />
-      },
-      {
-        path: "/fotos-aluno/:id",
-        element: <GerenciarFotosAluno />
-      }
-    ]
-  },
-  {
-    path: "*",
-    element: <NotFound />
-  }
-];
-
 function App() {
-  return <Toaster position="top-right" />;
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Index />} />
+            <Route path="login" element={<Login />} />
+            <Route path="cadastrar-professor" element={<CadastrarProfessor />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="dashboard-professor" element={<DashboardProfessor />} />
+            <Route path="gerenciar-alunos" element={<GerenciarAlunos />} />
+            <Route path="cadastrar-aluno" element={<CadastrarAluno />} />
+            <Route path="editar-aluno/:id" element={<EditarAluno />} />
+            <Route path="gerenciar-fichas" element={<GerenciarFichaTreino />} />
+            <Route path="ficha-treino/:id" element={<FichaTreino />} />
+            <Route path="cadastrar-treino/:id" element={<CadastrarTreino />} />
+            <Route path="listar-alunos" element={<ListarAlunos />} />
+            <Route path="gerenciar-pagamentos" element={<GerenciarPagamentos />} />
+            <Route path="cadastrar-pagamento" element={<CadastrarPagamento />} />
+            <Route path="editar-pagamento/:id" element={<EditarPagamento />} />
+            <Route path="agendamentos" element={<GerenciarAgendamentos />} />
+            <Route path="novo-agendamento" element={<NovoAgendamento />} />
+            <Route path="meus-treinos" element={<MeusTreinos />} />
+            <Route path="minhas-medidas" element={<MinhasMedidas />} />
+            <Route path="meus-pagamentos" element={<MeusPagamentos />} />
+            <Route path="agendamento" element={<Agendamento />} />
+            <Route path="chat" element={<Chat />} />
+            <Route path="fotos-aluno/:id" element={<GerenciarFotosAluno />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster position="top-right" />
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
 
 export default App;
