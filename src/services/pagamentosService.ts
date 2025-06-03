@@ -28,7 +28,11 @@ export const listarPagamentos = async (): Promise<Pagamento[]> => {
 
     if (error) throw error;
     
-    return data || [];
+    // Add type assertion to ensure status is properly typed
+    return (data || []).map(pagamento => ({
+      ...pagamento,
+      status: pagamento.status as "pendente" | "pago" | "atrasado"
+    }));
   } catch (error) {
     console.error("Erro ao listar pagamentos:", error);
     throw error;
@@ -45,7 +49,11 @@ export const buscarPagamentoPorId = async (id: string): Promise<Pagamento> => {
 
     if (error) throw error;
     
-    return data;
+    // Add type assertion to ensure status is properly typed
+    return {
+      ...data,
+      status: data.status as "pendente" | "pago" | "atrasado"
+    };
   } catch (error) {
     console.error(`Erro ao buscar pagamento com ID ${id}:`, error);
     throw error;
@@ -81,7 +89,11 @@ export const cadastrarPagamento = async (pagamento: Omit<Pagamento, "id" | "stat
 
     if (error) throw error;
     
-    return data;
+    // Add type assertion to ensure status is properly typed
+    return {
+      ...data,
+      status: data.status as "pendente" | "pago" | "atrasado"
+    };
   } catch (error) {
     console.error("Erro ao cadastrar pagamento:", error);
     throw error;
@@ -119,7 +131,11 @@ export const atualizarPagamento = async (id: string, pagamento: Partial<Pagament
 
     if (error) throw error;
     
-    return data;
+    // Add type assertion to ensure status is properly typed
+    return {
+      ...data,
+      status: data.status as "pendente" | "pago" | "atrasado"
+    };
   } catch (error) {
     console.error(`Erro ao atualizar pagamento com ID ${id}:`, error);
     throw error;
@@ -162,7 +178,11 @@ export const buscarPagamentosPorAluno = async (alunoId: string): Promise<Pagamen
 
     if (error) throw error;
     
-    return data || [];
+    // Add type assertion to ensure status is properly typed
+    return (data || []).map(pagamento => ({
+      ...pagamento,
+      status: pagamento.status as "pendente" | "pago" | "atrasado"
+    }));
   } catch (error) {
     console.error(`Erro ao buscar pagamentos do aluno ${alunoId}:`, error);
     throw error;

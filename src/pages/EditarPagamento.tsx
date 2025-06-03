@@ -30,18 +30,18 @@ const EditarPagamento: React.FC = () => {
           setPagamento(data);
           setValor(data.valor.toString());
           
-          // Convert string dates to Date objects
-          if (data.dataVencimento) {
-            setDataVencimento(parseISO(data.dataVencimento));
+          // Convert string dates to Date objects using correct property names
+          if (data.data_vencimento) {
+            setDataVencimento(parseISO(data.data_vencimento));
           }
           
-          if (data.dataPagamento) {
-            setDataPagamento(parseISO(data.dataPagamento));
+          if (data.data_pagamento) {
+            setDataPagamento(parseISO(data.data_pagamento));
           }
           
           setStatus(data.status);
           setObservacao(data.observacao || "");
-          setMetodoPagamento(data.metodoPagamento || "");
+          setMetodoPagamento(data.metodo_pagamento || "");
         } catch (error) {
           console.error("Erro ao carregar pagamento:", error);
           toast.error("Erro ao carregar dados do pagamento.");
@@ -71,12 +71,12 @@ const EditarPagamento: React.FC = () => {
       const valorNum = parseFloat(valor);
 
       await atualizarPagamento(id!, {
-        valor: valorNum, // Converted to number
-        dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
+        valor: valorNum,
+        data_vencimento: format(dataVencimento, "yyyy-MM-dd"),
         status,
-        dataPagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
+        data_pagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         observacao,
-        metodoPagamento,
+        metodo_pagamento: metodoPagamento,
       });
 
       toast.success("Pagamento atualizado com sucesso!");
