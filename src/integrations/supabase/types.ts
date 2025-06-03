@@ -9,7 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      pagamentos: {
+        Row: {
+          aluno_id: string
+          aluno_nome: string
+          ano: number
+          comprovante_url: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string
+          descricao: string | null
+          id: string
+          mes: number
+          metodo_pagamento: string | null
+          observacao: string | null
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          aluno_id: string
+          aluno_nome: string
+          ano: number
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento: string
+          descricao?: string | null
+          id?: string
+          mes: number
+          metodo_pagamento?: string | null
+          observacao?: string | null
+          status: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          aluno_id?: string
+          aluno_nome?: string
+          ano?: number
+          comprovante_url?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string
+          descricao?: string | null
+          id?: string
+          mes?: number
+          metodo_pagamento?: string | null
+          observacao?: string | null
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
