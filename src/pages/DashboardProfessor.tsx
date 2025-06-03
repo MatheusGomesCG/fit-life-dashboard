@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock } from "lucide-react";
+import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock, User, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   Pagamento, 
@@ -13,6 +13,11 @@ import {
   listarAgendamentosSemana,
   Agendamento
 } from "@/services/agendamentosService";
+import { 
+  buscarPlanoProfessor, 
+  contarAlunosProfessor,
+  ProfessorPlano
+} from "@/services/professorService";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { 
   Tabs, 
@@ -28,25 +33,33 @@ const DashboardProfessor: React.FC = () => {
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [avaliacoesSemana, setAvaliacoesSemana] = useState(0);
   const [agendamentosSemana, setAgendamentosSemana] = useState<Agendamento[]>([]);
+  const [plano, setPlano] = useState<ProfessorPlano | null>(null);
+  const [totalAlunos, setTotalAlunos] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
   
-  const [totalAlunos] = useState(15); // Mock value
+  const [totalAlunosMensais] = useState(15); // Mock value
   const [alunosAtivos] = useState(12); // Mock value
 
   useEffect(() => {
     const carregarDados = async () => {
+      if (!user?.id) return;
+      
       try {
         setIsLoading(true);
-        const [pagamentosData, numAvaliacoes, agendamentos] = await Promise.all([
+        const [pagamentosData, numAvaliacoes, agendamentos, planoData, numAlunos] = await Promise.all([
           listarPagamentos(),
           contarAvaliacoesSemana(),
-          listarAgendamentosSemana()
+          listarAgendamentosSemana(),
+          buscarPlanoProfessor(user.id),
+          contarAlunosProfessor(user.id)
         ]);
         
         setPagamentos(pagamentosData);
         setAvaliacoesSemana(numAvaliacoes);
         setAgendamentosSemana(agendamentos);
+        setPlano(planoData);
+        setTotalAlunos(numAlunos);
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
       } finally {
@@ -55,7 +68,7 @@ const DashboardProfessor: React.FC = () => {
     };
     
     carregarDados();
-  }, []);
+  }, [user?.id]);
 
   const totalRecebido = calcularTotalRecebido(pagamentos);
   const totalPendente = calcularTotalPendente(pagamentos);
@@ -71,11 +84,25 @@ const DashboardProfessor: React.FC = () => {
     .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())
     .slice(0, 5);
 
+  const getLimiteTexto = (limite: number) => {
+    if (limite === -1) return "Ilimitado";
+    return limite.toString();
+  };
+
+  const getStatusPlanoColor = (status: string) => {
+    switch (status) {
+      case "ativo": return "text-green-600 bg-green-100";
+      case "suspenso": return "text-yellow-600 bg-yellow-100";
+      case "cancelado": return "text-red-600 bg-red-100";
+      default: return "text-gray-600 bg-gray-100";
+    }
+  };
+
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Olá, Professor {user?.nome || ""}
+          Olá, Professor {user?.nome || user?.profile?.nome || ""}
         </h1>
         <p className="text-gray-600 mt-1">
           Bem-vindo ao seu painel de controle
@@ -90,6 +117,50 @@ const DashboardProfessor: React.FC = () => {
         </TabsList>
         
         <TabsContent value="resumo">
+          {/* Informações do Plano */}
+          {plano && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <div className="p-3 bg-purple-100 rounded-full">
+                    <CreditCard className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <h2 className="text-lg font-semibold ml-3">Plano Atual</h2>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusPlanoColor(plano.status)}`}>
+                  {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Tipo do Plano</p>
+                  <p className="text-lg font-bold text-purple-600">
+                    {plano.tipo_plano === "100+" ? "Premium" : `${plano.tipo_plano} alunos`}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Limite de Alunos</p>
+                  <p className="text-lg font-bold">
+                    {totalAlunos} / {getLimiteTexto(plano.limite_alunos)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Valor Mensal</p>
+                  <p className="text-lg font-bold text-green-600">
+                    R$ {plano.preco_mensal.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Vencimento</p>
+                  <p className="text-lg font-bold">
+                    {format(new Date(plano.data_vencimento), "dd/MM/yyyy")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <div className="flex items-center mb-4">
@@ -103,9 +174,11 @@ const DashboardProfessor: React.FC = () => {
                 <p className="text-2xl font-bold text-blue-600">
                   {totalAlunos}
                 </p>
-                <p className="text-sm text-gray-500">
-                  <span className="font-medium text-green-600">{alunosAtivos}</span> ativos
-                </p>
+                {plano && (
+                  <p className="text-sm text-gray-500">
+                    Limite: <span className="font-medium">{getLimiteTexto(plano.limite_alunos)}</span>
+                  </p>
+                )}
               </div>
               
               <Link to="/gerenciar-alunos" className="mt-4 flex items-center text-blue-600 font-medium">
@@ -296,7 +369,7 @@ const DashboardProfessor: React.FC = () => {
 
         <TabsContent value="alunos-mensais">
           <AlunosMensais 
-            alunosAtivos={alunosAtivos}
+            alunosAtivos={totalAlunosMensais}
             anoSelecionado={anoSelecionado}
           />
         </TabsContent>

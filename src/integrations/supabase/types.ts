@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      aluno_profiles: {
+        Row: {
+          altura: number | null
+          created_at: string
+          email: string
+          experiencia: string | null
+          id: string
+          idade: number | null
+          nome: string
+          objetivo: string | null
+          peso: number | null
+          professor_id: string
+          restricoes_medicas: string | null
+          senha_temporaria: boolean | null
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          altura?: number | null
+          created_at?: string
+          email: string
+          experiencia?: string | null
+          id?: string
+          idade?: number | null
+          nome: string
+          objetivo?: string | null
+          peso?: number | null
+          professor_id: string
+          restricoes_medicas?: string | null
+          senha_temporaria?: boolean | null
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          altura?: number | null
+          created_at?: string
+          email?: string
+          experiencia?: string | null
+          id?: string
+          idade?: number | null
+          nome?: string
+          objetivo?: string | null
+          peso?: number | null
+          professor_id?: string
+          restricoes_medicas?: string | null
+          senha_temporaria?: boolean | null
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pagamentos: {
         Row: {
           aluno_id: string
@@ -63,12 +117,103 @@ export type Database = {
         }
         Relationships: []
       }
+      professor_planos: {
+        Row: {
+          created_at: string
+          data_inicio: string
+          data_vencimento: string
+          id: string
+          limite_alunos: number
+          preco_mensal: number
+          professor_id: string
+          status: string
+          tipo_plano: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_inicio?: string
+          data_vencimento: string
+          id?: string
+          limite_alunos: number
+          preco_mensal: number
+          professor_id: string
+          status?: string
+          tipo_plano: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_inicio?: string
+          data_vencimento?: string
+          id?: string
+          limite_alunos?: number
+          preco_mensal?: number
+          professor_id?: string
+          status?: string
+          tipo_plano?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      professor_profiles: {
+        Row: {
+          biografia: string | null
+          created_at: string
+          documento: string | null
+          endereco: string | null
+          especialidade: string | null
+          foto_url: string | null
+          id: string
+          nome: string
+          status: string
+          telefone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          biografia?: string | null
+          created_at?: string
+          documento?: string | null
+          endereco?: string | null
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          biografia?: string | null
+          created_at?: string
+          documento?: string | null
+          endereco?: string | null
+          especialidade?: string | null
+          foto_url?: string | null
+          id?: string
+          nome?: string
+          status?: string
+          telefone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      contar_alunos_professor: {
+        Args: { professor_id: string }
+        Returns: number
+      }
+      verificar_limite_alunos: {
+        Args: { professor_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

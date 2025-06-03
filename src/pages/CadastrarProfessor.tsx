@@ -12,6 +12,10 @@ interface FormData {
   email: string;
   senha: string;
   confirmaSenha: string;
+  telefone: string;
+  documento: string;
+  endereco: string;
+  especialidade: string;
 }
 
 interface FormErrors {
@@ -19,6 +23,10 @@ interface FormErrors {
   email?: string;
   senha?: string;
   confirmaSenha?: string;
+  telefone?: string;
+  documento?: string;
+  endereco?: string;
+  especialidade?: string;
 }
 
 const CadastrarProfessor: React.FC = () => {
@@ -28,6 +36,10 @@ const CadastrarProfessor: React.FC = () => {
     email: "",
     senha: "",
     confirmaSenha: "",
+    telefone: "",
+    documento: "",
+    endereco: "",
+    especialidade: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,14 +67,32 @@ const CadastrarProfessor: React.FC = () => {
     
     if (!form.senha) {
       newErrors.senha = "Senha é obrigatória";
-    } else if (form.senha.length < 6) {
-      newErrors.senha = "A senha deve ter pelo menos 6 caracteres";
+    } else if (form.senha.length < 8) {
+      newErrors.senha = "A senha deve ter pelo menos 8 caracteres";
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*])/.test(form.senha)) {
+      newErrors.senha = "A senha deve conter pelo menos uma letra minúscula, uma maiúscula e um caractere especial";
     }
     
     if (!form.confirmaSenha) {
       newErrors.confirmaSenha = "Confirmação de senha é obrigatória";
     } else if (form.senha !== form.confirmaSenha) {
       newErrors.confirmaSenha = "As senhas não coincidem";
+    }
+
+    if (!form.telefone.trim()) {
+      newErrors.telefone = "Telefone é obrigatório";
+    }
+
+    if (!form.documento.trim()) {
+      newErrors.documento = "Documento é obrigatório";
+    }
+
+    if (!form.endereco.trim()) {
+      newErrors.endereco = "Endereço é obrigatório";
+    }
+
+    if (!form.especialidade.trim()) {
+      newErrors.especialidade = "Especialidade é obrigatória";
     }
     
     setErrors(newErrors);
@@ -85,7 +115,11 @@ const CadastrarProfessor: React.FC = () => {
         password: form.senha,
         userData: {
           nome: form.nome,
-          tipo: "professor"
+          tipo: "professor",
+          telefone: form.telefone,
+          documento: form.documento,
+          endereco: form.endereco,
+          especialidade: form.especialidade
         }
       });
       
@@ -130,6 +164,45 @@ const CadastrarProfessor: React.FC = () => {
             onChange={handleChange}
             required
             error={errors.email}
+          />
+
+          <FormInput
+            id="telefone"
+            label="Telefone"
+            value={form.telefone}
+            onChange={handleChange}
+            required
+            error={errors.telefone}
+            placeholder="(11) 99999-9999"
+          />
+
+          <FormInput
+            id="documento"
+            label="CPF/CNPJ"
+            value={form.documento}
+            onChange={handleChange}
+            required
+            error={errors.documento}
+            placeholder="000.000.000-00"
+          />
+
+          <FormInput
+            id="endereco"
+            label="Endereço"
+            value={form.endereco}
+            onChange={handleChange}
+            required
+            error={errors.endereco}
+          />
+
+          <FormInput
+            id="especialidade"
+            label="Especialidade"
+            value={form.especialidade}
+            onChange={handleChange}
+            required
+            error={errors.especialidade}
+            placeholder="Ex: Personal Trainer, Nutricionista"
           />
           
           <FormInput

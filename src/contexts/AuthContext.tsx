@@ -1,289 +1,185 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { User, Session } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import axios from "axios";
+import { criarPerfilProfessor, buscarPerfilProfessor, ProfessorProfile } from "@/services/professorService";
 
-const API_URL = "https://api.example.com"; // Substitua pela sua URL real da API
-
-interface User {
-  id: string;
-  nome: string;
-  email: string;
-  tipo: "aluno" | "professor";
-  professorId?: string; // ID do professor que cadastrou o aluno (apenas para alunos)
+interface AuthUser extends User {
+  nome?: string;
+  tipo?: "professor" | "aluno" | "admin";
+  profile?: ProfessorProfile;
 }
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  login: (email: string, senha: string, tipo?: "aluno" | "professor") => Promise<void>;
-  logout: () => void;
+  user: AuthUser | null;
+  session: Session | null;
   loading: boolean;
-  register: (data: { email: string, password: string, userData: Partial<User> }) => Promise<void>;
-  registerAluno: (data: { 
-    nome: string, 
-    email: string, 
-    senha: string,
-    idade: number,
-    peso: number,
-    altura: number,
-    experiencia: string
-  }) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  register: (data: RegisterData) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+}
+
+interface RegisterData {
+  email: string;
+  password: string;
+  userData: {
+    nome: string;
+    tipo: "professor" | "aluno";
+    telefone?: string;
+    documento?: string;
+    endereco?: string;
+    especialidade?: string;
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock student credentials for testing
-const STUDENT_EMAIL = "aluno@exemplo.com";
-const STUDENT_PASSWORD = "123456";
-
-// Mock professor credentials for testing
-const PROFESSOR_EMAIL = "professor@exemplo.com";
-const PROFESSOR_PASSWORD = "123456";
-
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Remove direct useNavigate and useLocation calls here
-  // We'll use window.location for navigation instead
-  
-  // Carregar token do localStorage na inicialização
-  useEffect(() => {
-    const storedToken = localStorage.getItem("fitnessToken");
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUserData(storedToken);
-    } else {
-      setLoading(false);
-    }
-  }, []);
 
-  // Configurar interceptor para incluir o token em todas as requisições
+  const loadUserProfile = async (authUser: User) => {
+    try {
+      // Verificar se é professor e buscar perfil
+      const profile = await buscarPerfilProfessor(authUser.id);
+      
+      const enhancedUser: AuthUser = {
+        ...authUser,
+        nome: profile?.nome || authUser.user_metadata?.nome,
+        tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
+        profile: profile || undefined
+      };
+      
+      setUser(enhancedUser);
+    } catch (error) {
+      console.error("Erro ao carregar perfil do usuário:", error);
+      // Em caso de erro, usar dados básicos
+      const basicUser: AuthUser = {
+        ...authUser,
+        nome: authUser.user_metadata?.nome,
+        tipo: authUser.user_metadata?.tipo || "aluno"
+      };
+      setUser(basicUser);
+    }
+  };
+
   useEffect(() => {
-    const interceptor = axios.interceptors.request.use(
-      (config) => {
-        if (token) {
-          config.headers["Authorization"] = `Bearer ${token}`;
+    // Configurar listener de mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.email);
+        setSession(session);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setUser(null);
         }
-        return config;
-      },
-      (error) => {
-        return Promise.reject(error);
+        
+        setLoading(false);
       }
     );
 
-    return () => {
-      axios.interceptors.request.eject(interceptor);
-    };
-  }, [token]);
-
-  const fetchUserData = async (authToken: string) => {
-    try {
-      setLoading(true);
-      // Esta rota deve existir no seu backend para retornar os dados do usuário autenticado
-      const response = await axios.get(`${API_URL}/usuarios/me`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
-      setUser(response.data);
-    } catch (error) {
-      console.error("Erro ao obter dados do usuário:", error);
-      
-      // Retrieve user data from localStorage if API call fails
-      const userData = localStorage.getItem("fitnessUser");
-      if (userData) {
-        setUser(JSON.parse(userData));
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadUserProfile(session.user);
       } else {
-        logout(); // Se falhar ao obter dados do usuário, fazer logout
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
 
-  const login = async (email: string, senha: string, tipo: "aluno" | "professor" = "aluno") => {
-    try {
-      setLoading(true);
-      
-      console.log("Login attempt with type:", tipo);
-      
-      // Mock response for development - usando ID específico para aluno@exemplo.com
-      let mockResponse;
-      
-      if (email === PROFESSOR_EMAIL && senha === PROFESSOR_PASSWORD) {
-        mockResponse = {
-          token: "mock_token_professor_" + Math.random(),
-          user: {
-            id: "prof_" + Math.random().toString(36).substr(2, 9),
-            nome: "Professor Silva",
-            email,
-            tipo: "professor" as const
-          }
-        };
-      } else if (email === STUDENT_EMAIL && senha === STUDENT_PASSWORD) {
-        mockResponse = {
-          token: "mock_token_aluno_" + Math.random(),
-          user: {
-            id: "user_exemplo_123", // ID específico que corresponde aos pagamentos mock
-            nome: "Aluno Exemplo",
-            email,
-            tipo: "aluno" as const
-          }
-        };
-      } else {
-        // Para outros emails, gerar ID aleatório
-        mockResponse = {
-          token: "mock_token_" + Math.random(),
-          user: {
-            id: "user_" + Math.random().toString(36).substr(2, 9),
-            nome: email.split("@")[0],
-            email,
-            tipo
-          }
-        };
-      }
-      
-      // Em produção, descomentar esta chamada API:
-      // const response = await axios.post(`${API_URL}/auth/login`, {
-      //   email,
-      //   senha,
-      //   tipo
-      // });
-      // const { token: authToken, user: userData } = response.data;
-      
-      const { token: authToken, user: userData } = mockResponse;
-      
-      localStorage.setItem("fitnessToken", authToken);
-      localStorage.setItem("fitnessUser", JSON.stringify(userData)); // Store user in localStorage
-      setToken(authToken);
-      setUser(userData);
-      
-      toast.success("Login realizado com sucesso!");
-      
-      // Use window.location instead of navigate
-      setTimeout(() => {
-        const route = userData.tipo === "professor" ? "/dashboard-professor" : "/dashboard";
-        window.location.href = route;
-      }, 100);
-    } catch (error) {
-      console.error("Erro no login:", error);
-      toast.error("Erro ao fazer login. Verifique suas credenciais.");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Adding the register function with improved navigation
-  const register = async (data: { email: string, password: string, userData: Partial<User> }) => {
-    try {
-      setLoading(true);
-      
-      // Para fins de demonstração/mock (substituir pela chamada API real):
-      // Simulando uma resposta de sucesso do servidor
-      const mockResponse = {
-        token: "mock_token_" + Math.random(),
-        user: {
-          id: "user_" + Math.random().toString(36).substr(2, 9),
-          nome: data.userData.nome || "",
-          email: data.email,
-          tipo: data.userData.tipo || "professor"
-        }
-      };
-      
-      // Na implementação real, use esta chamada:
-      // const response = await axios.post(`${API_URL}/auth/register`, {
-      //   email: data.email,
-      //   senha: data.password,
-      //   ...data.userData
-      // });
-      
-      const { token: authToken } = mockResponse;
-      
-      // Salvamos o token e definimos o usuário diretamente para evitar outra chamada API
-      localStorage.setItem("fitnessToken", authToken);
-      localStorage.setItem("fitnessUser", JSON.stringify(mockResponse.user)); // Store user in localStorage
-      setToken(authToken);
-      setUser(mockResponse.user as User);
-      
-      toast.success("Cadastro realizado com sucesso!");
-      
-      // Não redirecionamos aqui - deixamos o componente fazer isso após a conclusão
-    } catch (error) {
-      console.error("Erro no cadastro:", error);
-      toast.error("Erro ao cadastrar. Por favor, tente novamente.");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Function to register a student by a professor
-  const registerAluno = async (data: { 
-    nome: string, 
-    email: string, 
-    senha: string,
-    idade: number,
-    peso: number,
-    altura: number,
-    experiencia: string 
-  }) => {
-    try {
-      setLoading(true);
-      
-      if (!user || user.tipo !== "professor") {
-        throw new Error("Apenas professores podem cadastrar alunos");
-      }
-      
-      // Mock response for development
-      const alunoId = "aluno_" + Math.random().toString(36).substr(2, 9);
-      
-      // Em produção, descomentar esta chamada API:
-      // const response = await axios.post(`${API_URL}/auth/register-aluno`, {
-      //   ...data,
-      //   professorId: user.id
-      // });
-      // const alunoId = response.data.id;
-      
-      toast.success("Aluno cadastrado com sucesso!");
-      // Return void instead of alunoId to match the function signature
-      return;
-    } catch (error) {
-      console.error("Erro ao cadastrar aluno:", error);
-      toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const logout = useCallback(() => {
-    localStorage.removeItem("fitnessToken");
-    localStorage.removeItem("fitnessUser");
-    setToken(null);
-    setUser(null);
-    
-    // Use window.location instead of navigate
-    window.location.href = "/";
-    toast.info("Você saiu do sistema.");
+    return () => subscription.unsubscribe();
   }, []);
 
+  const login = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        await loadUserProfile(data.user);
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      console.error("Erro no login:", error);
+      return { error };
+    }
+  };
+
+  const register = async ({ email, password, userData }: RegisterData) => {
+    try {
+      const redirectUrl = `${window.location.origin}/dashboard-professor`;
+      
+      // Criar usuário no Supabase Auth
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            nome: userData.nome,
+            tipo: userData.tipo
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Se o usuário foi criado com sucesso e é um professor, criar perfil
+      if (data.user && userData.tipo === "professor") {
+        await criarPerfilProfessor({
+          user_id: data.user.id,
+          nome: userData.nome,
+          telefone: userData.telefone,
+          documento: userData.documento,
+          endereco: userData.endereco,
+          especialidade: userData.especialidade,
+          status: "ativo"
+        });
+
+        // Recarregar perfil do usuário
+        await loadUserProfile(data.user);
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      console.error("Erro no registro:", error);
+      return { error };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSession(null);
+    } catch (error) {
+      console.error("Erro no logout:", error);
+      toast.error("Erro ao fazer logout");
+    }
+  };
+
+  const value = {
+    user,
+    session,
+    loading,
+    login,
+    register,
+    logout
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        isAuthenticated: !!token,
-        login,
-        logout,
-        loading,
-        register,
-        registerAluno,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
@@ -292,7 +188,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
