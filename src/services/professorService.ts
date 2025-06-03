@@ -56,7 +56,7 @@ export const criarPerfilProfessor = async (professorData: Omit<ProfessorProfile,
       .single();
 
     if (error) throw error;
-    return data;
+    return data as ProfessorProfile;
   } catch (error) {
     console.error("Erro ao criar perfil do professor:", error);
     throw error;
@@ -72,7 +72,7 @@ export const buscarPerfilProfessor = async (userId: string): Promise<ProfessorPr
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
-    return data || null;
+    return data ? (data as ProfessorProfile) : null;
   } catch (error) {
     console.error("Erro ao buscar perfil do professor:", error);
     throw error;
@@ -89,7 +89,7 @@ export const atualizarPerfilProfessor = async (userId: string, updates: Partial<
       .single();
 
     if (error) throw error;
-    return data;
+    return data as ProfessorProfile;
   } catch (error) {
     console.error("Erro ao atualizar perfil do professor:", error);
     throw error;
@@ -106,7 +106,7 @@ export const buscarPlanoProfessor = async (professorId: string): Promise<Profess
       .single();
 
     if (error && error.code !== 'PGRST116') throw error;
-    return data || null;
+    return data ? (data as ProfessorPlano) : null;
   } catch (error) {
     console.error("Erro ao buscar plano do professor:", error);
     throw error;
@@ -122,7 +122,7 @@ export const criarPlanoProfessor = async (planoData: Omit<ProfessorPlano, "id" |
       .single();
 
     if (error) throw error;
-    return data;
+    return data as ProfessorPlano;
   } catch (error) {
     console.error("Erro ao criar plano do professor:", error);
     throw error;
@@ -164,7 +164,7 @@ export const criarPerfilAluno = async (alunoData: Omit<AlunoProfile, "id" | "cre
       .single();
 
     if (error) throw error;
-    return data;
+    return data as AlunoProfile;
   } catch (error) {
     console.error("Erro ao criar perfil do aluno:", error);
     throw error;
@@ -180,7 +180,7 @@ export const buscarAlunosProfessor = async (professorId: string): Promise<AlunoP
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return data ? (data as AlunoProfile[]) : [];
   } catch (error) {
     console.error("Erro ao buscar alunos do professor:", error);
     throw error;

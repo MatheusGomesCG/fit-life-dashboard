@@ -27,8 +27,13 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      // Pass the userType to login function
-      await login(email, password, userType as "aluno" | "professor");
+      // Call login function with only email and password
+      const { error } = await login(email, password);
+      
+      if (error) {
+        throw error;
+      }
+      
       toast.success("Login realizado com sucesso!");
     } catch (error) {
       console.error("Erro no login:", error);
