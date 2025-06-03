@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -44,7 +43,7 @@ const Dashboard: React.FC = () => {
 
   const proximoPagamento = pagamentos
     .filter(p => p.status === "pendente")
-    .sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime())[0];
+    .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())[0];
 
   return (
     <div>
@@ -184,7 +183,7 @@ const Dashboard: React.FC = () => {
                   <Calendar className="h-5 w-5 text-gray-400 mr-2" />
                   <span className="text-gray-600">Vencimento:</span>
                 </div>
-                <span className="font-medium">{format(new Date(proximoPagamento.dataVencimento), "dd/MM/yyyy")}</span>
+                <span className="font-medium">{format(new Date(proximoPagamento.data_vencimento), "dd/MM/yyyy")}</span>
               </div>
               <div className="flex items-center justify-between border-b border-gray-100 py-3">
                 <div className="flex items-center">

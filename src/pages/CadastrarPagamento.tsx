@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -81,15 +80,15 @@ const CadastrarPagamento: React.FC = () => {
       }
 
       await cadastrarPagamento({
-        alunoId: selectedAluno.id,
-        alunoNome: selectedAluno.nome,
+        aluno_id: selectedAluno.id,
+        aluno_nome: selectedAluno.nome,
         valor: valorNum,
-        dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
-        dataPagamento: status === "pago" && dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
+        data_vencimento: format(dataVencimento, "yyyy-MM-dd"),
+        data_pagamento: status === "pago" && dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         mes,
         ano,
         observacao,
-        metodoPagamento
+        metodo_pagamento: metodoPagamento
       });
 
       toast.success("Pagamento cadastrado com sucesso!");

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -76,15 +75,15 @@ const ModalRegistrarPagamento: React.FC<ModalRegistrarPagamentoProps> = ({
 
       // Registrar o pagamento
       const novoPagamento = await cadastrarPagamento({
-        alunoId: user.id,
-        alunoNome: user.nome || "Aluno",
+        aluno_id: user.id,
+        aluno_nome: user.nome || "Aluno",
         valor: valorNum,
-        dataVencimento: format(dataVencimento, "yyyy-MM-dd"),
-        dataPagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
+        data_vencimento: format(dataVencimento, "yyyy-MM-dd"),
+        data_pagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         mes,
         ano,
         observacao,
-        metodoPagamento
+        metodo_pagamento: metodoPagamento
       });
 
       // Se há um comprovante, enviar também

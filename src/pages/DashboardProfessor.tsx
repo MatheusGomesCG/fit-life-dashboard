@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock } from "lucide-react";
@@ -65,11 +64,11 @@ const DashboardProfessor: React.FC = () => {
   const proximosVencimentos = pagamentos
     .filter(p => p.status !== "pago")
     .filter(p => {
-      const dataVencimento = parseISO(p.dataVencimento);
+      const dataVencimento = parseISO(p.data_vencimento);
       const diasAteVencimento = differenceInDays(dataVencimento, hoje);
       return diasAteVencimento >= 0 && diasAteVencimento <= 7;
     })
-    .sort((a, b) => new Date(a.dataVencimento).getTime() - new Date(b.dataVencimento).getTime())
+    .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())
     .slice(0, 5);
 
   return (

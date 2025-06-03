@@ -61,7 +61,7 @@ const GerenciarPagamentos: React.FC = () => {
     try {
       const dataAtual = new Date().toISOString().split("T")[0];
       await atualizarPagamento(id, {
-        dataPagamento: dataAtual,
+        data_pagamento: dataAtual,
         status: "pago"
       });
       toast.success("Pagamento registrado com sucesso!");
@@ -93,7 +93,7 @@ const GerenciarPagamentos: React.FC = () => {
 
   const pagamentosFiltrados = pagamentos.filter(
     (pagamento) =>
-      pagamento.alunoNome.toLowerCase().includes(filtro.toLowerCase())
+      pagamento.aluno_nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
   return (
@@ -153,16 +153,16 @@ const GerenciarPagamentos: React.FC = () => {
                   <TableRow key={pagamento.id}>
                     <TableCell className="font-medium">
                       <button 
-                        onClick={() => visualizarHistoricoPagamentosAluno(pagamento.alunoId, pagamento.alunoNome)}
+                        onClick={() => visualizarHistoricoPagamentosAluno(pagamento.aluno_id, pagamento.aluno_nome)}
                         className="text-left text-blue-600 hover:underline flex items-center gap-1"
                       >
-                        {pagamento.alunoNome}
+                        {pagamento.aluno_nome}
                         <History className="h-4 w-4" />
                       </button>
                     </TableCell>
                     <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
                     <TableCell>
-                      {format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}
+                      {format(parseISO(pagamento.data_vencimento), "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
@@ -184,16 +184,16 @@ const GerenciarPagamentos: React.FC = () => {
                       {pagamento.mes}/{pagamento.ano}
                     </TableCell>
                     <TableCell>
-                      {pagamento.dataPagamento ? (
-                        format(parseISO(pagamento.dataPagamento), "dd/MM/yyyy")
+                      {pagamento.data_pagamento ? (
+                        format(parseISO(pagamento.data_pagamento), "dd/MM/yyyy")
                       ) : (
                         "Não pago"
                       )}
                     </TableCell>
                     <TableCell>
-                      {pagamento.comprovante ? (
+                      {pagamento.comprovante_url ? (
                         <a 
-                          href={pagamento.comprovante} 
+                          href={pagamento.comprovante_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-blue-600 hover:text-blue-800"

@@ -28,21 +28,7 @@ export const listarPagamentos = async (): Promise<Pagamento[]> => {
 
     if (error) throw error;
     
-    return data.map(pagamento => ({
-      id: pagamento.id,
-      alunoId: pagamento.aluno_id,
-      alunoNome: pagamento.aluno_nome,
-      valor: pagamento.valor,
-      dataVencimento: pagamento.data_vencimento,
-      dataPagamento: pagamento.data_pagamento,
-      status: pagamento.status as "pendente" | "pago" | "atrasado",
-      mes: pagamento.mes,
-      ano: pagamento.ano,
-      observacao: pagamento.observacao,
-      metodoPagamento: pagamento.metodo_pagamento,
-      descricao: pagamento.descricao,
-      comprovante: pagamento.comprovante_url
-    })) as Pagamento[];
+    return data || [];
   } catch (error) {
     console.error("Erro ao listar pagamentos:", error);
     throw error;
@@ -59,21 +45,7 @@ export const buscarPagamentoPorId = async (id: string): Promise<Pagamento> => {
 
     if (error) throw error;
     
-    return {
-      id: data.id,
-      alunoId: data.aluno_id,
-      alunoNome: data.aluno_nome,
-      valor: data.valor,
-      dataVencimento: data.data_vencimento,
-      dataPagamento: data.data_pagamento,
-      status: data.status as "pendente" | "pago" | "atrasado",
-      mes: data.mes,
-      ano: data.ano,
-      observacao: data.observacao,
-      metodoPagamento: data.metodo_pagamento,
-      descricao: data.descricao,
-      comprovante: data.comprovante_url
-    } as Pagamento;
+    return data;
   } catch (error) {
     console.error(`Erro ao buscar pagamento com ID ${id}:`, error);
     throw error;
@@ -83,25 +55,25 @@ export const buscarPagamentoPorId = async (id: string): Promise<Pagamento> => {
 export const cadastrarPagamento = async (pagamento: Omit<Pagamento, "id" | "status">): Promise<Pagamento> => {
   try {
     // Definir status baseado na data de vencimento e data de pagamento
-    const status = pagamento.dataPagamento 
+    const status = pagamento.data_pagamento 
       ? "pago" 
-      : new Date(pagamento.dataVencimento) < new Date() 
+      : new Date(pagamento.data_vencimento) < new Date() 
         ? "atrasado" 
         : "pendente";
     
     const { data, error } = await supabase
       .from('pagamentos')
       .insert({
-        aluno_id: pagamento.alunoId,
-        aluno_nome: pagamento.alunoNome,
+        aluno_id: pagamento.aluno_id,
+        aluno_nome: pagamento.aluno_nome,
         valor: pagamento.valor,
-        data_vencimento: pagamento.dataVencimento,
-        data_pagamento: pagamento.dataPagamento,
+        data_vencimento: pagamento.data_vencimento,
+        data_pagamento: pagamento.data_pagamento,
         status,
         mes: pagamento.mes,
         ano: pagamento.ano,
         observacao: pagamento.observacao,
-        metodo_pagamento: pagamento.metodoPagamento,
+        metodo_pagamento: pagamento.metodo_pagamento,
         descricao: pagamento.descricao
       })
       .select()
@@ -109,21 +81,7 @@ export const cadastrarPagamento = async (pagamento: Omit<Pagamento, "id" | "stat
 
     if (error) throw error;
     
-    return {
-      id: data.id,
-      alunoId: data.aluno_id,
-      alunoNome: data.aluno_nome,
-      valor: data.valor,
-      dataVencimento: data.data_vencimento,
-      dataPagamento: data.data_pagamento,
-      status: data.status as "pendente" | "pago" | "atrasado",
-      mes: data.mes,
-      ano: data.ano,
-      observacao: data.observacao,
-      metodoPagamento: data.metodo_pagamento,
-      descricao: data.descricao,
-      comprovante: data.comprovante_url
-    } as Pagamento;
+    return data;
   } catch (error) {
     console.error("Erro ao cadastrar pagamento:", error);
     throw error;
@@ -134,23 +92,23 @@ export const atualizarPagamento = async (id: string, pagamento: Partial<Pagament
   try {
     // Se a data de pagamento for fornecida, atualizamos o status para "pago"
     let novoStatus = pagamento.status;
-    if (pagamento.dataPagamento && !novoStatus) {
+    if (pagamento.data_pagamento && !novoStatus) {
       novoStatus = "pago";
     }
     
     const updateData: any = {};
-    if (pagamento.alunoId) updateData.aluno_id = pagamento.alunoId;
-    if (pagamento.alunoNome) updateData.aluno_nome = pagamento.alunoNome;
+    if (pagamento.aluno_id) updateData.aluno_id = pagamento.aluno_id;
+    if (pagamento.aluno_nome) updateData.aluno_nome = pagamento.aluno_nome;
     if (pagamento.valor) updateData.valor = pagamento.valor;
-    if (pagamento.dataVencimento) updateData.data_vencimento = pagamento.dataVencimento;
-    if (pagamento.dataPagamento) updateData.data_pagamento = pagamento.dataPagamento;
+    if (pagamento.data_vencimento) updateData.data_vencimento = pagamento.data_vencimento;
+    if (pagamento.data_pagamento) updateData.data_pagamento = pagamento.data_pagamento;
     if (novoStatus) updateData.status = novoStatus;
     if (pagamento.mes) updateData.mes = pagamento.mes;
     if (pagamento.ano) updateData.ano = pagamento.ano;
     if (pagamento.observacao) updateData.observacao = pagamento.observacao;
-    if (pagamento.metodoPagamento) updateData.metodo_pagamento = pagamento.metodoPagamento;
+    if (pagamento.metodo_pagamento) updateData.metodo_pagamento = pagamento.metodo_pagamento;
     if (pagamento.descricao) updateData.descricao = pagamento.descricao;
-    if (pagamento.comprovante) updateData.comprovante_url = pagamento.comprovante;
+    if (pagamento.comprovante_url) updateData.comprovante_url = pagamento.comprovante_url;
     
     const { data, error } = await supabase
       .from('pagamentos')
@@ -161,21 +119,7 @@ export const atualizarPagamento = async (id: string, pagamento: Partial<Pagament
 
     if (error) throw error;
     
-    return {
-      id: data.id,
-      alunoId: data.aluno_id,
-      alunoNome: data.aluno_nome,
-      valor: data.valor,
-      dataVencimento: data.data_vencimento,
-      dataPagamento: data.data_pagamento,
-      status: data.status as "pendente" | "pago" | "atrasado",
-      mes: data.mes,
-      ano: data.ano,
-      observacao: data.observacao,
-      metodoPagamento: data.metodo_pagamento,
-      descricao: data.descricao,
-      comprovante: data.comprovante_url
-    } as Pagamento;
+    return data;
   } catch (error) {
     console.error(`Erro ao atualizar pagamento com ID ${id}:`, error);
     throw error;
@@ -218,21 +162,7 @@ export const buscarPagamentosPorAluno = async (alunoId: string): Promise<Pagamen
 
     if (error) throw error;
     
-    return data.map(pagamento => ({
-      id: pagamento.id,
-      alunoId: pagamento.aluno_id,
-      alunoNome: pagamento.aluno_nome,
-      valor: pagamento.valor,
-      dataVencimento: pagamento.data_vencimento,
-      dataPagamento: pagamento.data_pagamento,
-      status: pagamento.status as "pendente" | "pago" | "atrasado",
-      mes: pagamento.mes,
-      ano: pagamento.ano,
-      observacao: pagamento.observacao,
-      metodoPagamento: pagamento.metodo_pagamento,
-      descricao: pagamento.descricao,
-      comprovante: pagamento.comprovante_url
-    })) as Pagamento[];
+    return data || [];
   } catch (error) {
     console.error(`Erro ao buscar pagamentos do aluno ${alunoId}:`, error);
     throw error;
@@ -260,7 +190,7 @@ export const enviarComprovantePagamento = async (pagamentoId: string, comprovant
 
     // Atualizar o pagamento com a URL do comprovante
     const pagamentoAtualizado = await atualizarPagamento(pagamentoId, {
-      comprovante: urlData.publicUrl
+      comprovante_url: urlData.publicUrl
     });
 
     return pagamentoAtualizado;

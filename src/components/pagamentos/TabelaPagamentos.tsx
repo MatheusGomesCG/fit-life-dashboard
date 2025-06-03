@@ -75,7 +75,7 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({
               <TableRow key={pagamento.id}>
                 <TableCell>{pagamento.descricao || `Mensalidade ${pagamento.mes}/${pagamento.ano}`}</TableCell>
                 <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
-                <TableCell>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</TableCell>
+                <TableCell>{format(parseISO(pagamento.data_vencimento), "dd/MM/yyyy")}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     {getStatusIcon(pagamento.status)}
@@ -91,9 +91,9 @@ const TabelaPagamentos: React.FC<TabelaPagamentosProps> = ({
                   </div>
                 </TableCell>
                 <TableCell>
-                  {pagamento.comprovante ? (
+                  {pagamento.comprovante_url ? (
                     <a 
-                      href={pagamento.comprovante} 
+                      href={pagamento.comprovante_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-blue-600 hover:text-blue-800"

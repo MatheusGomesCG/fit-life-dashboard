@@ -88,7 +88,7 @@ const HistoricoPagamentosAluno: React.FC<HistoricoPagamentosAlunoProps> = ({ alu
                 <TableRow key={pagamento.id}>
                   <TableCell>{pagamento.descricao || `Mensalidade ${pagamento.mes}/${pagamento.ano}`}</TableCell>
                   <TableCell>R$ {pagamento.valor.toFixed(2)}</TableCell>
-                  <TableCell>{format(parseISO(pagamento.dataVencimento), "dd/MM/yyyy")}</TableCell>
+                  <TableCell>{format(parseISO(pagamento.data_vencimento), "dd/MM/yyyy")}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       {getStatusIcon(pagamento.status)}
@@ -106,16 +106,16 @@ const HistoricoPagamentosAluno: React.FC<HistoricoPagamentosAlunoProps> = ({ alu
                     </div>
                   </TableCell>
                   <TableCell>
-                    {pagamento.dataPagamento ? (
-                      format(parseISO(pagamento.dataPagamento), "dd/MM/yyyy")
+                    {pagamento.data_pagamento ? (
+                      format(parseISO(pagamento.data_pagamento), "dd/MM/yyyy")
                     ) : (
                       "Não pago"
                     )}
                   </TableCell>
                   <TableCell>
-                    {pagamento.comprovante ? (
+                    {pagamento.comprovante_url ? (
                       <a 
-                        href={pagamento.comprovante} 
+                        href={pagamento.comprovante_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-blue-600 hover:text-blue-800"
