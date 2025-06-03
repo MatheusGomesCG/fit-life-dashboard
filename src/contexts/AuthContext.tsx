@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { criarPerfilProfessor, buscarPerfilProfessor, ProfessorProfile } from "@/services/professorService";
+import { buscarPerfilProfessor, ProfessorProfile } from "@/services/professorService";
 
 interface AuthUser extends User {
   nome?: string;
@@ -17,21 +17,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
-  register: (data: RegisterData) => Promise<{ error: any }>;
   logout: () => Promise<void>;
-}
-
-interface RegisterData {
-  email: string;
-  password: string;
-  userData: {
-    nome: string;
-    tipo: "professor" | "aluno";
-    telefone?: string;
-    documento?: string;
-    endereco?: string;
-    especialidade?: string;
-  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -116,48 +102,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async ({ email, password, userData }: RegisterData) => {
-    try {
-      const redirectUrl = `${window.location.origin}/dashboard-professor`;
-      
-      // Criar usuário no Supabase Auth
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            nome: userData.nome,
-            tipo: userData.tipo
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      // Se o usuário foi criado com sucesso e é um professor, criar perfil
-      if (data.user && userData.tipo === "professor") {
-        await criarPerfilProfessor({
-          user_id: data.user.id,
-          nome: userData.nome,
-          telefone: userData.telefone,
-          documento: userData.documento,
-          endereco: userData.endereco,
-          especialidade: userData.especialidade,
-          status: "ativo"
-        });
-
-        // Recarregar perfil do usuário
-        await loadUserProfile(data.user);
-      }
-
-      return { error: null };
-    } catch (error: any) {
-      console.error("Erro no registro:", error);
-      return { error };
-    }
-  };
-
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -177,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isAuthenticated: !!user,
     login,
-    register,
     logout
   };
 

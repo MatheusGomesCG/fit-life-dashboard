@@ -112,17 +112,11 @@ const Login: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-center">
             <Link to="/" className="text-sm text-fitness-secondary hover:underline flex items-center">
               <ArrowLeft className="h-4 w-4 mr-1" />
               <span>Voltar</span>
             </Link>
-            
-            {userType === "professor" && (
-              <Link to="/cadastrar-professor" className="text-sm text-fitness-secondary hover:underline">
-                Cadastre-se aqui
-              </Link>
-            )}
           </div>
         </form>
       </div>
