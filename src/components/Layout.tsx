@@ -15,15 +15,6 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Show loading spinner while auth is initializing
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
-
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = location.pathname === "/" || 
                        location.pathname === "/login" || 
@@ -49,6 +40,15 @@ const Layout: React.FC = () => {
     }
   }, [isAuthenticated, user, loading, location.pathname, navigate]);
 
+  // Show loading spinner while auth is initializing - MOVED AFTER ALL HOOKS
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
   // Define os itens de menu com base no tipo de usuário (admin, professor ou aluno)
   const getMenuItems = () => {
     if (user?.tipo === "admin") {
@@ -71,7 +71,7 @@ const Layout: React.FC = () => {
         icon: Users,
         label: "Alunos"
       }, {
-        to: "/cadastrar-aluno",
+        to: "/alunos/cadastrar",
         icon: User,
         label: "Novo Aluno"
       }, {
@@ -79,7 +79,7 @@ const Layout: React.FC = () => {
         icon: FileText,
         label: "Fichas de Treino"
       }, {
-        to: "/gerenciar-pagamentos",
+        to: "/pagamentos/cadastrar",
         icon: DollarSign,
         label: "Pagamentos"
       }, {
