@@ -8,7 +8,8 @@ const Layout: React.FC = () => {
   const {
     isAuthenticated,
     user,
-    logout
+    logout,
+    loading
   } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,16 +24,20 @@ const Layout: React.FC = () => {
 
   // Redirecionar usuários autenticados para o dashboard apropriado apenas se estiverem na página inicial
   useEffect(() => {
-    if (isAuthenticated && location.pathname === "/") {
-      if (user?.tipo === "admin") {
+    if (isAuthenticated && user && !loading && location.pathname === "/") {
+      console.log("Redirecionando usuário:", user.tipo);
+      if (user.tipo === "admin") {
+        console.log("Redirecionando para admin dashboard");
         navigate("/admin/dashboard");
-      } else if (user?.tipo === "professor") {
+      } else if (user.tipo === "professor") {
+        console.log("Redirecionando para dashboard professor");
         navigate("/dashboard-professor");
       } else {
+        console.log("Redirecionando para dashboard aluno");
         navigate("/dashboard");
       }
     }
-  }, [isAuthenticated, user, location.pathname, navigate]);
+  }, [isAuthenticated, user, loading, location.pathname, navigate]);
 
   // Define os itens de menu com base no tipo de usuário (admin, professor ou aluno)
   const getMenuItems = () => {
