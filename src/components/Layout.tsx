@@ -1,6 +1,6 @@
 
-import React, { useEffect } from "react";
-import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
+import React from "react";
+import { Link, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar, Shield } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -13,7 +13,15 @@ const Layout: React.FC = () => {
     loading
   } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
+
+  // Show loading spinner while auth is initializing
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = location.pathname === "/" || 
@@ -22,32 +30,6 @@ const Layout: React.FC = () => {
 
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
-
-  // Redirecionar usuários autenticados para o dashboard apropriado apenas se estiverem na página inicial
-  useEffect(() => {
-    if (isAuthenticated && user && !loading && location.pathname === "/") {
-      console.log("Redirecionando usuário:", user.tipo);
-      if (user.tipo === "admin") {
-        console.log("Redirecionando para admin dashboard");
-        navigate("/admin/dashboard");
-      } else if (user.tipo === "professor") {
-        console.log("Redirecionando para dashboard professor");
-        navigate("/dashboard-professor");
-      } else {
-        console.log("Redirecionando para dashboard aluno");
-        navigate("/dashboard");
-      }
-    }
-  }, [isAuthenticated, user, loading, location.pathname, navigate]);
-
-  // Show loading spinner while auth is initializing - MOVED AFTER ALL HOOKS
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
 
   // Define os itens de menu com base no tipo de usuário (admin, professor ou aluno)
   const getMenuItems = () => {
