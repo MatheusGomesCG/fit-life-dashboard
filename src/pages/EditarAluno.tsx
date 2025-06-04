@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -146,31 +147,19 @@ const EditarAluno: React.FC = () => {
     fetchAluno();
   }, [id, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
+  const handleChange = (field: keyof FormData, value: string) => {
     setForm((prev) => ({
       ...prev,
-      [id]: value,
+      [field]: value,
     }));
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [id]: value,
-    }));
-  };
-
-  const handleDobraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const fieldName = id.split("-")[1]; // Formato: "dobra-triceps"
-    
+  const handleDobraChange = (field: keyof FormData['dobrasCutaneas'], value: string) => {
     setForm((prev) => ({
       ...prev,
       dobrasCutaneas: {
         ...prev.dobrasCutaneas,
-        [fieldName]: value,
+        [field]: value,
       },
     }));
   };
@@ -370,7 +359,7 @@ const EditarAluno: React.FC = () => {
                 id="nome"
                 label="Nome Completo"
                 value={form.nome}
-                onChange={handleChange}
+                onChange={(value) => handleChange('nome', value)}
                 required
                 error={errors.nome}
               />
@@ -381,7 +370,7 @@ const EditarAluno: React.FC = () => {
                   label="Idade"
                   type="number"
                   value={form.idade}
-                  onChange={handleChange}
+                  onChange={(value) => handleChange('idade', value)}
                   min={1}
                   max={120}
                   required
@@ -392,7 +381,7 @@ const EditarAluno: React.FC = () => {
                   id="genero"
                   label="Gênero"
                   value={form.genero}
-                  onChange={handleSelectChange}
+                  onChange={(value) => handleChange('genero', value)}
                   options={opcoesGenero}
                   required
                   error={errors.genero}
@@ -416,7 +405,7 @@ const EditarAluno: React.FC = () => {
                 label="Email"
                 type="email"
                 value={form.email}
-                onChange={handleChange}
+                onChange={(value) => handleChange('email', value)}
                 error={errors.email}
               />
               
@@ -424,14 +413,14 @@ const EditarAluno: React.FC = () => {
                 id="telefone"
                 label="Telefone"
                 value={form.telefone}
-                onChange={handleChange}
+                onChange={(value) => handleChange('telefone', value)}
               />
               
               <FormInput
                 id="endereco"
                 label="Endereço"
                 value={form.endereco}
-                onChange={handleChange}
+                onChange={(value) => handleChange('endereco', value)}
               />
             </div>
             
@@ -444,7 +433,7 @@ const EditarAluno: React.FC = () => {
                 label="Valor da Mensalidade (R$)"
                 type="number"
                 value={form.valorMensalidade}
-                onChange={handleChange}
+                onChange={(value) => handleChange('valorMensalidade', value)}
                 min={0}
                 step={0.01}
                 error={errors.valorMensalidade}
@@ -469,7 +458,7 @@ const EditarAluno: React.FC = () => {
                 <textarea
                   id="objetivo"
                   value={form.objetivo}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange('objetivo', e.target.value)}
                   className="fitness-input w-full min-h-[100px]"
                   placeholder="Descreva o objetivo do aluno"
                 />
@@ -482,7 +471,7 @@ const EditarAluno: React.FC = () => {
                 <textarea
                   id="observacoes"
                   value={form.observacoes}
-                  onChange={handleChange}
+                  onChange={(e) => handleChange('observacoes', e.target.value)}
                   className="fitness-input w-full min-h-[100px]"
                   placeholder="Observações adicionais"
                 />
@@ -492,7 +481,7 @@ const EditarAluno: React.FC = () => {
                 id="experiencia"
                 label="Nível de Experiência"
                 value={form.experiencia}
-                onChange={handleSelectChange}
+                onChange={(value) => handleChange('experiencia', value)}
                 options={niveisExperiencia}
                 required
                 error={errors.experiencia}
@@ -509,7 +498,7 @@ const EditarAluno: React.FC = () => {
                   label="Peso (kg)"
                   type="number"
                   value={form.peso}
-                  onChange={handleChange}
+                  onChange={(value) => handleChange('peso', value)}
                   min={1}
                   max={300}
                   step={0.1}
@@ -522,7 +511,7 @@ const EditarAluno: React.FC = () => {
                   label="Altura (cm)"
                   type="number"
                   value={form.altura}
-                  onChange={handleChange}
+                  onChange={(value) => handleChange('altura', value)}
                   min={1}
                   max={250}
                   required
@@ -538,7 +527,7 @@ const EditarAluno: React.FC = () => {
                   label="Tríceps"
                   type="number"
                   value={form.dobrasCutaneas.triceps}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('triceps', value)}
                   min={0}
                   step={0.1}
                   required
@@ -549,7 +538,7 @@ const EditarAluno: React.FC = () => {
                   label="Subescapular"
                   type="number"
                   value={form.dobrasCutaneas.subescapular}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('subescapular', value)}
                   min={0}
                   step={0.1}
                   required
@@ -560,7 +549,7 @@ const EditarAluno: React.FC = () => {
                   label="Axilar Média"
                   type="number"
                   value={form.dobrasCutaneas.axilarMedia}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('axilarMedia', value)}
                   min={0}
                   step={0.1}
                   required
@@ -571,7 +560,7 @@ const EditarAluno: React.FC = () => {
                   label="Peitoral"
                   type="number"
                   value={form.dobrasCutaneas.peitoral}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('peitoral', value)}
                   min={0}
                   step={0.1}
                   required
@@ -582,7 +571,7 @@ const EditarAluno: React.FC = () => {
                   label="Suprailíaca"
                   type="number"
                   value={form.dobrasCutaneas.suprailiaca}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('suprailiaca', value)}
                   min={0}
                   step={0.1}
                   required
@@ -593,7 +582,7 @@ const EditarAluno: React.FC = () => {
                   label="Abdominal"
                   type="number"
                   value={form.dobrasCutaneas.abdominal}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('abdominal', value)}
                   min={0}
                   step={0.1}
                   required
@@ -604,7 +593,7 @@ const EditarAluno: React.FC = () => {
                   label="Coxa"
                   type="number"
                   value={form.dobrasCutaneas.coxa}
-                  onChange={handleDobraChange}
+                  onChange={(value) => handleDobraChange('coxa', value)}
                   min={0}
                   step={0.1}
                   required

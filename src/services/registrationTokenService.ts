@@ -54,3 +54,11 @@ export const buscarTokenCadastro = async (token: string): Promise<ProfessorRegis
   
   return foundToken;
 };
+
+export const marcarTokenComoUsado = async (token: string): Promise<void> => {
+  // Mark token as used by removing it from mock tokens for development
+  const index = mockTokens.findIndex(t => t.token === token);
+  if (index > -1) {
+    mockTokens.splice(index, 1);
+  }
+};
