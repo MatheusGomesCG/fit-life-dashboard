@@ -3,6 +3,7 @@ import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar, Shield } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Layout: React.FC = () => {
   const {
@@ -13,6 +14,15 @@ const Layout: React.FC = () => {
   } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Show loading spinner while auth is initializing
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = location.pathname === "/" || 

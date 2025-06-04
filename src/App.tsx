@@ -29,7 +29,11 @@ function App() {
           <div className="min-h-screen bg-background">
             <Toaster />
             <Routes>
-              <Route path="/" element={<Layout />}>
+              {/* Route for creating first admin - outside Layout */}
+              <Route path="/create-first-admin" element={<CreateFirstAdmin />} />
+              
+              {/* All other routes use Layout */}
+              <Route path="*" element={<Layout />}>
                 <Route index element={<Index />} />
                 <Route path="login" element={<Login />} />
                 <Route path="dashboard" element={<Dashboard />} />
@@ -42,7 +46,6 @@ function App() {
                 <Route path="admin/dashboard" element={<AdminDashboard />} />
                 <Route path="admin/tokens" element={<AdminTokens />} />
               </Route>
-              <Route path="create-first-admin" element={<CreateFirstAdmin />} />
             </Routes>
           </div>
         </Router>
