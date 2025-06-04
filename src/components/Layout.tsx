@@ -42,7 +42,7 @@ const Layout: React.FC = () => {
     icon: Users,
     label: "Alunos"
   }, {
-    to: "/cadastrar-aluno",
+    to: "/alunos/cadastrar",
     icon: User,
     label: "Novo Aluno"
   }, {
@@ -50,7 +50,7 @@ const Layout: React.FC = () => {
     icon: FileText,
     label: "Fichas de Treino"
   }, {
-    to: "/gerenciar-pagamentos",
+    to: "/pagamentos/cadastrar",
     icon: DollarSign,
     label: "Pagamentos"
   }, {
@@ -74,7 +74,7 @@ const Layout: React.FC = () => {
     icon: DollarSign,
     label: "Pagamentos"
   }, {
-    to: "/agendamento",
+    to: "/agendamentos",
     icon: Calendar,
     label: "Agendamento"
   }, {
@@ -113,8 +113,12 @@ const Layout: React.FC = () => {
         {!shouldHideSidebar && <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map(item => {
-            const isActive = location.pathname === item.to || item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to) || item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino"));
-            return <Link key={item.to} to={item.to} className={`flex items-center gap-2 p-3 rounded-md ${isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"}`}>
+            const isActive = location.pathname === item.to || (
+              item.to !== "/dashboard" && 
+              item.to !== "/dashboard-professor" && 
+              location.pathname.startsWith(item.to)
+            );
+            return <Link key={item.to} to={item.to} className={`flex items-center gap-2 p-3 rounded-md transition-colors ${isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100 text-gray-700"}`}>
                     <item.icon size={18} />
                     <span>{item.label}</span>
                   </Link>;
