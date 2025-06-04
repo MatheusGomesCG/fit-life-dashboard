@@ -392,15 +392,13 @@ const Index: React.FC = () => {
             <div className="flex justify-center mb-4">
               <Activity className="h-8 w-8 text-fitness-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-2">FitLife</h3>
+            <h3 className="text-xl font-bold mb-2">GymClouod</h3>
             <p className="text-gray-400 mb-8">
               Sistema de Avaliação Física para Professores
             </p>
             
             <div className="border-t border-gray-800 pt-8">
-              <p className="text-gray-400 text-sm">
-                © 2024 FitLife. Todos os direitos reservados.
-              </p>
+              <p className="text-gray-400 text-sm">© 2025 GymCloud. Todos os direitos reservados.</p>
             </div>
           </div>
         </div>
