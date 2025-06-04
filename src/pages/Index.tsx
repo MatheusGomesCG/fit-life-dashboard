@@ -1,14 +1,17 @@
+
 import React from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Users, ArrowRight, Activity, CheckCircle, Star, Calendar, BarChart3, Shield, Clock, Trophy, FileText } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+
 const Index: React.FC = () => {
   const {
     isAuthenticated,
     loading,
     user
   } = useAuth();
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="large" />
@@ -309,7 +312,7 @@ const Index: React.FC = () => {
                 {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
               </div>
               <p className="text-gray-600 mb-4">
-                "O FitLife revolucionou minha forma de trabalhar. Consigo acompanhar todos os meus alunos de forma organizada e profissional."
+                "O GymCloud revolucionou minha forma de trabalhar. Consigo acompanhar todos os meus alunos de forma organizada e profissional."
               </p>
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-fitness-primary rounded-full flex items-center justify-center text-white font-semibold">
@@ -368,7 +371,7 @@ const Index: React.FC = () => {
             Pronto para transformar seu negócio?
           </h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Junte-se a centenas de professores que já estão usando o FitLife para crescer seus negócios.
+            Junte-se a centenas de professores que já estão usando o GymCloud para crescer seus negócios.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -392,7 +395,7 @@ const Index: React.FC = () => {
             <div className="flex justify-center mb-4">
               <Activity className="h-8 w-8 text-fitness-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-2">GymClouod</h3>
+            <h3 className="text-xl font-bold mb-2">GymCloud</h3>
             <p className="text-gray-400 mb-8">
               Sistema de Avaliação Física para Professores
             </p>
@@ -405,4 +408,5 @@ const Index: React.FC = () => {
       </footer>
     </div>;
 };
+
 export default Index;
