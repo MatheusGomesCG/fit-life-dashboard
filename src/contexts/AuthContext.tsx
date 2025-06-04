@@ -17,6 +17,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
+  loginWithGoogle: () => Promise<{ error: any }>;
   logout: () => Promise<void>;
 }
 
@@ -34,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const enhancedUser: AuthUser = {
         ...authUser,
-        nome: profile?.nome || authUser.user_metadata?.nome,
+        nome: profile?.nome || authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
         tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
         profile: profile || undefined
       };
@@ -45,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Em caso de erro, usar dados básicos
       const basicUser: AuthUser = {
         ...authUser,
-        nome: authUser.user_metadata?.nome,
+        nome: authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
         tipo: authUser.user_metadata?.tipo || "aluno"
       };
       setUser(basicUser);
@@ -102,6 +103,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) throw error;
+
+      return { error: null };
+    } catch (error: any) {
+      console.error("Erro no login com Google:", error);
+      return { error };
+    }
+  };
+
   const logout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
@@ -121,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isAuthenticated: !!user,
     login,
+    loginWithGoogle,
     logout
   };
 
