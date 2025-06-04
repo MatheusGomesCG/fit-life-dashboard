@@ -6,8 +6,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import Layout from './components/Layout';
+import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import DashboardProfessor from './pages/DashboardProfessor';
 import CadastrarPagamento from './pages/CadastrarPagamento';
 import EditarPagamento from './pages/EditarPagamento';
 import CadastrarAluno from './pages/CadastrarAluno';
@@ -26,9 +28,10 @@ function App() {
             <Toaster />
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route index element={<Login />} />
+                <Route index element={<Index />} />
                 <Route path="login" element={<Login />} />
                 <Route path="dashboard" element={<Dashboard />} />
+                <Route path="dashboard-professor" element={<DashboardProfessor />} />
                 <Route path="pagamentos/cadastrar" element={<CadastrarPagamento />} />
                 <Route path="pagamentos/editar/:id" element={<EditarPagamento />} />
                 <Route path="alunos/cadastrar" element={<CadastrarAluno />} />
