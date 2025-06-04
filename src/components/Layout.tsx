@@ -1,9 +1,8 @@
 
-import React from "react";
-import { Link, useLocation, Outlet } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar, Shield } from "lucide-react";
-import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Layout: React.FC = () => {
   const {
@@ -13,15 +12,7 @@ const Layout: React.FC = () => {
     loading
   } = useAuth();
   const location = useLocation();
-
-  // Show loading spinner while auth is initializing
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
+  const navigate = useNavigate();
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = location.pathname === "/" || 
@@ -30,6 +21,23 @@ const Layout: React.FC = () => {
 
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
+
+  // Redirecionar usuários autenticados para o dashboard apropriado apenas se estiverem na página inicial
+  useEffect(() => {
+    if (isAuthenticated && user && !loading && location.pathname === "/") {
+      console.log("Redirecionando usuário:", user.tipo);
+      if (user.tipo === "admin") {
+        console.log("Redirecionando para admin dashboard");
+        navigate("/admin/dashboard");
+      } else if (user.tipo === "professor") {
+        console.log("Redirecionando para dashboard professor");
+        navigate("/dashboard-professor");
+      } else {
+        console.log("Redirecionando para dashboard aluno");
+        navigate("/dashboard");
+      }
+    }
+  }, [isAuthenticated, user, loading, location.pathname, navigate]);
 
   // Define os itens de menu com base no tipo de usuário (admin, professor ou aluno)
   const getMenuItems = () => {
@@ -53,7 +61,7 @@ const Layout: React.FC = () => {
         icon: Users,
         label: "Alunos"
       }, {
-        to: "/alunos/cadastrar",
+        to: "/cadastrar-aluno",
         icon: User,
         label: "Novo Aluno"
       }, {
@@ -61,7 +69,7 @@ const Layout: React.FC = () => {
         icon: FileText,
         label: "Fichas de Treino"
       }, {
-        to: "/pagamentos/cadastrar",
+        to: "/gerenciar-pagamentos",
         icon: DollarSign,
         label: "Pagamentos"
       }, {
@@ -111,8 +119,7 @@ const Layout: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
+  return <div className="min-h-screen bg-gray-50">
       {/* Cabeçalho */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -121,8 +128,7 @@ const Layout: React.FC = () => {
             <h1 className="text-xl font-bold text-fitness-dark">GymCloud</h1>
           </div>
           
-          {isAuthenticated && user && (
-            <div className="flex items-center gap-4">
+          {isAuthenticated && user && <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
                 <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
@@ -133,54 +139,37 @@ const Layout: React.FC = () => {
                   {getUserTypeLabel()}
                 </span>
               </div>
-              <button 
-                onClick={logout} 
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors"
-              >
+              <button onClick={logout} className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors">
                 <LogOut size={16} />
                 <span>Sair</span>
               </button>
-            </div>
-          )}
+            </div>}
         </div>
       </header>
 
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
         {/* Barra lateral - Esconder na página inicial e de login */}
-        {!shouldHideSidebar && (
-          <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
+        {!shouldHideSidebar && <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
-              {menuItems.map((item) => {
-                const isActive = location.pathname === item.to || 
-                               (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && item.to !== "/admin/dashboard" && location.pathname.startsWith(item.to)) || 
-                               (item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
-                return (
-                  <Link 
-                    key={item.to} 
-                    to={item.to} 
-                    className={`flex items-center gap-2 p-3 rounded-md ${
-                      isActive 
-                        ? "bg-fitness-primary text-white" 
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
+              {menuItems.map(item => {
+            const isActive = location.pathname === item.to || 
+                           (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && item.to !== "/admin/dashboard" && location.pathname.startsWith(item.to)) || 
+                           (item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
+            return <Link key={item.to} to={item.to} className={`flex items-center gap-2 p-3 rounded-md ${isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"}`}>
                     <item.icon size={18} />
                     <span>{item.label}</span>
-                  </Link>
-                );
-              })}
+                  </Link>;
+          })}
             </nav>
-          </aside>
-        )}
+          </aside>}
 
         {/* Conteúdo principal - Expandir para tela inteira em rotas públicas */}
         <main className="flex-1 p-6">
           <Outlet />
         </main>
       </div>
-    </div>
-  );
+    </div>;
 };
 
 export default Layout;

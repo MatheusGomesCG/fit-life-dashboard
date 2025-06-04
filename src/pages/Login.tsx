@@ -33,12 +33,18 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, user, navigate]);
   
+  // Log to debug the userType
+  useEffect(() => {
+    console.log("Current userType:", userType);
+  }, [userType]);
+  
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       console.log("Tentando fazer login...");
+      // Call login function with only email and password
       const { error } = await login(email, password);
       
       if (error) {
