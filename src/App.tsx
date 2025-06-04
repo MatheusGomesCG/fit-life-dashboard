@@ -1,67 +1,44 @@
-
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/AuthContext";
-import Layout from "./components/Layout";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import DashboardProfessor from "./pages/DashboardProfessor";
-import CadastrarAluno from "./pages/CadastrarAluno";
-import GerenciarAlunos from "./pages/GerenciarAlunos";
-import ListarAlunos from "./pages/ListarAlunos";
-import EditarAluno from "./pages/EditarAluno";
-import FichaTreino from "./pages/FichaTreino";
-import CadastrarTreino from "./pages/CadastrarTreino";
-import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
-import GerenciarPagamentos from "./pages/GerenciarPagamentos";
-import CadastrarPagamento from "./pages/CadastrarPagamento";
-import EditarPagamento from "./pages/EditarPagamento";
-import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
-import NovoAgendamento from "./pages/NovoAgendamento";
-import MeusTreinos from "./pages/MeusTreinos";
-import MinhasMedidas from "./pages/MinhasMedidas";
-import MeusPagamentos from "./pages/MeusPagamentos";
-import Agendamento from "./pages/Agendamento";
-import Chat from "./pages/Chat";
-import NotFound from "./pages/NotFound";
-import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+import { AuthProvider } from './contexts/AuthContext';
+import { QueryClient } from "react-query";
+
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import Profile from './pages/Profile';
+import Students from './pages/Students';
+import Pagamentos from './pages/Pagamentos';
+import CadastrarPagamento from './pages/CadastrarPagamento';
+import EditarPagamento from './pages/EditarPagamento';
+import CadastrarAluno from './pages/CadastrarAluno';
+import EditarAluno from './pages/EditarAluno';
+import CadastrarProfessor from "@/pages/CadastrarProfessor";
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Index />} />
-            <Route path="login" element={<Login />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="dashboard-professor" element={<DashboardProfessor />} />
-            <Route path="gerenciar-alunos" element={<GerenciarAlunos />} />
-            <Route path="cadastrar-aluno" element={<CadastrarAluno />} />
-            <Route path="editar-aluno/:id" element={<EditarAluno />} />
-            <Route path="gerenciar-fichas" element={<GerenciarFichaTreino />} />
-            <Route path="ficha-treino/:id" element={<FichaTreino />} />
-            <Route path="cadastrar-treino/:id" element={<CadastrarTreino />} />
-            <Route path="listar-alunos" element={<ListarAlunos />} />
-            <Route path="gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-            <Route path="cadastrar-pagamento" element={<CadastrarPagamento />} />
-            <Route path="editar-pagamento/:id" element={<EditarPagamento />} />
-            <Route path="agendamentos" element={<GerenciarAgendamentos />} />
-            <Route path="novo-agendamento" element={<NovoAgendamento />} />
-            <Route path="meus-treinos" element={<MeusTreinos />} />
-            <Route path="minhas-medidas" element={<MinhasMedidas />} />
-            <Route path="meus-pagamentos" element={<MeusPagamentos />} />
-            <Route path="agendamento" element={<Agendamento />} />
-            <Route path="chat" element={<Chat />} />
-            <Route path="fotos-aluno/:id" element={<GerenciarFotosAluno />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster position="top-right" />
+        <QueryClient>
+          <div className="min-h-screen bg-background">
+            <Toaster />
+            <Routes>
+              <Route path="/" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/alunos" element={<Students />} />
+              <Route path="/pagamentos" element={<Pagamentos />} />
+              <Route path="/pagamentos/cadastrar" element={<CadastrarPagamento />} />
+              <Route path="/pagamentos/editar/:id" element={<EditarPagamento />} />
+              <Route path="/alunos/cadastrar" element={<CadastrarAluno />} />
+              <Route path="/alunos/editar/:id" element={<EditarAluno />} />
+              <Route path="/cadastrar-professor/:token" element={<CadastrarProfessor />} />
+            </Routes>
+          </div>
+        </QueryClient>
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
 
