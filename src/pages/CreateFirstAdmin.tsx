@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
+import { criarAdmin } from "@/services/adminService";
 import { useNavigate } from "react-router-dom";
 
 const CreateFirstAdmin: React.FC = () => {
@@ -42,52 +43,18 @@ const CreateFirstAdmin: React.FC = () => {
         return;
       }
 
-      console.log("Usuário criado:", authData.user.id);
-
       // Aguardar um pouco para garantir que o usuário foi criado
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Fazer login com o usuário criado para passar pelas políticas RLS
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email,
-        password
+      // Criar o registro de admin
+      await criarAdmin({
+        user_id: authData.user.id,
+        nome: nome,
+        email: email
       });
-
-      if (loginError) {
-        console.error("Erro ao fazer login:", loginError);
-        toast.error("Erro ao fazer login: " + loginError.message);
-        return;
-      }
-
-      console.log("Login realizado com sucesso");
-
-      // Aguardar um pouco para garantir que a sessão foi estabelecida
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Agora criar o registro de admin usando inserção direta
-      const { data: adminData, error: adminError } = await supabase
-        .from('admin_users')
-        .insert([{
-          user_id: authData.user.id,
-          nome: nome,
-          email: email
-        }])
-        .select()
-        .single();
-
-      if (adminError) {
-        console.error("Erro ao criar admin:", adminError);
-        toast.error("Erro ao criar administrador: " + adminError.message);
-        return;
-      }
-
-      console.log("Admin criado:", adminData);
 
       toast.success("Primeiro administrador criado com sucesso!");
       toast.info("Use as credenciais fornecidas para fazer login.");
-      
-      // Fazer logout para que o usuário possa fazer login normalmente
-      await supabase.auth.signOut();
       
       // Redirecionar para a página de login
       navigate("/login");
