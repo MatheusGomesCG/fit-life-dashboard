@@ -8,7 +8,6 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import DashboardProfessor from "./pages/DashboardProfessor";
-import CadastrarProfessor from "./pages/CadastrarProfessor";
 import CadastrarAluno from "./pages/CadastrarAluno";
 import GerenciarAlunos from "./pages/GerenciarAlunos";
 import ListarAlunos from "./pages/ListarAlunos";
@@ -37,7 +36,6 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="login" element={<Login />} />
-            <Route path="cadastrar-professor" element={<CadastrarProfessor />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="dashboard-professor" element={<DashboardProfessor />} />
             <Route path="gerenciar-alunos" element={<GerenciarAlunos />} />
