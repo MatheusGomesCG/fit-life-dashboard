@@ -16,6 +16,7 @@ import CadastrarAluno from './pages/CadastrarAluno';
 import EditarAluno from './pages/EditarAluno';
 import CadastrarProfessor from "@/pages/CadastrarProfessor";
 import AdminTokens from "@/pages/AdminTokens";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ function App() {
                 <Route path="alunos/cadastrar" element={<CadastrarAluno />} />
                 <Route path="alunos/editar/:id" element={<EditarAluno />} />
                 <Route path="cadastrar-professor/:token" element={<CadastrarProfessor />} />
+                <Route path="admin/dashboard" element={<AdminDashboard />} />
                 <Route path="admin/tokens" element={<AdminTokens />} />
               </Route>
             </Routes>

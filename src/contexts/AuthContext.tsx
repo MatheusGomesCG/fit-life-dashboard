@@ -4,11 +4,13 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buscarPerfilProfessor, ProfessorProfile } from "@/services/professorService";
+import { verificarSeEhAdmin } from "@/services/adminService";
 
 interface AuthUser extends User {
   nome?: string;
   tipo?: "professor" | "aluno" | "admin";
   profile?: ProfessorProfile;
+  isAdmin?: boolean;
 }
 
 interface AuthContextType {
@@ -33,11 +35,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Verificar se é professor e buscar perfil
       const profile = await buscarPerfilProfessor(authUser.id);
       
+      // Verificar se é admin
+      const isAdmin = await verificarSeEhAdmin(authUser.id);
+      
       const enhancedUser: AuthUser = {
         ...authUser,
         nome: profile?.nome || authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
-        tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
-        profile: profile || undefined
+        tipo: isAdmin ? "admin" : (profile ? "professor" : "aluno"),
+        profile: profile || undefined,
+        isAdmin
       };
       
       setUser(enhancedUser);
@@ -47,7 +53,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const basicUser: AuthUser = {
         ...authUser,
         nome: authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
-        tipo: authUser.user_metadata?.tipo || "aluno"
+        tipo: authUser.user_metadata?.tipo || "aluno",
+        isAdmin: false
       };
       setUser(basicUser);
     }
