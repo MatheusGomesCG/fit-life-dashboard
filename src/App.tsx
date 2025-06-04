@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from './contexts/AuthContext';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
+import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import CadastrarPagamento from './pages/CadastrarPagamento';
@@ -18,26 +19,28 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
           <div className="min-h-screen bg-background">
             <Toaster />
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/pagamentos/cadastrar" element={<CadastrarPagamento />} />
-              <Route path="/pagamentos/editar/:id" element={<EditarPagamento />} />
-              <Route path="/alunos/cadastrar" element={<CadastrarAluno />} />
-              <Route path="/alunos/editar/:id" element={<EditarAluno />} />
-              <Route path="/cadastrar-professor/:token" element={<CadastrarProfessor />} />
-              <Route path="/admin/tokens" element={<AdminTokens />} />
-            </Routes>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/pagamentos/cadastrar" element={<CadastrarPagamento />} />
+                <Route path="/pagamentos/editar/:id" element={<EditarPagamento />} />
+                <Route path="/alunos/cadastrar" element={<CadastrarAluno />} />
+                <Route path="/alunos/editar/:id" element={<EditarAluno />} />
+                <Route path="/cadastrar-professor/:token" element={<CadastrarProfessor />} />
+                <Route path="/admin/tokens" element={<AdminTokens />} />
+              </Routes>
+            </Layout>
           </div>
-        </AuthProvider>
-      </QueryClientProvider>
-    </Router>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

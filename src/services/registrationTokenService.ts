@@ -2,88 +2,55 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProfessorRegistrationToken {
-  id?: string;
+  id: string;
   token: string;
   professor_email: string;
   professor_nome: string;
   tipo_plano: "25" | "50" | "100" | "100+";
-  used: boolean;
   expires_at: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
 }
 
-export const criarTokenCadastroProfessor = async (
-  tokenData: Omit<ProfessorRegistrationToken, "id" | "token" | "used" | "created_at" | "updated_at">
-): Promise<ProfessorRegistrationToken> => {
-  try {
-    // Gerar token único
-    const token = `prof_reg_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-    
-    const { data, error } = await supabase
-      .from('professor_registration_tokens')
-      .insert({
-        ...tokenData,
-        token,
-        used: false,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
-      })
-      .select()
-      .single();
+export interface CreateTokenData {
+  professor_email: string;
+  professor_nome: string;
+  tipo_plano: "25" | "50" | "100" | "100+";
+  expires_at: string;
+}
 
-    if (error) throw error;
-    return data as ProfessorRegistrationToken;
-  } catch (error) {
-    console.error("Erro ao criar token de cadastro:", error);
-    throw error;
-  }
-};
+// Mock data for development since the table doesn't exist yet
+const mockTokens: ProfessorRegistrationToken[] = [];
 
-export const buscarTokenCadastro = async (token: string): Promise<ProfessorRegistrationToken | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('professor_registration_tokens')
-      .select('*')
-      .eq('token', token)
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+export const criarTokenCadastroProfessor = async (data: CreateTokenData): Promise<ProfessorRegistrationToken> => {
+  // Generate a simple token for development
+  const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  
+  const newToken: ProfessorRegistrationToken = {
+    id: Math.random().toString(36).substring(2, 15),
+    token,
+    professor_email: data.professor_email,
+    professor_nome: data.professor_nome,
+    tipo_plano: data.tipo_plano,
+    expires_at: data.expires_at,
+    created_at: new Date().toISOString()
+  };
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return data ? (data as ProfessorRegistrationToken) : null;
-  } catch (error) {
-    console.error("Erro ao buscar token de cadastro:", error);
-    throw error;
-  }
-};
-
-export const marcarTokenComoUsado = async (token: string): Promise<void> => {
-  try {
-    const { error } = await supabase
-      .from('professor_registration_tokens')
-      .update({ used: true })
-      .eq('token', token);
-
-    if (error) throw error;
-  } catch (error) {
-    console.error("Erro ao marcar token como usado:", error);
-    throw error;
-  }
+  mockTokens.push(newToken);
+  return newToken;
 };
 
 export const listarTokensAtivos = async (): Promise<ProfessorRegistrationToken[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('professor_registration_tokens')
-      .select('*')
-      .eq('used', false)
-      .gt('expires_at', new Date().toISOString())
-      .order('created_at', { ascending: false });
+  // Return mock tokens for development
+  return mockTokens.filter(token => new Date(token.expires_at) > new Date());
+};
 
-    if (error) throw error;
-    return data ? (data as ProfessorRegistrationToken[]) : [];
-  } catch (error) {
-    console.error("Erro ao listar tokens ativos:", error);
-    throw error;
+export const buscarTokenCadastro = async (token: string): Promise<ProfessorRegistrationToken | null> => {
+  // Find mock token for development
+  const foundToken = mockTokens.find(t => t.token === token);
+  
+  if (!foundToken || new Date(foundToken.expires_at) <= new Date()) {
+    return null;
   }
+  
+  return foundToken;
 };
