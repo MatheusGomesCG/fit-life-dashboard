@@ -134,7 +134,6 @@ const AdminTokens: React.FC = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormInput
                     label="Email do Professor"
-                    name="professor_email"
                     type="email"
                     value={formData.professor_email}
                     onChange={(value) => handleInputChange("professor_email", value)}
@@ -145,7 +144,6 @@ const AdminTokens: React.FC = () => {
 
                   <FormInput
                     label="Nome do Professor"
-                    name="professor_nome"
                     value={formData.professor_nome}
                     onChange={(value) => handleInputChange("professor_nome", value)}
                     placeholder="Nome completo"
@@ -157,7 +155,6 @@ const AdminTokens: React.FC = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormSelect
                     label="Tipo de Plano"
-                    name="tipo_plano"
                     value={formData.tipo_plano}
                     onChange={(value) => handleInputChange("tipo_plano", value)}
                     options={tiposPlano}
@@ -166,7 +163,6 @@ const AdminTokens: React.FC = () => {
 
                   <FormInput
                     label="Data de Expiração"
-                    name="expires_at"
                     type="datetime-local"
                     value={formData.expires_at}
                     onChange={(value) => handleInputChange("expires_at", value)}

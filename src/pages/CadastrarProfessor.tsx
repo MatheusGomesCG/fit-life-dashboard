@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { buscarTokenCadastro } from "@/services/registrationTokenService";
 import { cadastrarProfessor, CadastroProfessorData } from "@/services/registrationService";
@@ -115,7 +114,6 @@ const CadastrarProfessor: React.FC = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <FormInput
                   label="Nome Completo"
-                  name="nome"
                   value={formData.nome || ""}
                   onChange={(value) => handleInputChange("nome", value)}
                   placeholder="Seu nome completo"
@@ -125,7 +123,6 @@ const CadastrarProfessor: React.FC = () => {
 
                 <FormInput
                   label="Email"
-                  name="email"
                   type="email"
                   value={formData.email || ""}
                   onChange={(value) => handleInputChange("email", value)}
@@ -138,7 +135,6 @@ const CadastrarProfessor: React.FC = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <FormInput
                   label="Telefone"
-                  name="telefone"
                   value={formData.telefone || ""}
                   onChange={(value) => handleInputChange("telefone", value)}
                   placeholder="(11) 99999-9999"
@@ -147,7 +143,6 @@ const CadastrarProfessor: React.FC = () => {
 
                 <FormInput
                   label="CPF"
-                  name="documento"
                   value={formData.documento || ""}
                   onChange={(value) => handleInputChange("documento", value)}
                   placeholder="000.000.000-00"
@@ -157,7 +152,6 @@ const CadastrarProfessor: React.FC = () => {
 
               <FormInput
                 label="Endereço"
-                name="endereco"
                 value={formData.endereco || ""}
                 onChange={(value) => handleInputChange("endereco", value)}
                 placeholder="Rua, número, bairro - Cidade, Estado"
@@ -166,7 +160,6 @@ const CadastrarProfessor: React.FC = () => {
 
               <FormInput
                 label="Especialidade"
-                name="especialidade"
                 value={formData.especialidade || ""}
                 onChange={(value) => handleInputChange("especialidade", value)}
                 placeholder="Ex: Musculação, Pilates, Funcional..."
