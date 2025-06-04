@@ -1,7 +1,9 @@
+
 import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
+
 const Layout: React.FC = () => {
   const {
     isAuthenticated,
@@ -12,17 +14,23 @@ const Layout: React.FC = () => {
   const navigate = useNavigate();
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
-  const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
+  const isPublicRoute = location.pathname === "/" || 
+                       location.pathname === "/login" || 
+                       location.pathname.startsWith("/cadastrar-professor");
 
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
 
-  // Redirecionar para home apenas se não estiver autenticado e não estiver em rota pública
+  // Redirecionar usuários autenticados para o dashboard apropriado apenas se estiverem na página inicial
   useEffect(() => {
-    if (!isAuthenticated && !isPublicRoute) {
-      navigate("/");
+    if (isAuthenticated && location.pathname === "/") {
+      if (user?.tipo === "professor") {
+        navigate("/dashboard-professor");
+      } else {
+        navigate("/dashboard");
+      }
     }
-  }, [isAuthenticated, isPublicRoute, navigate]);
+  }, [isAuthenticated, user, location.pathname, navigate]);
 
   // Define os itens de menu com base no tipo de usuário (aluno ou professor)
   const menuItems = user?.tipo === "professor" ? [{
@@ -74,6 +82,7 @@ const Layout: React.FC = () => {
     icon: MessageSquare,
     label: "Chat"
   }];
+
   return <div className="min-h-screen bg-gray-50">
       {/* Cabeçalho */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
@@ -120,4 +129,5 @@ const Layout: React.FC = () => {
       </div>
     </div>;
 };
+
 export default Layout;
