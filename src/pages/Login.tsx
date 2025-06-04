@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Activity, LogIn, ArrowLeft, Shield, Users, Dumbbell } from "lucide-react";
+import { Activity, LogIn, ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import GoogleLoginButton from "@/components/GoogleLoginButton";
 
@@ -11,27 +11,12 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated, user } = useAuth();
+  const { login } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
   
-  // Get user type from query string (?tipo=aluno, ?tipo=professor, ?tipo=admin)
+  // Get user type from query string (?tipo=aluno or ?tipo=professor)
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
-  
-  // Redirecionar se já estiver logado
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("Usuário já logado, redirecionando...");
-      if (user.tipo === "admin") {
-        navigate("/admin/dashboard");
-      } else if (user.tipo === "professor") {
-        navigate("/dashboard-professor");
-      } else {
-        navigate("/dashboard");
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
   
   // Log to debug the userType
   useEffect(() => {
@@ -43,7 +28,6 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log("Tentando fazer login...");
       // Call login function with only email and password
       const { error } = await login(email, password);
       
@@ -60,34 +44,6 @@ const Login: React.FC = () => {
     }
   };
 
-  const getLoginInfo = () => {
-    switch (userType) {
-      case "admin":
-        return {
-          title: "Acesso Administrativo",
-          subtitle: "Painel de administração do sistema",
-          icon: Shield,
-          color: "text-red-600"
-        };
-      case "professor":
-        return {
-          title: "Acesso para Professores", 
-          subtitle: "Gerencie seus alunos e treinos",
-          icon: Users,
-          color: "text-blue-600"
-        };
-      default:
-        return {
-          title: "Acesso para Alunos",
-          subtitle: "Acompanhe seus treinos e progresso", 
-          icon: Dumbbell,
-          color: "text-green-600"
-        };
-    }
-  };
-
-  const loginInfo = getLoginInfo();
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
@@ -96,16 +52,10 @@ const Login: React.FC = () => {
             <Activity className="h-12 w-12 text-fitness-primary" />
           </div>
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
-            GymCloud
+            FitLife
           </h1>
-          <div className="mt-2 flex items-center justify-center gap-2">
-            <loginInfo.icon className={`h-5 w-5 ${loginInfo.color}`} />
-            <p className="text-sm text-gray-600">
-              {loginInfo.title}
-            </p>
-          </div>
-          <p className="text-xs text-gray-500 mt-1">
-            {loginInfo.subtitle}
+          <p className="mt-2 text-sm text-gray-600">
+            {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}
           </p>
         </div>
 

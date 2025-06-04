@@ -32,37 +32,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (authUser: User) => {
     try {
-      console.log("Carregando perfil para usuário:", authUser.id);
-      
-      // Verificar se é admin primeiro
-      const isAdmin = await verificarSeEhAdmin(authUser.id);
-      console.log("É admin?", isAdmin);
-      
-      if (isAdmin) {
-        const enhancedUser: AuthUser = {
-          ...authUser,
-          nome: authUser.user_metadata?.nome || authUser.user_metadata?.full_name || "Administrador",
-          tipo: "admin",
-          isAdmin: true
-        };
-        console.log("Usuário admin configurado:", enhancedUser);
-        setUser(enhancedUser);
-        return;
-      }
-      
-      // Se não é admin, verificar se é professor
+      // Verificar se é professor e buscar perfil
       const profile = await buscarPerfilProfessor(authUser.id);
-      console.log("Perfil de professor:", profile);
+      
+      // Verificar se é admin
+      const isAdmin = await verificarSeEhAdmin(authUser.id);
       
       const enhancedUser: AuthUser = {
         ...authUser,
         nome: profile?.nome || authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
-        tipo: profile ? "professor" : "aluno",
+        tipo: isAdmin ? "admin" : (profile ? "professor" : "aluno"),
         profile: profile || undefined,
-        isAdmin: false
+        isAdmin
       };
       
-      console.log("Usuário configurado:", enhancedUser);
       setUser(enhancedUser);
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
@@ -70,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const basicUser: AuthUser = {
         ...authUser,
         nome: authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
-        tipo: "aluno",
+        tipo: authUser.user_metadata?.tipo || "aluno",
         isAdmin: false
       };
       setUser(basicUser);
@@ -109,15 +92,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("Tentando fazer login com:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) throw error;
-
-      console.log("Login bem-sucedido:", data.user?.id);
 
       if (data.user) {
         await loadUserProfile(data.user);
