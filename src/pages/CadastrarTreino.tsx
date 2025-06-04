@@ -288,7 +288,7 @@ const CadastrarTreino: React.FC = () => {
                   id={`exercicio-${index}-nome`}
                   label="Nome do Exercício"
                   value={exercicio.nomeExercicio}
-                  onChange={(value) => handleExercicioChange(index, "nomeExercicio", value)}
+                  onChange={(e) => handleExercicioChange(index, "nomeExercicio", e.target.value)}
                   required
                 />
                 
@@ -296,7 +296,7 @@ const CadastrarTreino: React.FC = () => {
                   id={`exercicio-${index}-grupo`}
                   label="Grupo Muscular"
                   value={exercicio.grupoMuscular}
-                  onChange={(value) => handleExercicioChange(index, "grupoMuscular", value)}
+                  onChange={(e) => handleExercicioChange(index, "grupoMuscular", e.target.value)}
                   options={gruposMusculares.map(grupo => ({ value: grupo, label: grupo }))}
                   required
                 />
@@ -305,7 +305,7 @@ const CadastrarTreino: React.FC = () => {
                   id={`exercicio-${index}-dia`}
                   label="Dia do Treino"
                   value={exercicio.diaTreino || ""}
-                  onChange={(value) => handleExercicioChange(index, "diaTreino", value)}
+                  onChange={(e) => handleExercicioChange(index, "diaTreino", e.target.value)}
                   options={diasSemana.map(dia => ({ value: dia, label: dia }))}
                   required
                 />
@@ -315,7 +315,7 @@ const CadastrarTreino: React.FC = () => {
                   label="Carga (kg)"
                   type="number"
                   value={exercicio.cargaIdeal}
-                  onChange={(value) => handleExercicioChange(index, "cargaIdeal", value)}
+                  onChange={(e) => handleExercicioChange(index, "cargaIdeal", e.target.value)}
                   required
                 />
                 
@@ -324,7 +324,7 @@ const CadastrarTreino: React.FC = () => {
                   label="Séries"
                   type="number"
                   value={exercicio.series}
-                  onChange={(value) => handleExercicioChange(index, "series", Number(value))}
+                  onChange={(e) => handleExercicioChange(index, "series", Number(e.target.value))}
                   required
                 />
                 
@@ -333,7 +333,7 @@ const CadastrarTreino: React.FC = () => {
                   label="Repetições"
                   type="number"
                   value={exercicio.repeticoes}
-                  onChange={(value) => handleExercicioChange(index, "repeticoes", Number(value))}
+                  onChange={(e) => handleExercicioChange(index, "repeticoes", Number(e.target.value))}
                   required
                 />
                 
@@ -341,7 +341,7 @@ const CadastrarTreino: React.FC = () => {
                   id={`exercicio-${index}-estrategia`}
                   label="Estratégia/Técnica"
                   value={exercicio.estrategia || ""}
-                  onChange={(value) => handleExercicioChange(index, "estrategia", value)}
+                  onChange={(e) => handleExercicioChange(index, "estrategia", e.target.value)}
                 />
                 
                 <div className="md:col-span-2">
@@ -349,7 +349,7 @@ const CadastrarTreino: React.FC = () => {
                     id={`exercicio-${index}-video`}
                     label="Link do Vídeo (YouTube)"
                     value={exercicio.videoUrl || ""}
-                    onChange={(value) => handleExercicioChange(index, "videoUrl", value)}
+                    onChange={(e) => handleExercicioChange(index, "videoUrl", e.target.value)}
                   />
                 </div>
               </div>

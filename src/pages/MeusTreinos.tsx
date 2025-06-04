@@ -1,108 +1,63 @@
 
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { FileText, Play, Clock, CheckCircle, Target } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { FileText, Calendar, ArrowRight } from "lucide-react";
+import { buscarFichaTreinoAluno } from "@/services/alunosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
-
-interface Treino {
-  id: string;
-  nome: string;
-  descricao: string;
-  exercicios: number;
-  duracao: string;
-  nivel: "iniciante" | "intermediario" | "avancado";
-  status: "pendente" | "em_andamento" | "concluido";
-  professor_nome: string;
-  created_at: string;
-}
 
 const MeusTreinos: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [treinos, setTreinos] = useState<Treino[]>([]);
+  const [treinos, setTreinos] = useState<any[]>([]);
+  const [temFichaTreino, setTemFichaTreino] = useState(false);
 
   useEffect(() => {
-    // Simular carregamento de treinos
-    setTimeout(() => {
-      setTreinos([
-        {
-          id: "1",
-          nome: "Treino Superior A",
-          descricao: "Foco em peito, ombros e tríceps",
-          exercicios: 8,
-          duracao: "45 min",
-          nivel: "intermediario",
-          status: "pendente",
-          professor_nome: "Prof. Carlos Silva",
-          created_at: "2024-06-01"
-        },
-        {
-          id: "2",
-          nome: "Treino Inferior B", 
-          descricao: "Foco em pernas e glúteos",
-          exercicios: 10,
-          duracao: "50 min",
-          nivel: "intermediario",
-          status: "concluido",
-          professor_nome: "Prof. Carlos Silva",
-          created_at: "2024-05-28"
-        },
-        {
-          id: "3",
-          nome: "Cardio HIIT",
-          descricao: "Treino cardiovascular intenso",
-          exercicios: 6,
-          duracao: "30 min", 
-          nivel: "avancado",
-          status: "em_andamento",
-          professor_nome: "Prof. Carlos Silva",
-          created_at: "2024-06-03"
+    const carregarTreinos = async () => {
+      try {
+        setLoading(true);
+        
+        if (user?.id) {
+          const fichaTreino = await buscarFichaTreinoAluno(user.id);
+          
+          if (fichaTreino && fichaTreino.exercicios) {
+            setTemFichaTreino(true);
+            
+            // Agrupar exercícios por dia da semana
+            const treinosPorDia = fichaTreino.exercicios.reduce((acc, exercicio) => {
+              const dia = exercicio.diaTreino || "Sem dia definido";
+              
+              if (!acc[dia]) {
+                acc[dia] = [];
+              }
+              
+              acc[dia].push(exercicio);
+              return acc;
+            }, {} as Record<string, any[]>);
+            
+            // Converter para array para renderização
+            const treinosArray = Object.entries(treinosPorDia).map(([dia, exercicios]) => ({
+              dia,
+              exercicios
+            }));
+            
+            setTreinos(treinosArray);
+          } else {
+            setTemFichaTreino(false);
+          }
         }
-      ]);
-      setLoading(false);
-    }, 1000);
+      } catch (error) {
+        console.error("Erro ao carregar treinos:", error);
+        toast.error("Erro ao carregar seus treinos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    carregarTreinos();
   }, [user]);
-
-  const getNivelColor = (nivel: string) => {
-    switch (nivel) {
-      case "iniciante": return "bg-green-100 text-green-800";
-      case "intermediario": return "bg-yellow-100 text-yellow-800";
-      case "avancado": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pendente": return "bg-blue-100 text-blue-800";
-      case "em_andamento": return "bg-orange-100 text-orange-800";
-      case "concluido": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "pendente": return "Pendente";
-      case "em_andamento": return "Em Andamento";
-      case "concluido": return "Concluído";
-      default: return status;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "pendente": return <Clock className="h-4 w-4" />;
-      case "em_andamento": return <Play className="h-4 w-4" />;
-      case "concluido": return <CheckCircle className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
-  };
 
   if (loading) {
     return (
@@ -112,141 +67,94 @@ const MeusTreinos: React.FC = () => {
     );
   }
 
-  const treinosPendentes = treinos.filter(t => t.status === "pendente");
-  const treinosAndamento = treinos.filter(t => t.status === "em_andamento");
-  const treinosConcluidos = treinos.filter(t => t.status === "concluido");
+  if (!temFichaTreino) {
+    return (
+      <div className="space-y-6">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">Meus Treinos</h1>
+          <p className="text-gray-600 mt-1">
+            Visualize seus exercícios e plano de treinamento
+          </p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+          <div className="mx-auto w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+            <FileText className="h-8 w-8 text-amber-500" />
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Nenhum treino encontrado</h2>
+          <p className="text-gray-600 max-w-md mx-auto">
+            Você ainda não possui uma ficha de treino. Entre em contato com seu professor para criar seu plano de treinamento personalizado.
+          </p>
+          <button
+            onClick={() => navigate("/agendamento")}
+            className="mt-6 px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 inline-flex items-center"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Agendar avaliação
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Meus Treinos</h1>
-          <p className="text-gray-600 mt-1">
-            Acompanhe seus treinos e progresso
-          </p>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Meus Treinos</h1>
+        <p className="text-gray-600 mt-1">
+          Visualize seus exercícios e plano de treinamento
+        </p>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <Target className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total de Treinos</p>
-                <p className="text-2xl font-bold">{treinos.length}</p>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {treinos.map((treino, index) => (
+          <div 
+            key={index}
+            className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+          >
+            <div className="bg-fitness-primary text-white py-3 px-4">
+              <h2 className="text-lg font-semibold">{treino.dia}</h2>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pendentes</p>
-                <p className="text-2xl font-bold">{treinosPendentes.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <Play className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Em Andamento</p>
-                <p className="text-2xl font-bold">{treinosAndamento.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Concluídos</p>
-                <p className="text-2xl font-bold">{treinosConcluidos.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Lista de Treinos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Todos os Treinos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {treinos.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Nenhum treino encontrado
-              </h3>
-              <p className="text-gray-500">
-                Seu professor ainda não criou treinos para você.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {treinos.map((treino) => (
-                <div key={treino.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900">{treino.nome}</h3>
-                        <Badge className={getStatusColor(treino.status)}>
-                          <div className="flex items-center gap-1">
-                            {getStatusIcon(treino.status)}
-                            {getStatusText(treino.status)}
-                          </div>
-                        </Badge>
+            <div className="p-4">
+              <ul className="divide-y divide-gray-100">
+                {treino.exercicios.map((exercicio, idx) => (
+                  <li key={idx} className="py-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium text-gray-900">{exercicio.nomeExercicio}</h3>
+                        <p className="text-sm text-gray-600">{exercicio.grupoMuscular}</p>
+                        <div className="mt-1 text-sm">
+                          <span className="mr-3 text-gray-900">{exercicio.series} séries</span>
+                          <span className="text-gray-900">{exercicio.repeticoes} repetições</span>
+                          {exercicio.cargaIdeal > 0 && (
+                            <span className="ml-3 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-md">
+                              {exercicio.cargaIdeal} kg
+                            </span>
+                          )}
+                        </div>
+                        {exercicio.estrategia && (
+                          <p className="mt-1 text-xs text-gray-500 italic">{exercicio.estrategia}</p>
+                        )}
                       </div>
-                      <p className="text-gray-600 text-sm mb-2">{treino.descricao}</p>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>{treino.exercicios} exercícios</span>
-                        <span>{treino.duracao}</span>
-                        <span>Prof: {treino.professor_nome}</span>
-                      </div>
+                      {exercicio.videoUrl && (
+                        <a 
+                          href={exercicio.videoUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-fitness-secondary hover:underline flex items-center"
+                        >
+                          Ver vídeo
+                          <ArrowRight className="ml-1 h-3 w-3" />
+                        </a>
+                      )}
                     </div>
-                    <Badge className={getNivelColor(treino.nivel)}>
-                      {treino.nivel.charAt(0).toUpperCase() + treino.nivel.slice(1)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Link to={`/ficha-treino/${treino.id}`}>
-                      <Button variant="outline" size="sm">
-                        <FileText className="h-4 w-4 mr-1" />
-                        Ver Detalhes
-                      </Button>
-                    </Link>
-                    {treino.status === "pendente" && (
-                      <Button size="sm">
-                        <Play className="h-4 w-4 mr-1" />
-                        Iniciar Treino
-                      </Button>
-                    )}
-                    {treino.status === "em_andamento" && (
-                      <Button size="sm" variant="outline">
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Finalizar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

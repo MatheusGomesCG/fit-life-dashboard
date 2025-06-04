@@ -9,36 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          nome: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          nome: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          nome?: string
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       aluno_profiles: {
         Row: {
           altura: number | null
@@ -239,10 +209,6 @@ export type Database = {
       contar_alunos_professor: {
         Args: { professor_id: string }
         Returns: number
-      }
-      is_admin: {
-        Args: { user_uuid: string }
-        Returns: boolean
       }
       verificar_limite_alunos: {
         Args: { professor_id: string }

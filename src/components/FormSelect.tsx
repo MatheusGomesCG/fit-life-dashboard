@@ -7,10 +7,10 @@ interface Option {
 }
 
 interface FormSelectProps {
-  id?: string;
+  id: string;
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: Option[];
   required?: boolean;
   className?: string;
@@ -27,21 +27,15 @@ const FormSelect: React.FC<FormSelectProps> = ({
   className = "",
   error,
 }) => {
-  const selectId = id || label.toLowerCase().replace(/\s+/g, '-');
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange(e.target.value);
-  };
-
   return (
     <div className={`mb-4 ${className}`}>
-      <label htmlFor={selectId} className="fitness-label block mb-2">
+      <label htmlFor={id} className="fitness-label block mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <select
-        id={selectId}
+        id={id}
         value={value}
-        onChange={handleChange}
+        onChange={onChange}
         required={required}
         className={`fitness-input w-full ${
           error ? "border-red-500 focus-visible:ring-red-500" : ""

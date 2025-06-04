@@ -17,7 +17,6 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<{ error: any }>;
-  loginWithGoogle: () => Promise<{ error: any }>;
   logout: () => Promise<void>;
 }
 
@@ -35,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const enhancedUser: AuthUser = {
         ...authUser,
-        nome: profile?.nome || authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
+        nome: profile?.nome || authUser.user_metadata?.nome,
         tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
         profile: profile || undefined
       };
@@ -46,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Em caso de erro, usar dados básicos
       const basicUser: AuthUser = {
         ...authUser,
-        nome: authUser.user_metadata?.nome || authUser.user_metadata?.full_name,
+        nome: authUser.user_metadata?.nome,
         tipo: authUser.user_metadata?.tipo || "aluno"
       };
       setUser(basicUser);
@@ -54,15 +53,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let mounted = true;
-    
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change:", event, session?.user?.email);
-        
-        if (!mounted) return;
-        
         setSession(session);
         
         if (session?.user) {
@@ -77,22 +71,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Verificar sessão existente
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
       setSession(session);
       if (session?.user) {
-        loadUserProfile(session.user).finally(() => {
-          if (mounted) setLoading(false);
-        });
+        loadUserProfile(session.user);
       } else {
         setLoading(false);
       }
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -111,24 +98,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null };
     } catch (error: any) {
       console.error("Erro no login:", error);
-      return { error };
-    }
-  };
-
-  const loginWithGoogle = async () => {
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`
-        }
-      });
-
-      if (error) throw error;
-
-      return { error: null };
-    } catch (error: any) {
-      console.error("Erro no login com Google:", error);
       return { error };
     }
   };
@@ -152,7 +121,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     isAuthenticated: !!user,
     login,
-    loginWithGoogle,
     logout
   };
 

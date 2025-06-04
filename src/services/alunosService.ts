@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
@@ -38,7 +39,6 @@ export interface Aluno {
   valorMensalidade?: number;
   dataVencimento?: string;
   fotos?: FotoAluno[]; // Array de fotos do aluno
-  professorId?: string; // Add professor ID to link students to professors
 }
 
 export interface CargaExercicio {
@@ -58,7 +58,7 @@ export interface FichaTreino {
   exercicios: CargaExercicio[];
 }
 
-// Mock data for testing - Update to include professorId
+// Mock data for testing
 const mockAlunos: Aluno[] = [
   {
     id: "aluno_01",
@@ -73,7 +73,6 @@ const mockAlunos: Aluno[] = [
     imc: 23.8,
     genero: "masculino",
     experiencia: "intermediario",
-    professorId: "professor_01", // Add professor ID
     dobrasCutaneas: {
       triceps: 10,
       subescapular: 12,
@@ -114,7 +113,6 @@ const mockAlunos: Aluno[] = [
     imc: 22.8,
     genero: "feminino",
     experiencia: "iniciante",
-    professorId: "professor_01", // Add professor ID
     dobrasCutaneas: {
       triceps: 18,
       subescapular: 15,
@@ -141,7 +139,6 @@ const mockAlunos: Aluno[] = [
     imc: 24.9,
     genero: "masculino",
     experiencia: "avancado",
-    professorId: "professor_02", // Different professor
     dobrasCutaneas: {
       triceps: 8,
       subescapular: 10,
@@ -168,7 +165,6 @@ const mockAlunos: Aluno[] = [
     imc: 22.3,
     genero: "feminino",
     experiencia: "iniciante",
-    professorId: "professor_01", // Same professor as first students
     dobrasCutaneas: {
       triceps: 19,
       subescapular: 16,
@@ -195,7 +191,6 @@ const mockAlunos: Aluno[] = [
     imc: 25.7,
     genero: "masculino",
     experiencia: "intermediario",
-    professorId: "professor_02", // Same professor as Pedro
     dobrasCutaneas: {
       triceps: 12,
       subescapular: 14,
@@ -210,21 +205,6 @@ const mockAlunos: Aluno[] = [
     dataVencimento: "2025-05-12"
   }
 ];
-
-// Add the missing function to search students by professor
-export const buscarAlunosPorProfessor = async (professorId: string): Promise<Aluno[]> => {
-  try {
-    // Mock implementation - filter students by professor ID
-    const alunosDosProfessor = mockAlunos.filter(aluno => aluno.professorId === professorId);
-    
-    return new Promise(resolve => {
-      setTimeout(() => resolve(alunosDosProfessor), 500); // Simulating network delay
-    });
-  } catch (error) {
-    console.error(`Erro ao buscar alunos do professor ${professorId}:`, error);
-    throw error;
-  }
-};
 
 // Função para calcular o percentual de gordura usando a fórmula de Jackson e Pollock
 export const calcularPercentualGordura = (
