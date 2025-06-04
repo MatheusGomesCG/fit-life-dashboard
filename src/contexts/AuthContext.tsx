@@ -54,10 +54,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("Auth state change:", event, session?.user?.email);
+        
+        if (!mounted) return;
+        
         setSession(session);
         
         if (session?.user) {
@@ -72,15 +77,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Verificar sessão existente
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
       if (session?.user) {
-        loadUserProfile(session.user);
+        loadUserProfile(session.user).finally(() => {
+          if (mounted) setLoading(false);
+        });
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {

@@ -38,8 +38,8 @@ const Layout: React.FC = () => {
     }
   }, [isAuthenticated, user?.tipo, location.pathname, navigate, loading]);
 
-  // Se estiver carregando, mostrar loading
-  if (loading) {
+  // Se estiver carregando E não estiver em uma rota específica do dashboard, mostrar loading
+  if (loading && !location.pathname.includes("/dashboard")) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center space-x-2">
