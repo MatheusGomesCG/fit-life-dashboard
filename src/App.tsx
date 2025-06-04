@@ -17,6 +17,7 @@ import EditarAluno from './pages/EditarAluno';
 import CadastrarProfessor from "@/pages/CadastrarProfessor";
 import AdminTokens from "@/pages/AdminTokens";
 import AdminDashboard from "@/pages/AdminDashboard";
+import CreateFirstAdmin from "@/pages/CreateFirstAdmin";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ function App() {
                 <Route path="admin/dashboard" element={<AdminDashboard />} />
                 <Route path="admin/tokens" element={<AdminTokens />} />
               </Route>
+              <Route path="create-first-admin" element={<CreateFirstAdmin />} />
             </Routes>
           </div>
         </Router>
