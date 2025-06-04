@@ -1,32 +1,18 @@
-
 import React from "react";
 import { Navigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { 
-  User, 
-  Users, 
-  ArrowRight, 
-  Activity, 
-  CheckCircle, 
-  Star,
-  Calendar,
-  BarChart3,
-  Shield,
-  Clock,
-  Trophy,
-  FileText
-} from "lucide-react";
+import { User, Users, ArrowRight, Activity, CheckCircle, Star, Calendar, BarChart3, Shield, Clock, Trophy, FileText } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
-
 const Index: React.FC = () => {
-  const { isAuthenticated, loading, user } = useAuth();
-
+  const {
+    isAuthenticated,
+    loading,
+    user
+  } = useAuth();
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="large" />
-      </div>
-    );
+      </div>;
   }
 
   // Redirect to appropriate dashboard if already authenticated
@@ -36,10 +22,9 @@ const Index: React.FC = () => {
     }
     return <Navigate to="/dashboard" replace />;
   }
-  
+
   // Landing page for non-authenticated users
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-24">
         <div className="container mx-auto px-4">
@@ -48,7 +33,7 @@ const Index: React.FC = () => {
               <Activity className="h-16 w-16 text-fitness-primary" />
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6">
-              <span className="text-fitness-primary">FitLife</span>
+              <span className="text-fitness-primary">GymCloud</span>
               <br />
               Sistema de Avaliação Física
             </h1>
@@ -62,17 +47,11 @@ const Index: React.FC = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/login?tipo=professor"
-                className="bg-fitness-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary/90 transition-colors inline-flex items-center justify-center"
-              >
+              <Link to="/login?tipo=professor" className="bg-fitness-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary/90 transition-colors inline-flex items-center justify-center">
                 <Users className="mr-2 h-5 w-5" />
                 Começar como Professor
               </Link>
-              <Link
-                to="/login?tipo=aluno"
-                className="bg-white text-fitness-primary border-2 border-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary hover:text-white transition-colors inline-flex items-center justify-center"
-              >
+              <Link to="/login?tipo=aluno" className="bg-white text-fitness-primary border-2 border-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary hover:text-white transition-colors inline-flex items-center justify-center">
                 <User className="mr-2 h-5 w-5" />
                 Entrar como Aluno
               </Link>
@@ -193,10 +172,7 @@ const Index: React.FC = () => {
                 </li>
               </ul>
               
-              <Link
-                to="/login?tipo=professor"
-                className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center"
-              >
+              <Link to="/login?tipo=professor" className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center">
                 Começar teste grátis
               </Link>
             </div>
@@ -238,10 +214,7 @@ const Index: React.FC = () => {
                 </li>
               </ul>
               
-              <Link
-                to="/login?tipo=professor"
-                className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center"
-              >
+              <Link to="/login?tipo=professor" className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center">
                 Começar teste grátis
               </Link>
             </div>
@@ -277,10 +250,7 @@ const Index: React.FC = () => {
                 </li>
               </ul>
               
-              <Link
-                to="/login?tipo=professor"
-                className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center"
-              >
+              <Link to="/login?tipo=professor" className="w-full bg-fitness-primary text-white py-3 rounded-lg font-semibold hover:bg-fitness-primary/90 transition-colors flex items-center justify-center">
                 Começar teste grátis
               </Link>
             </div>
@@ -316,10 +286,7 @@ const Index: React.FC = () => {
                 </li>
               </ul>
               
-              <Link
-                to="/login?tipo=professor"
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center"
-              >
+              <Link to="/login?tipo=professor" className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center">
                 Começar teste grátis
               </Link>
             </div>
@@ -339,9 +306,7 @@ const Index: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
+                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
               </div>
               <p className="text-gray-600 mb-4">
                 "O FitLife revolucionou minha forma de trabalhar. Consigo acompanhar todos os meus alunos de forma organizada e profissional."
@@ -359,9 +324,7 @@ const Index: React.FC = () => {
 
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
+                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
               </div>
               <p className="text-gray-600 mb-4">
                 "Sistema completo e fácil de usar. Meus alunos adoram poder acessar os treinos pelo celular."
@@ -379,9 +342,7 @@ const Index: React.FC = () => {
 
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                ))}
+                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
               </div>
               <p className="text-gray-600 mb-4">
                 "Excelente custo-benefício. O suporte é muito atencioso e o sistema é muito estável."
@@ -411,10 +372,7 @@ const Index: React.FC = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login?tipo=professor"
-              className="bg-white text-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-flex items-center justify-center"
-            >
+            <Link to="/login?tipo=professor" className="bg-white text-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
               <Users className="mr-2 h-5 w-5" />
               Começar teste grátis
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -447,8 +405,6 @@ const Index: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
