@@ -33,7 +33,7 @@ export interface FichaTreinoCompleta {
 // Helper function to safely cast Json to ExercicioTreino[]
 const castJsonToExercicios = (jsonData: Json): ExercicioTreino[] => {
   if (Array.isArray(jsonData)) {
-    return jsonData as ExercicioTreino[];
+    return jsonData as unknown as ExercicioTreino[];
   }
   return [];
 };
