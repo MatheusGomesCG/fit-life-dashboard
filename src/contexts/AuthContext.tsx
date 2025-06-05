@@ -30,13 +30,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadUserProfile = async (authUser: User) => {
     try {
       console.log("Loading user profile for:", authUser.id);
+      
+      // Primeiro, verificar se o email contém "professor" para identificar professores
+      const isTeacherByEmail = authUser.email?.includes("professor");
+      
       // Verificar se é professor e buscar perfil
       const profile = await buscarPerfilProfessor(authUser.id);
       
+      // Determinar o tipo de usuário
+      let userType: "professor" | "aluno" = "aluno";
+      
+      if (profile) {
+        // Se tem perfil de professor, é professor
+        userType = "professor";
+      } else if (isTeacherByEmail) {
+        // Se o email contém "professor", mesmo sem perfil, é professor
+        userType = "professor";
+      } else if (authUser.user_metadata?.tipo) {
+        // Usar tipo dos metadados se disponível
+        userType = authUser.user_metadata.tipo;
+      }
+      
       const enhancedUser: AuthUser = {
         ...authUser,
-        nome: profile?.nome || authUser.user_metadata?.nome,
-        tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
+        nome: profile?.nome || authUser.user_metadata?.nome || authUser.email?.split('@')[0],
+        tipo: userType,
         profile: profile || undefined
       };
       
@@ -44,11 +62,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(enhancedUser);
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
-      // Em caso de erro, usar dados básicos
+      
+      // Em caso de erro, usar dados básicos mas ainda verificar o email
+      const isTeacherByEmail = authUser.email?.includes("professor");
+      
       const basicUser: AuthUser = {
         ...authUser,
-        nome: authUser.user_metadata?.nome,
-        tipo: authUser.user_metadata?.tipo || "aluno"
+        nome: authUser.user_metadata?.nome || authUser.email?.split('@')[0],
+        tipo: isTeacherByEmail ? "professor" : (authUser.user_metadata?.tipo || "aluno")
       };
       console.log("Basic user:", basicUser.tipo, basicUser.nome);
       setUser(basicUser);
