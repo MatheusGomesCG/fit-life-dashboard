@@ -143,6 +143,98 @@ export type Database = {
         }
         Relationships: []
       }
+      exercicios_treino: {
+        Row: {
+          carga_ideal: number
+          created_at: string
+          dia_treino: string
+          estrategia: string | null
+          ficha_treino_id: string
+          grupo_muscular: string
+          id: string
+          nome_exercicio: string
+          repeticoes: number
+          series: number
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          carga_ideal?: number
+          created_at?: string
+          dia_treino: string
+          estrategia?: string | null
+          ficha_treino_id: string
+          grupo_muscular: string
+          id?: string
+          nome_exercicio: string
+          repeticoes?: number
+          series?: number
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          carga_ideal?: number
+          created_at?: string
+          dia_treino?: string
+          estrategia?: string | null
+          ficha_treino_id?: string
+          grupo_muscular?: string
+          id?: string
+          nome_exercicio?: string
+          repeticoes?: number
+          series?: number
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercicios_treino_ficha_treino_id_fkey"
+            columns: ["ficha_treino_id"]
+            isOneToOne: false
+            referencedRelation: "fichas_treino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercicios_treino_ficha_treino_id_fkey"
+            columns: ["ficha_treino_id"]
+            isOneToOne: false
+            referencedRelation: "fichas_treino_completas"
+            referencedColumns: ["ficha_id"]
+          },
+        ]
+      }
+      fichas_treino: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          professor_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          professor_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          professor_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fichas_treino_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "aluno_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       pagamentos: {
         Row: {
           aluno_id: string
@@ -303,6 +395,32 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_agendamento_aluno"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "aluno_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      fichas_treino_completas: {
+        Row: {
+          altura: number | null
+          aluno_email: string | null
+          aluno_id: string | null
+          aluno_nome: string | null
+          created_at: string | null
+          exercicios: Json | null
+          experiencia: string | null
+          ficha_id: string | null
+          idade: number | null
+          objetivo: string | null
+          peso: number | null
+          professor_id: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fichas_treino_aluno_id_fkey"
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "aluno_profiles"
