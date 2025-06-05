@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Activity, LogIn, ArrowLeft } from "lucide-react";
@@ -10,8 +10,9 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Get user type from query string (?tipo=aluno or ?tipo=professor)
   const searchParams = new URLSearchParams(location.search);
@@ -21,12 +22,25 @@ const Login: React.FC = () => {
   useEffect(() => {
     console.log("Current userType:", userType);
   }, [userType]);
+
+  // Redirect authenticated users to appropriate dashboard
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      console.log("User authenticated, redirecting...", user.tipo);
+      if (user.tipo === "professor") {
+        navigate("/dashboard-professor", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      console.log("Starting login process...");
       // Call login function with only email and password
       const { error } = await login(email, password);
       
@@ -35,6 +49,7 @@ const Login: React.FC = () => {
       }
       
       toast.success("Login realizado com sucesso!");
+      // O redirecionamento será feito pelo useEffect acima
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Credenciais inválidas. Por favor, tente novamente.");
@@ -42,6 +57,15 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Don't render login form if user is already authenticated
+  if (isAuthenticated && user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

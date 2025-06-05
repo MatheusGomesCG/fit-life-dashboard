@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (authUser: User) => {
     try {
+      console.log("Loading user profile for:", authUser.id);
       // Verificar se é professor e buscar perfil
       const profile = await buscarPerfilProfessor(authUser.id);
       
@@ -39,6 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile: profile || undefined
       };
       
+      console.log("Enhanced user:", enhancedUser.tipo, enhancedUser.nome);
       setUser(enhancedUser);
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
@@ -48,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         nome: authUser.user_metadata?.nome,
         tipo: authUser.user_metadata?.tipo || "aluno"
       };
+      console.log("Basic user:", basicUser.tipo, basicUser.nome);
       setUser(basicUser);
     }
   };
@@ -84,6 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -91,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
+      console.log("Login successful:", data.user?.email);
       if (data.user) {
         await loadUserProfile(data.user);
       }
