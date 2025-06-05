@@ -39,6 +39,56 @@ export type Database = {
         }
         Relationships: []
       }
+      agendamentos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data: string
+          descricao: string | null
+          horario: string
+          id: string
+          observacoes: string | null
+          professor_id: string
+          status: string
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data: string
+          descricao?: string | null
+          horario: string
+          id?: string
+          observacoes?: string | null
+          professor_id: string
+          status?: string
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          horario?: string
+          id?: string
+          observacoes?: string | null
+          professor_id?: string
+          status?: string
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_agendamento_aluno"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "aluno_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       aluno_profiles: {
         Row: {
           altura: number | null
@@ -233,7 +283,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      agendamentos_com_aluno: {
+        Row: {
+          aluno_email: string | null
+          aluno_id: string | null
+          aluno_nome: string | null
+          aluno_telefone: string | null
+          created_at: string | null
+          data: string | null
+          descricao: string | null
+          horario: string | null
+          id: string | null
+          observacoes: string | null
+          professor_id: string | null
+          status: string | null
+          tipo: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_agendamento_aluno"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "aluno_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Functions: {
       contar_alunos_professor: {
