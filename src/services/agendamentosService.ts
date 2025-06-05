@@ -64,7 +64,7 @@ export const listarAgendamentos = async (): Promise<Agendamento[]> => {
       tipo: item.tipo,
       descricao: item.descricao,
       observacoes: item.observacoes,
-      status: item.status,
+      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
       aluno_nome: item.aluno_nome,
       aluno_email: item.aluno_email,
       aluno_telefone: item.aluno_telefone
@@ -102,7 +102,7 @@ export const listarAgendamentosSemana = async (): Promise<Agendamento[]> => {
       tipo: item.tipo,
       descricao: item.descricao,
       observacoes: item.observacoes,
-      status: item.status,
+      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
       aluno_nome: item.aluno_nome,
       aluno_email: item.aluno_email,
       aluno_telefone: item.aluno_telefone
@@ -148,7 +148,7 @@ export const buscarAgendamentosPorAluno = async (alunoId: string): Promise<Agend
       tipo: item.tipo,
       descricao: item.descricao,
       observacoes: item.observacoes,
-      status: item.status,
+      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
       aluno_nome: item.aluno_nome,
       aluno_email: item.aluno_email,
       aluno_telefone: item.aluno_telefone
@@ -181,7 +181,7 @@ export const buscarAgendamentosPorProfessor = async (professorId: string): Promi
       tipo: item.tipo,
       descricao: item.descricao,
       observacoes: item.observacoes,
-      status: item.status,
+      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
       aluno_nome: item.aluno_nome,
       aluno_email: item.aluno_email,
       aluno_telefone: item.aluno_telefone
@@ -270,7 +270,7 @@ export const atualizarAgendamento = async (id: string, agendamento: Partial<Agen
       tipo: agendamentoCompleto.tipo,
       descricao: agendamentoCompleto.descricao,
       observacoes: agendamentoCompleto.observacoes,
-      status: agendamentoCompleto.status,
+      status: agendamentoCompleto.status as "pendente" | "concluido" | "cancelado" | "agendado",
       aluno_nome: agendamentoCompleto.aluno_nome,
       aluno_email: agendamentoCompleto.aluno_email,
       aluno_telefone: agendamentoCompleto.aluno_telefone
