@@ -1,479 +1,445 @@
-
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { criarAluno, calcularPercentualGordura } from "@/services/alunosService";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cadastrarAluno } from "@/services/alunosService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft } from "lucide-react";
 
-// Interface para dados do aluno
-interface DadosAluno {
-  nome: string;
-  email: string;
-  telefone: string;
-  dataNascimento: Date | null;
-  genero: "masculino" | "feminino" | "outro"; // Updating to match required type
-  endereco: string;
-  objetivo: string;
-  observacoes: string;
-  altura: number;
-  peso: number;
-  valorMensalidade: number;
-  dataVencimento: Date | null;
-  // Adicionando campos obrigatórios que faltavam
-  idade: number;
-  experiencia: "iniciante" | "intermediario" | "avancado";
-  dobrasCutaneas: {
-    triceps: number;
-    subescapular: number;
-    axilarMedia: number;
-    peitoral: number;
-    suprailiaca: number;
-    abdominal: number;
-    coxa: number;
-  };
-}
+const alunoSchema = z.object({
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("Email inválido"),
+  telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
+  idade: z.number().min(1, "Idade deve ser maior que 0"),
+  peso: z.number().min(1, "Peso deve ser maior que 0"),
+  altura: z.number().min(1, "Altura deve ser maior que 0"),
+  objetivo: z.string().min(1, "Objetivo é obrigatório"),
+  experiencia: z.string().min(1, "Experiência é obrigatória"),
+  restricoes_medicas: z.string(),
+  genero: z.enum(["masculino", "feminino"]),
+  dataNascimento: z.string(),
+  valorMensalidade: z.number().min(0, "Valor deve ser maior ou igual a 0"),
+  dataVencimento: z.string(),
+  endereco: z.string().optional(),
+  observacoes: z.string().optional(),
+  // Dobras cutâneas
+  triceps: z.number().min(0),
+  subescapular: z.number().min(0),
+  axilarMedia: z.number().min(0),
+  peitoral: z.number().min(0),
+  suprailiaca: z.number().min(0),
+  abdominal: z.number().min(0),
+  coxa: z.number().min(0),
+});
+
+type AlunoFormData = z.infer<typeof alunoSchema>;
 
 const CadastrarAluno: React.FC = () => {
   const navigate = useNavigate();
-  
-  const [dadosAluno, setDadosAluno] = useState<DadosAluno>({
-    nome: "",
-    email: "",
-    telefone: "",
-    dataNascimento: null,
-    genero: "masculino", // Default to masculino to ensure type safety
-    endereco: "",
-    objetivo: "",
-    observacoes: "",
-    altura: 0,
-    peso: 0,
-    valorMensalidade: 0,
-    dataVencimento: null,
-    // Inicialização dos novos campos obrigatórios
-    idade: 0,
-    experiencia: "iniciante",
-    dobrasCutaneas: {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AlunoFormData>({
+    resolver: zodResolver(alunoSchema),
+    defaultValues: {
+      restricoes_medicas: "",
+      endereco: "",
+      observacoes: "",
       triceps: 0,
       subescapular: 0,
       axilarMedia: 0,
       peitoral: 0,
       suprailiaca: 0,
       abdominal: 0,
-      coxa: 0
+      coxa: 0,
     }
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setDadosAluno(prev => ({ ...prev, [id]: value }));
-  };
-  
-  const handleSelectChange = (field: string, value: string) => {
-    setDadosAluno(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleDateChange = (field: string, date: Date | null) => {
-    setDadosAluno(prev => ({ ...prev, [field]: date }));
-  };
-
-  // Adicionando handler para campos numéricos específicos
-  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setDadosAluno(prev => ({ ...prev, [id]: Number(value) }));
-  };
-
-  // Adicionando handler para dobras cutâneas
-  const handleDobrasCutaneasChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const dobra = id.replace('dobra-', '');
-    setDadosAluno(prev => ({
-      ...prev,
-      dobrasCutaneas: {
-        ...prev.dobrasCutaneas,
-        [dobra]: Number(value)
-      }
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
+  const onSubmit = async (data: AlunoFormData) => {
     try {
-      // Validações básicas
-      if (!dadosAluno.nome || !dadosAluno.email || !dadosAluno.telefone) {
-        toast.error("Por favor, preencha os campos obrigatórios");
-        return;
-      }
+      setIsLoading(true);
 
-      // Certificando-se que idade é um número
-      if (!dadosAluno.idade || dadosAluno.idade <= 0) {
-        toast.error("Por favor, informe uma idade válida");
-        return;
-      }
-
-      // Formatando o objeto para envio
-      // Garantindo que genero seja do tipo apropriado antes de enviar
-      const generoValue = dadosAluno.genero as "masculino" | "feminino";
-      
-      const alunoFormatado = {
-        ...dadosAluno,
-        altura: Number(dadosAluno.altura),
-        peso: Number(dadosAluno.peso),
-        valorMensalidade: Number(dadosAluno.valorMensalidade),
-        idade: Number(dadosAluno.idade),
-        genero: generoValue, // Usar o valor tipado
-        // Convertendo as datas para string no formato ISO
-        dataNascimento: dadosAluno.dataNascimento ? dadosAluno.dataNascimento.toISOString() : null,
-        dataVencimento: dadosAluno.dataVencimento ? dadosAluno.dataVencimento.toISOString() : null,
+      const dobrasCutaneas = {
+        triceps: data.triceps,
+        subescapular: data.subescapular,
+        axilarMedia: data.axilarMedia,
+        peitoral: data.peitoral,
+        suprailiaca: data.suprailiaca,
+        abdominal: data.abdominal,
+        coxa: data.coxa,
       };
 
-      await cadastrarAluno(alunoFormatado);
+      const percentualGordura = calcularPercentualGordura(
+        dobrasCutaneas,
+        data.genero,
+        data.idade
+      );
+
+      const novoAluno = {
+        nome: data.nome,
+        email: data.email,
+        telefone: data.telefone,
+        idade: data.idade,
+        peso: data.peso,
+        altura: data.altura,
+        objetivo: data.objetivo,
+        experiencia: data.experiencia,
+        restricoes_medicas: data.restricoes_medicas, // Added this line
+        genero: data.genero,
+        dataNascimento: new Date(data.dataNascimento),
+        valorMensalidade: data.valorMensalidade,
+        dataVencimento: new Date(data.dataVencimento),
+        endereco: data.endereco || "",
+        observacoes: data.observacoes || "",
+        dobrasCutaneas,
+        percentualGordura
+      };
+
+      await criarAluno(novoAluno);
       
       toast.success("Aluno cadastrado com sucesso!");
       navigate("/gerenciar-alunos");
     } catch (error) {
       console.error("Erro ao cadastrar aluno:", error);
-      toast.error("Erro ao cadastrar aluno. Por favor, tente novamente.");
+      toast.error("Erro ao cadastrar aluno. Tente novamente.");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
-        <p className="text-gray-600 mt-1">Preencha o formulário para cadastrar um novo aluno</p>
+    <div className="space-y-6">
+      <div className="flex items-center">
+        <button
+          onClick={() => navigate("/gerenciar-alunos")}
+          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+          aria-label="Voltar"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
+          <p className="text-gray-600 mt-1">
+            Preencha as informações do aluno para criar sua ficha
+          </p>
+        </div>
       </div>
 
-      <div className="bg-white p-6 rounded-md shadow-md border border-gray-200">
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          {/* Dados Pessoais */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados Pessoais</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Nome */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Pessoais</CardTitle>
+            <CardDescription>
+              Dados básicos do aluno
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="nome">Nome Completo*</Label>
-                <Input 
-                  id="nome" 
-                  placeholder="Nome do aluno" 
-                  value={dadosAluno.nome}
-                  onChange={handleInputChange}
-                  required
+                <Label htmlFor="nome">Nome Completo</Label>
+                <Input
+                  id="nome"
+                  {...register("nome")}
+                  placeholder="Digite o nome completo"
                 />
+                {errors.nome && <p className="text-red-500 text-sm">{errors.nome.message}</p>}
               </div>
 
-              {/* Email */}
               <div>
-                <Label htmlFor="email">E-mail*</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="email@exemplo.com" 
-                  value={dadosAluno.email}
-                  onChange={handleInputChange}
-                  required
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...register("email")}
+                  placeholder="Digite o email"
                 />
+                {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
               </div>
 
-              {/* Telefone */}
               <div>
-                <Label htmlFor="telefone">Telefone*</Label>
-                <Input 
-                  id="telefone" 
-                  placeholder="(00) 00000-0000" 
-                  value={dadosAluno.telefone}
-                  onChange={handleInputChange}
-                  required
+                <Label htmlFor="telefone">Telefone</Label>
+                <Input
+                  id="telefone"
+                  {...register("telefone")}
+                  placeholder="Digite o telefone"
                 />
+                {errors.telefone && <p className="text-red-500 text-sm">{errors.telefone.message}</p>}
               </div>
 
-              {/* Idade - Campo Adicionado */}
               <div>
-                <Label htmlFor="idade">Idade*</Label>
-                <Input 
-                  id="idade" 
-                  type="number" 
-                  placeholder="25" 
-                  value={dadosAluno.idade || ''}
-                  onChange={handleNumericChange}
-                  required
+                <Label htmlFor="idade">Idade</Label>
+                <Input
+                  id="idade"
+                  type="number"
+                  {...register("idade", { valueAsNumber: true })}
+                  placeholder="Digite a idade"
                 />
+                {errors.idade && <p className="text-red-500 text-sm">{errors.idade.message}</p>}
               </div>
 
-              {/* Data de Nascimento */}
-              <div>
-                <Label htmlFor="dataNascimento">Data de Nascimento</Label>
-                <DatePicker
-                  selected={dadosAluno.dataNascimento}
-                  onSelect={(date) => handleDateChange('dataNascimento', date)}
-                  placeholder="Selecione uma data"
-                />
-              </div>
-
-              {/* Gênero - Modificado para usar valores estritos */}
               <div>
                 <Label htmlFor="genero">Gênero</Label>
-                <Select 
-                  onValueChange={(value: "masculino" | "feminino" | "outro") => handleSelectChange('genero', value)}
-                  defaultValue={dadosAluno.genero}
-                >
-                  <SelectTrigger className="w-full">
+                <Select onValueChange={(value) => setValue("genero", value as "masculino" | "feminino")}>
+                  <SelectTrigger>
                     <SelectValue placeholder="Selecione o gênero" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="masculino">Masculino</SelectItem>
                     <SelectItem value="feminino">Feminino</SelectItem>
-                    <SelectItem value="outro">Outro</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.genero && <p className="text-red-500 text-sm">{errors.genero.message}</p>}
               </div>
 
-              {/* Endereço */}
               <div>
-                <Label htmlFor="endereco">Endereço</Label>
-                <Input 
-                  id="endereco" 
-                  placeholder="Endereço completo" 
-                  value={dadosAluno.endereco}
-                  onChange={handleInputChange}
+                <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                <Input
+                  id="dataNascimento"
+                  type="date"
+                  {...register("dataNascimento")}
                 />
-              </div>
-
-              {/* Nível de Experiência - Campo Adicionado */}
-              <div>
-                <Label htmlFor="experiencia">Nível de Experiência*</Label>
-                <Select 
-                  onValueChange={(value: "iniciante" | "intermediario" | "avancado") => 
-                    handleSelectChange('experiencia', value)
-                  }
-                  defaultValue={dadosAluno.experiencia}
-                  required
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o nível" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="iniciante">Iniciante</SelectItem>
-                    <SelectItem value="intermediario">Intermediário</SelectItem>
-                    <SelectItem value="avancado">Avançado</SelectItem>
-                  </SelectContent>
-                </Select>
+                {errors.dataNascimento && <p className="text-red-500 text-sm">{errors.dataNascimento.message}</p>}
               </div>
             </div>
-          </div>
 
-          {/* Dados Físicos */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados Físicos</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Altura */}
-              <div>
-                <Label htmlFor="altura">Altura (cm)</Label>
-                <Input 
-                  id="altura" 
-                  type="number" 
-                  placeholder="170"
-                  value={dadosAluno.altura || ''}
-                  onChange={(e) => setDadosAluno(prev => ({ 
-                    ...prev, 
-                    altura: Number(e.target.value) 
-                  }))}
-                />
-              </div>
+            <div>
+              <Label htmlFor="endereco">Endereço</Label>
+              <Input
+                id="endereco"
+                {...register("endereco")}
+                placeholder="Digite o endereço completo"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Peso */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Físicas</CardTitle>
+            <CardDescription>
+              Medidas e dados físicos do aluno
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="peso">Peso (kg)</Label>
-                <Input 
-                  id="peso" 
-                  type="number" 
-                  placeholder="70"
-                  value={dadosAluno.peso || ''}
-                  onChange={(e) => setDadosAluno(prev => ({ 
-                    ...prev, 
-                    peso: Number(e.target.value) 
-                  }))}
+                <Input
+                  id="peso"
+                  type="number"
+                  step="0.1"
+                  {...register("peso", { valueAsNumber: true })}
+                  placeholder="Digite o peso"
                 />
+                {errors.peso && <p className="text-red-500 text-sm">{errors.peso.message}</p>}
+              </div>
+
+              <div>
+                <Label htmlFor="altura">Altura (cm)</Label>
+                <Input
+                  id="altura"
+                  type="number"
+                  {...register("altura", { valueAsNumber: true })}
+                  placeholder="Digite a altura"
+                />
+                {errors.altura && <p className="text-red-500 text-sm">{errors.altura.message}</p>}
               </div>
             </div>
 
-            {/* Dobras Cutâneas - Seção Adicionada */}
-            <div className="mt-4">
-              <h3 className="text-md font-semibold mb-3">Dobras Cutâneas (mm)*</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Triceps */}
+            <div>
+              <Label>Dobras Cutâneas (mm)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                 <div>
-                  <Label htmlFor="dobra-triceps">Tríceps</Label>
-                  <Input 
-                    id="dobra-triceps" 
-                    type="number" 
-                    placeholder="10" 
-                    value={dadosAluno.dobrasCutaneas.triceps || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="triceps" className="text-sm">Tríceps</Label>
+                  <Input
+                    id="triceps"
+                    type="number"
+                    step="0.1"
+                    {...register("triceps", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Subescapular */}
                 <div>
-                  <Label htmlFor="dobra-subescapular">Subescapular</Label>
-                  <Input 
-                    id="dobra-subescapular" 
-                    type="number" 
-                    placeholder="12" 
-                    value={dadosAluno.dobrasCutaneas.subescapular || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="subescapular" className="text-sm">Subescapular</Label>
+                  <Input
+                    id="subescapular"
+                    type="number"
+                    step="0.1"
+                    {...register("subescapular", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Axilar Média */}
                 <div>
-                  <Label htmlFor="dobra-axilarMedia">Axilar Média</Label>
-                  <Input 
-                    id="dobra-axilarMedia" 
-                    type="number" 
-                    placeholder="8" 
-                    value={dadosAluno.dobrasCutaneas.axilarMedia || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="axilarMedia" className="text-sm">Axilar Média</Label>
+                  <Input
+                    id="axilarMedia"
+                    type="number"
+                    step="0.1"
+                    {...register("axilarMedia", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Peitoral */}
                 <div>
-                  <Label htmlFor="dobra-peitoral">Peitoral</Label>
-                  <Input 
-                    id="dobra-peitoral" 
-                    type="number" 
-                    placeholder="7" 
-                    value={dadosAluno.dobrasCutaneas.peitoral || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="peitoral" className="text-sm">Peitoral</Label>
+                  <Input
+                    id="peitoral"
+                    type="number"
+                    step="0.1"
+                    {...register("peitoral", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Supra-ilíaca */}
                 <div>
-                  <Label htmlFor="dobra-suprailiaca">Supra-ilíaca</Label>
-                  <Input 
-                    id="dobra-suprailiaca" 
-                    type="number" 
-                    placeholder="14" 
-                    value={dadosAluno.dobrasCutaneas.suprailiaca || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="suprailiaca" className="text-sm">Suprailíaca</Label>
+                  <Input
+                    id="suprailiaca"
+                    type="number"
+                    step="0.1"
+                    {...register("suprailiaca", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Abdominal */}
                 <div>
-                  <Label htmlFor="dobra-abdominal">Abdominal</Label>
-                  <Input 
-                    id="dobra-abdominal" 
-                    type="number" 
-                    placeholder="18" 
-                    value={dadosAluno.dobrasCutaneas.abdominal || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="abdominal" className="text-sm">Abdominal</Label>
+                  <Input
+                    id="abdominal"
+                    type="number"
+                    step="0.1"
+                    {...register("abdominal", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
-                
-                {/* Coxa */}
                 <div>
-                  <Label htmlFor="dobra-coxa">Coxa</Label>
-                  <Input 
-                    id="dobra-coxa" 
-                    type="number" 
-                    placeholder="15" 
-                    value={dadosAluno.dobrasCutaneas.coxa || ''}
-                    onChange={handleDobrasCutaneasChange}
+                  <Label htmlFor="coxa" className="text-sm">Coxa</Label>
+                  <Input
+                    id="coxa"
+                    type="number"
+                    step="0.1"
+                    {...register("coxa", { valueAsNumber: true })}
+                    placeholder="mm"
                   />
                 </div>
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Dados de Contrato */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Dados de Pagamento</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Valor da Mensalidade */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações de Treino</CardTitle>
+            <CardDescription>
+              Objetivos e experiência do aluno
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="objetivo">Objetivo</Label>
+              <Select onValueChange={(value) => setValue("objetivo", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o objetivo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="emagrecimento">Emagrecimento</SelectItem>
+                  <SelectItem value="ganho_massa">Ganho de Massa Muscular</SelectItem>
+                  <SelectItem value="condicionamento">Condicionamento Físico</SelectItem>
+                  <SelectItem value="reabilitacao">Reabilitação</SelectItem>
+                  <SelectItem value="manutencao">Manutenção</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.objetivo && <p className="text-red-500 text-sm">{errors.objetivo.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="experiencia">Experiência</Label>
+              <Select onValueChange={(value) => setValue("experiencia", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a experiência" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="iniciante">Iniciante</SelectItem>
+                  <SelectItem value="intermediario">Intermediário</SelectItem>
+                  <SelectItem value="avancado">Avançado</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.experiencia && <p className="text-red-500 text-sm">{errors.experiencia.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="restricoes_medicas">Restrições Médicas</Label>
+              <Textarea
+                id="restricoes_medicas"
+                {...register("restricoes_medicas")}
+                placeholder="Descreva qualquer restrição médica ou lesão"
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="observacoes">Observações</Label>
+              <Textarea
+                id="observacoes"
+                {...register("observacoes")}
+                placeholder="Observações adicionais"
+                className="min-h-[80px]"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Informações Financeiras</CardTitle>
+            <CardDescription>
+              Dados de pagamento e mensalidade
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="valorMensalidade">Valor da Mensalidade (R$)</Label>
-                <Input 
-                  id="valorMensalidade" 
-                  type="number" 
-                  placeholder="100.00"
-                  value={dadosAluno.valorMensalidade || ''}
-                  onChange={(e) => setDadosAluno(prev => ({ 
-                    ...prev, 
-                    valorMensalidade: Number(e.target.value) 
-                  }))}
+                <Input
+                  id="valorMensalidade"
+                  type="number"
+                  step="0.01"
+                  {...register("valorMensalidade", { valueAsNumber: true })}
+                  placeholder="Digite o valor da mensalidade"
                 />
+                {errors.valorMensalidade && <p className="text-red-500 text-sm">{errors.valorMensalidade.message}</p>}
               </div>
 
-              {/* Data de Vencimento */}
               <div>
                 <Label htmlFor="dataVencimento">Data de Vencimento</Label>
-                <DatePicker
-                  selected={dadosAluno.dataVencimento}
-                  onSelect={(date) => handleDateChange('dataVencimento', date)}
-                  placeholder="Selecione a data de vencimento"
+                <Input
+                  id="dataVencimento"
+                  type="date"
+                  {...register("dataVencimento")}
                 />
+                {errors.dataVencimento && <p className="text-red-500 text-sm">{errors.dataVencimento.message}</p>}
               </div>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Plano de Treino */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 pb-2 border-b border-gray-200">Informações do Treino</h2>
-            <div className="grid grid-cols-1 gap-6">
-              {/* Objetivo */}
-              <div>
-                <Label htmlFor="objetivo">Objetivo</Label>
-                <Select 
-                  onValueChange={(value) => handleSelectChange('objetivo', value)}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione o objetivo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="hipertrofia">Hipertrofia</SelectItem>
-                    <SelectItem value="emagrecimento">Emagrecimento</SelectItem>
-                    <SelectItem value="condicionamento">Condicionamento Físico</SelectItem>
-                    <SelectItem value="reabilitacao">Reabilitação</SelectItem>
-                    <SelectItem value="saude">Saúde e Bem-estar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Observações */}
-              <div>
-                <Label htmlFor="observacoes">Observações</Label>
-                <Textarea 
-                  id="observacoes" 
-                  placeholder="Informações adicionais, restrições médicas, etc."
-                  value={dadosAluno.observacoes}
-                  onChange={handleInputChange}
-                  className="h-32"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Botão de Cadastrar */}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Cadastrando..." : "Cadastrar Aluno"}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate("/gerenciar-alunos")}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Cadastrando..." : "Cadastrar Aluno"}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

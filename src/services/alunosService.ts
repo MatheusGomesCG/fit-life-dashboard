@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Aluno {
@@ -37,6 +38,8 @@ export interface FotoAluno {
   aluno_id: string;
   url: string;
   data_upload: string;
+  data?: string; // Added missing property
+  descricao?: string; // Added missing property
   tipo: "frente" | "lado" | "costas";
   observacoes?: string;
 }
