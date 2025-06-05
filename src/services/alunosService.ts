@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Aluno {
@@ -66,10 +65,51 @@ export const calcularIMC = (peso: number, altura: number): number => {
   return peso / (alturaMetros * alturaMetros);
 };
 
-// Calcular percentual de gordura (mock function)
-export const calcularPercentualGordura = (aluno: Aluno): number => {
-  // This is a simplified calculation - in reality, you'd use proper formulas
-  return 22; // Mock value
+// Calcular percentual de gordura - Support both old and new function signatures
+export const calcularPercentualGordura = (
+  dobrasCutaneasOrAluno: {
+    triceps: number;
+    subescapular: number;
+    axilarMedia: number;
+    peitoral: number;
+    suprailiaca: number;
+    abdominal: number;
+    coxa: number;
+  } | Aluno,
+  genero?: "masculino" | "feminino",
+  idade?: number
+): number => {
+  // Check if it's the old signature with single Aluno parameter
+  if (genero === undefined && idade === undefined && 'peso' in dobrasCutaneasOrAluno) {
+    // Old signature - return mock value for backwards compatibility
+    return 22;
+  }
+  
+  // New signature with dobras cutâneas
+  const dobrasCutaneas = dobrasCutaneasOrAluno as {
+    triceps: number;
+    subescapular: number;
+    axilarMedia: number;
+    peitoral: number;
+    suprailiaca: number;
+    abdominal: number;
+    coxa: number;
+  };
+  
+  if (!genero || !idade) {
+    return 22; // fallback value
+  }
+  
+  // Simplified calculation using Jackson-Pollock formula
+  const somaDobras = Object.values(dobrasCutaneas).reduce((sum, dobra) => sum + dobra, 0);
+  
+  if (genero === "masculino") {
+    const densidadeCorporal = 1.112 - (0.00043499 * somaDobras) + (0.00000055 * somaDobras * somaDobras) - (0.00028826 * idade);
+    return ((4.95 / densidadeCorporal) - 4.50) * 100;
+  } else {
+    const densidadeCorporal = 1.097 - (0.00046971 * somaDobras) + (0.00000056 * somaDobras * somaDobras) - (0.00012828 * idade);
+    return ((4.96 / densidadeCorporal) - 4.51) * 100;
+  }
 };
 
 // Listar todos os alunos

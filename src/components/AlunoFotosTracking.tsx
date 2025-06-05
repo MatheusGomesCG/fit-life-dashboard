@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -43,7 +44,7 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
     const photoGroups: Record<string, FotoAluno[]> = {};
     
     fotos.forEach(foto => {
-      const photoDate = new Date(foto.data);
+      const photoDate = new Date(foto.data || foto.data_upload);
       const key = `${photoDate.getFullYear()}-${photoDate.getMonth()}`;
       
       if (!photoGroups[key]) {
@@ -104,11 +105,13 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
       // Create a date for the current month view
       const photoDate = new Date(activeYear, activeMonth, 15); // middle of the month
 
-      // Add the photo to the student's record - FIX: Removed the data property from this object
-      // and keep the photoDate separate to be used when we create the FotoAluno in the service
+      // Add the photo to the student's record with correct properties
       const novaFoto = await adicionarFotoAluno(alunoId, {
         url: imageUrl,
-        descricao: `${monthNames[activeMonth]} ${activeYear}`
+        tipo: "frente",
+        descricao: `${monthNames[activeMonth]} ${activeYear}`,
+        data_upload: photoDate.toISOString(),
+        observacoes: ""
       });
 
       // Update the local state
@@ -128,7 +131,7 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
 
   const handleRemovePhoto = async (fotoId: string) => {
     try {
-      await removerFotoAluno(alunoId, fotoId);
+      await removerFotoAluno(fotoId);
       
       // Update the local state
       const fotosAtualizadas = fotos.filter(foto => foto.id !== fotoId);
@@ -223,7 +226,7 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
                 </div>
                 <div className="p-3 bg-gray-50 flex justify-between items-center">
                   <span className="text-sm font-medium">
-                    {format(new Date(foto.data), "dd/MM/yyyy")}
+                    {format(new Date(foto.data || foto.data_upload), "dd/MM/yyyy")}
                   </span>
                   <Button
                     variant="destructive"
