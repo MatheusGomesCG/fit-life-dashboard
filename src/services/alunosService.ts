@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Aluno {
@@ -13,6 +14,32 @@ export interface Aluno {
   restricoes_medicas: string;
   imc?: number;
   percentualGordura?: number;
+  // Additional fields for the complete aluno interface
+  dataNascimento?: Date | null;
+  genero?: "masculino" | "feminino" | "outro";
+  endereco?: string;
+  observacoes?: string;
+  valorMensalidade?: number;
+  dataVencimento?: Date | null;
+  dobrasCutaneas?: {
+    triceps: number;
+    subescapular: number;
+    axilarMedia: number;
+    peitoral: number;
+    suprailiaca: number;
+    abdominal: number;
+    coxa: number;
+  };
+  fotos?: FotoAluno[];
+}
+
+export interface FotoAluno {
+  id: string;
+  aluno_id: string;
+  url: string;
+  data_upload: string;
+  tipo: "frente" | "lado" | "costas";
+  observacoes?: string;
 }
 
 export interface CargaExercicio {
@@ -26,17 +53,23 @@ export interface CargaExercicio {
   diaTreino: string;
 }
 
-// Adicionar a nova interface de ficha de treino
 export interface FichaTreino {
   aluno: Aluno;
   exercicios: CargaExercicio[];
+  dataAvaliacao?: string;
 }
 
 // Calcular IMC
-const calcularIMC = (peso: number, altura: number): number => {
+export const calcularIMC = (peso: number, altura: number): number => {
   if (!peso || !altura) return 0;
   const alturaMetros = altura / 100;
   return peso / (alturaMetros * alturaMetros);
+};
+
+// Calcular percentual de gordura (mock function)
+export const calcularPercentualGordura = (aluno: Aluno): number => {
+  // This is a simplified calculation - in reality, you'd use proper formulas
+  return 22; // Mock value
 };
 
 // Listar todos os alunos
@@ -69,7 +102,7 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
   }
 };
 
-// Criar um novo aluno
+// Criar um novo aluno (also exported as cadastrarAluno)
 export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura">): Promise<Aluno> => {
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -132,6 +165,9 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
   }
 };
 
+// Export criarAluno as cadastrarAluno for compatibility
+export const cadastrarAluno = criarAluno;
+
 // Buscar aluno por ID
 export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
   try {
@@ -158,7 +194,8 @@ export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
       telefone: data.telefone,
       restricoes_medicas: data.restricoes_medicas,
       imc: calcularIMC(data.peso, data.altura),
-      percentualGordura: 22
+      percentualGordura: 22,
+      fotos: [] // Mock empty photos array
     };
   } catch (error) {
     console.error("Erro ao buscar aluno por ID:", error);
@@ -198,7 +235,7 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
       objetivo: data.objetivo,
       experiencia: data.experiencia,
       telefone: data.telefone,
-      restricoes_medicas: data.restricoes_medicas,
+      restricoes_medicas: aluno.restricoes_medicas,
       imc: calcularIMC(data.peso, data.altura),
       percentualGordura: 22
     };
@@ -223,7 +260,28 @@ export const excluirAluno = async (id: string): Promise<void> => {
   }
 };
 
-// Atualizar a função buscarFichaTreinoAluno
+// Photo management functions
+export const adicionarFotoAluno = async (alunoId: string, foto: Omit<FotoAluno, "id" | "aluno_id">): Promise<FotoAluno> => {
+  // Mock implementation for now
+  const novaFoto: FotoAluno = {
+    id: Date.now().toString(),
+    aluno_id: alunoId,
+    url: foto.url,
+    data_upload: new Date().toISOString(),
+    tipo: foto.tipo,
+    observacoes: foto.observacoes
+  };
+  
+  console.log("Foto adicionada:", novaFoto);
+  return novaFoto;
+};
+
+export const removerFotoAluno = async (fotoId: string): Promise<void> => {
+  // Mock implementation for now
+  console.log("Foto removida:", fotoId);
+};
+
+// Buscar ficha de treino do aluno
 export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
   try {
     const { data, error } = await supabase
@@ -242,9 +300,10 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
     // Buscar dados do aluno para complementar a resposta
     const aluno = await buscarAlunoPorId(alunoId);
 
-    return {
-      aluno: aluno,
-      exercicios: data.exercicios?.map((ex: any) => ({
+    // Handle the Json type properly
+    let exercicios: CargaExercicio[] = [];
+    if (data.exercicios && Array.isArray(data.exercicios)) {
+      exercicios = data.exercicios.map((ex: any) => ({
         nomeExercicio: ex.nome_exercicio,
         grupoMuscular: ex.grupo_muscular,
         cargaIdeal: ex.carga_ideal,
@@ -253,7 +312,13 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
         estrategia: ex.estrategia,
         videoUrl: ex.video_url,
         diaTreino: ex.dia_treino
-      })) || []
+      }));
+    }
+
+    return {
+      aluno: aluno!,
+      exercicios,
+      dataAvaliacao: data.created_at
     };
   } catch (error) {
     console.error(`Erro ao buscar ficha de treino para o aluno ${alunoId}:`, error);
@@ -261,7 +326,7 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
   }
 };
 
-// Atualizar a função criarOuAtualizarFichaTreino
+// Criar ou atualizar ficha de treino
 export const criarOuAtualizarFichaTreino = async (
   alunoId: string, 
   exercicios: CargaExercicio[]
