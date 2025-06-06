@@ -28,22 +28,24 @@ export interface Conversa {
 export const buscarConversasProfessor = async (professorId: string): Promise<Conversa[]> => {
   try {
     const { data, error } = await supabase
-      .rpc('select_conversas_completas', { professor_id_param: professorId })
+      .from('conversas_completas')
+      .select('*')
+      .eq('professor_id', professorId)
       .order('updated_at', { ascending: false });
 
-    if (error) {
-      // Fallback: try direct query to conversas_completas view
-      const { data: viewData, error: viewError } = await supabase
-        .from('conversas_completas')
-        .select('*')
-        .eq('professor_id', professorId)
-        .order('updated_at', { ascending: false });
-      
-      if (viewError) throw viewError;
-      return viewData || [];
-    }
-    
-    return data || [];
+    if (error) throw error;
+    return (data || []).map(item => ({
+      id: item.id || '',
+      professor_id: item.professor_id || '',
+      aluno_id: item.aluno_id || '',
+      aluno_nome: item.aluno_nome || '',
+      aluno_email: item.aluno_email || '',
+      ultima_mensagem: item.ultima_mensagem || undefined,
+      ultima_mensagem_data: item.ultima_mensagem_data || undefined,
+      mensagens_nao_lidas: item.mensagens_nao_lidas || 0,
+      created_at: item.created_at || '',
+      updated_at: item.updated_at || ''
+    }));
   } catch (error) {
     console.error("Erro ao buscar conversas:", error);
     throw error;
@@ -59,7 +61,16 @@ export const buscarMensagensConversa = async (conversaId: string): Promise<Mensa
       .order('created_at', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      id: item.id,
+      conversa_id: item.conversa_id,
+      remetente_id: item.remetente_id,
+      destinatario_id: item.destinatario_id,
+      conteudo: item.conteudo,
+      created_at: item.created_at,
+      lida: item.lida,
+      tipo: (item.tipo === 'imagem' ? 'imagem' : 'texto') as 'texto' | 'imagem'
+    }));
   } catch (error) {
     console.error("Erro ao buscar mensagens:", error);
     throw error;
@@ -92,7 +103,16 @@ export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at
       })
       .eq('id', mensagem.conversa_id);
 
-    return data;
+    return {
+      id: data.id,
+      conversa_id: data.conversa_id,
+      remetente_id: data.remetente_id,
+      destinatario_id: data.destinatario_id,
+      conteudo: data.conteudo,
+      created_at: data.created_at,
+      lida: data.lida,
+      tipo: (data.tipo === 'imagem' ? 'imagem' : 'texto') as 'texto' | 'imagem'
+    };
   } catch (error) {
     console.error("Erro ao enviar mensagem:", error);
     throw error;

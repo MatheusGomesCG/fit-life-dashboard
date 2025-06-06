@@ -49,6 +49,10 @@ const Layout: React.FC = () => {
     to: "/agendamentos",
     icon: Calendar,
     label: "Agendamentos"
+  }, {
+    to: "/chat-professor",
+    icon: MessageSquare,
+    label: "Chat"
   }] : [{
     to: "/dashboard",
     icon: Home,

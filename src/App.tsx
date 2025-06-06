@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -27,6 +26,7 @@ import Agendamento from "./pages/Agendamento";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+import ChatProfessor from "./pages/ChatProfessor";
 
 function App() {
   return (
@@ -55,6 +55,7 @@ function App() {
             <Route path="meus-pagamentos" element={<MeusPagamentos />} />
             <Route path="agendamento" element={<Agendamento />} />
             <Route path="chat" element={<Chat />} />
+            <Route path="chat-professor" element={<ChatProfessor />} />
             <Route path="fotos-aluno/:id" element={<GerenciarFotosAluno />} />
           </Route>
           <Route path="*" element={<NotFound />} />

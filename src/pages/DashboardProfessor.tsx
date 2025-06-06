@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock, User, CreditCard, MessageSquare } from "lucide-react";
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/tabs";
 import PagamentosAnuais from "@/components/pagamentos/PagamentosAnuais";
 import AlunosMensais from "@/components/alunos/AlunosMensais";
-import ChatDashboard from "@/components/chat/ChatDashboard";
 
 const DashboardProfessor: React.FC = () => {
   const { user } = useAuth();
@@ -114,7 +112,6 @@ const DashboardProfessor: React.FC = () => {
       <Tabs defaultValue="resumo" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="resumo">Resumo</TabsTrigger>
-          <TabsTrigger value="chat">Chat com Alunos</TabsTrigger>
           <TabsTrigger value="pagamentos-anuais">Pagamentos Anuais</TabsTrigger>
           <TabsTrigger value="alunos-mensais">Alunos Mensais</TabsTrigger>
         </TabsList>
@@ -359,10 +356,6 @@ const DashboardProfessor: React.FC = () => {
               <p className="text-gray-500">Não há agendamentos esta semana.</p>
             )}
           </div>
-        </TabsContent>
-        
-        <TabsContent value="chat">
-          <ChatDashboard />
         </TabsContent>
         
         <TabsContent value="pagamentos-anuais">
