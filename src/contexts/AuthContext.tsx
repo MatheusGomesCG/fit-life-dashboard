@@ -26,169 +26,149 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadUserProfile = async (authUser: User) => {
+  const getUserRole = async (userId: string): Promise<"professor" | "aluno" | "admin" | "unknown"> => {
     try {
-      console.log("Loading user profile for:", authUser.id, authUser.email);
-      
-      // Check if user exists in professor_profiles - using maybeSingle to avoid errors
-      const { data: professorCheck, error: professorError } = await supabase
-        .from('professor_profiles')
-        .select('user_id')
-        .eq('user_id', authUser.id)
+      const { data: professor } = await supabase
+        .from("professor_profiles")
+        .select("user_id")
+        .eq("user_id", userId)
         .maybeSingle();
-      
-      console.log("Professor check result:", professorCheck, professorError);
-      
-      // Check if user exists in aluno_profiles - using maybeSingle to avoid errors
-      const { data: alunoCheck, error: alunoError } = await supabase
-        .from('aluno_profiles')
-        .select('user_id')
-        .eq('user_id', authUser.id)
+
+      if (professor) return "professor";
+
+      const { data: aluno } = await supabase
+        .from("aluno_profiles")
+        .select("user_id")
+        .eq("user_id", userId)
         .maybeSingle();
-      
-      console.log("Aluno check result:", alunoCheck, alunoError);
-      
-      // Determine user role based on which table has the record
-      let userRole: string;
-      if (professorCheck) {
-        userRole = 'professor';
-      } else if (alunoCheck) {
-        userRole = 'aluno';
-      } else {
-        // Check admin table as fallback - using maybeSingle to avoid errors
-        const { data: adminCheck, error: adminError } = await supabase
-          .from('admin_users')
-          .select('user_id')
-          .eq('user_id', authUser.id)
-          .maybeSingle();
-        
-        console.log("Admin check result:", adminCheck, adminError);
-        
-        if (adminCheck) {
-          userRole = 'admin';
-        } else {
-          userRole = 'unknown';
-        }
+
+      if (aluno) return "aluno";
+
+      const { data: admin } = await supabase
+        .from("admin_users")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (admin) return "admin";
+
+      return "unknown";
+    } catch (error) {
+      console.error("Erro ao identificar tipo de usuário:", error);
+      return "unknown";
+    }
+  };
+
+  const getUserName = async (userId: string, role: string): Promise<string> => {
+    try {
+      let nome = "";
+
+      if (role === "professor") {
+        const profile = await buscarPerfilProfessor(userId);
+        return profile?.nome ?? "Professor";
       }
 
-      console.log("Determined user role:", userRole);
+      if (role === "aluno") {
+        const { data } = await supabase
+          .from("aluno_profiles")
+          .select("nome")
+          .eq("user_id", userId)
+          .single();
 
+        return data?.nome ?? "Aluno";
+      }
+
+      if (role === "admin") {
+        const { data } = await supabase
+          .from("admin_users")
+          .select("nome")
+          .eq("user_id", userId)
+          .single();
+
+        return data?.nome ?? "Administrador";
+      }
+
+      return "Usuário";
+    } catch (error) {
+      console.warn(`Erro ao buscar nome para usuário (${role}):`, error);
+      return "Usuário";
+    }
+  };
+
+  const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
+    try {
+      const role = await getUserRole(authUser.id);
+      const nome = await getUserName(authUser.id, role);
       let profile: ProfessorProfile | undefined;
-      let userName = authUser.email?.split('@')[0] || 'Usuário';
 
-      // If user is a professor, get their profile
-      if (userRole === 'professor') {
-        try {
-          profile = await buscarPerfilProfessor(authUser.id);
-          if (profile) {
-            userName = profile.nome;
-          }
-        } catch (profileError) {
-          console.warn("Could not load professor profile:", profileError);
-        }
-      }
-
-      // If user is a student, get their name from aluno_profiles
-      if (userRole === 'aluno') {
-        try {
-          const { data: alunoProfile, error: alunoProfileError } = await supabase
-            .from('aluno_profiles')
-            .select('nome')
-            .eq('user_id', authUser.id)
-            .single();
-          
-          if (!alunoProfileError && alunoProfile) {
-            userName = alunoProfile.nome;
-          }
-        } catch (alunoProfileError) {
-          console.warn("Could not load student profile:", alunoProfileError);
-        }
-      }
-
-      // If user is an admin, get their name from admin_users
-      if (userRole === 'admin') {
-        try {
-          const { data: adminProfile, error: adminProfileError } = await supabase
-            .from('admin_users')
-            .select('nome')
-            .eq('user_id', authUser.id)
-            .single();
-          
-          if (!adminProfileError && adminProfile) {
-            userName = adminProfile.nome;
-          }
-        } catch (adminProfileError) {
-          console.warn("Could not load admin profile:", adminProfileError);
-        }
+      if (role === "professor") {
+        profile = await buscarPerfilProfessor(authUser.id);
       }
 
       const enhancedUser: AuthUser = {
         ...authUser,
-        nome: userName,
-        tipo: userRole as "professor" | "aluno" | "admin",
-        profile: profile || undefined
+        nome,
+        tipo: role !== "unknown" ? role : undefined,
+        profile
       };
-      
-      console.log("Enhanced user created:", enhancedUser.tipo, enhancedUser.nome);
+
       setUser(enhancedUser);
       return enhancedUser;
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
-      
-      // In case of error, user type will be 'unknown' and they won't have access
-      const basicUser: AuthUser = {
+      const fallbackUser: AuthUser = {
         ...authUser,
-        nome: authUser.email?.split('@')[0] || 'Usuário',
-        tipo: undefined // This will prevent access to protected areas
+        nome: authUser.email?.split("@")[0] || "Usuário",
+        tipo: undefined
       };
-      console.log("Basic user (no access):", basicUser.nome);
-      setUser(basicUser);
-      return basicUser;
+      setUser(fallbackUser);
+      return fallbackUser;
     }
   };
 
   useEffect(() => {
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state change:", event, session?.user?.email);
+    let mounted = true;
+
+    const initialize = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!mounted) return;
+
+      const session = data.session;
+      setSession(session);
+
+      if (session?.user) {
+        await loadUserProfile(session.user);
+      }
+
+      setLoading(false);
+    };
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
         setSession(session);
-        
+
         if (session?.user) {
           await loadUserProfile(session.user);
         } else {
           setUser(null);
         }
-        
+
         setLoading(false);
       }
     );
 
-    // Verificar sessão existente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        loadUserProfile(session.user);
-      } else {
-        setLoading(false);
-      }
-    });
+    initialize();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("Attempting login for:", email);
-      
-      // Input validation
-      if (!email || !password) {
-        throw new Error("Email and password are required");
-      }
-      
-      if (!email.includes('@')) {
-        throw new Error("Invalid email format");
-      }
+      if (!email || !password) throw new Error("Email e senha são obrigatórios");
+      if (!email.includes("@")) throw new Error("Formato de e-mail inválido");
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -197,15 +177,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      console.log("Login successful:", data.user?.email);
       if (data.user) {
         const enhancedUser = await loadUserProfile(data.user);
-        console.log("Login - Enhanced user type:", enhancedUser?.tipo);
         return { error: null, user: enhancedUser };
       }
 
       return { error: null };
-    } catch (error: any) {
+    } catch (error) {
       console.error("Erro no login:", error);
       return { error };
     }
@@ -215,34 +193,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      
+
       setUser(null);
       setSession(null);
     } catch (error) {
-      console.error("Erro no logout:", error);
+      console.error("Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };
 
-  const value = {
+  const value: AuthContextType = {
     user,
     session,
     loading,
-    isAuthenticated: !!user && !!user.tipo,
+    isAuthenticated: !!user?.tipo,
     login,
     logout
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
