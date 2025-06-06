@@ -524,8 +524,20 @@ export type Database = {
         Args: { professor_id: string }
         Returns: number
       }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
       is_admin: {
         Args: { user_uuid: string }
+        Returns: boolean
+      }
+      is_professor: {
+        Args: { user_uuid: string }
+        Returns: boolean
+      }
+      is_student_of_professor: {
+        Args: { student_id: string; professor_id: string }
         Returns: boolean
       }
       verificar_limite_alunos: {

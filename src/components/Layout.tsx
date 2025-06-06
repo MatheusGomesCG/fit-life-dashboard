@@ -1,7 +1,9 @@
+
 import React, { useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
+
 const Layout: React.FC = () => {
   const {
     isAuthenticated,
@@ -17,12 +19,71 @@ const Layout: React.FC = () => {
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
 
-  // Redirecionar para home apenas se não estiver autenticado e não estiver em rota pública
+  // Enhanced route protection
   useEffect(() => {
     if (!isAuthenticated && !isPublicRoute) {
+      console.log("Redirecting unauthenticated user to home");
       navigate("/");
+      return;
     }
-  }, [isAuthenticated, isPublicRoute, navigate]);
+
+    // Verify user has proper role and redirect if not
+    if (isAuthenticated && user) {
+      if (!user.tipo) {
+        console.log("User has no valid role, redirecting to home");
+        navigate("/");
+        return;
+      }
+
+      // Role-based route protection
+      const currentPath = location.pathname;
+      
+      // Professor-only routes
+      const professorRoutes = [
+        "/dashboard-professor", 
+        "/gerenciar-alunos", 
+        "/cadastrar-aluno", 
+        "/gerenciar-fichas", 
+        "/gerenciar-pagamentos",
+        "/agendamentos",
+        "/chat-professor"
+      ];
+      
+      // Student-only routes
+      const studentRoutes = [
+        "/dashboard",
+        "/meus-treinos",
+        "/minhas-medidas", 
+        "/meus-pagamentos",
+        "/agendamento",
+        "/chat"
+      ];
+
+      if (user.tipo === "professor" && studentRoutes.includes(currentPath)) {
+        console.log("Professor trying to access student route, redirecting");
+        navigate("/dashboard-professor");
+        return;
+      }
+
+      if (user.tipo === "aluno" && professorRoutes.includes(currentPath)) {
+        console.log("Student trying to access professor route, redirecting");
+        navigate("/dashboard");
+        return;
+      }
+
+      // Check for edit routes that require additional validation
+      if (currentPath.startsWith("/editar-aluno/") || 
+          currentPath.startsWith("/ficha-treino/") ||
+          currentPath.startsWith("/cadastrar-treino/") ||
+          currentPath.startsWith("/fotos-aluno/")) {
+        if (user.tipo !== "professor") {
+          console.log("Non-professor trying to access edit route, redirecting");
+          navigate("/dashboard");
+          return;
+        }
+      }
+    }
+  }, [isAuthenticated, isPublicRoute, navigate, user, location.pathname]);
 
   // Define os itens de menu com base no tipo de usuário (aluno ou professor)
   const menuItems = user?.tipo === "professor" ? [{
@@ -78,6 +139,7 @@ const Layout: React.FC = () => {
     icon: MessageSquare,
     label: "Chat"
   }];
+
   return <div className="min-h-screen bg-gray-50">
       {/* Cabeçalho */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
@@ -87,11 +149,11 @@ const Layout: React.FC = () => {
             <h1 className="text-xl font-bold text-fitness-dark">GymCloud</h1>
           </div>
           
-          {isAuthenticated && user && <div className="flex items-center gap-4">
+          {isAuthenticated && user && user.tipo && <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
                 <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                  {user.tipo === "professor" ? "Professor" : "Aluno"}
+                  {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
                 </span>
               </div>
               <button onClick={logout} className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors">
@@ -105,7 +167,7 @@ const Layout: React.FC = () => {
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
         {/* Barra lateral - Esconder na página inicial e de login */}
-        {!shouldHideSidebar && <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
+        {!shouldHideSidebar && isAuthenticated && user?.tipo && <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map(item => {
             const isActive = location.pathname === item.to || item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to) || item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino"));
@@ -124,4 +186,5 @@ const Layout: React.FC = () => {
       </div>
     </div>;
 };
+
 export default Layout;

@@ -25,8 +25,42 @@ export interface Conversa {
   updated_at: string;
 }
 
+// Input sanitization function
+const sanitizeContent = (content: string): string => {
+  // Remove potentially dangerous HTML/script tags
+  const sanitized = content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '');
+  
+  // Limit message length
+  return sanitized.substring(0, 1000);
+};
+
+// Validate message content
+const validateMessageContent = (content: string, tipo: string): boolean => {
+  if (!content || content.trim().length === 0) {
+    return false;
+  }
+  
+  if (content.length > 1000) {
+    return false;
+  }
+  
+  if (tipo && !['texto', 'imagem'].includes(tipo)) {
+    return false;
+  }
+  
+  return true;
+};
+
 export const buscarConversasProfessor = async (professorId: string): Promise<Conversa[]> => {
   try {
+    if (!professorId) {
+      throw new Error("Professor ID is required");
+    }
+
     const { data, error } = await supabase
       .from('conversas_completas')
       .select('*')
@@ -54,6 +88,10 @@ export const buscarConversasProfessor = async (professorId: string): Promise<Con
 
 export const buscarMensagensConversa = async (conversaId: string): Promise<Mensagem[]> => {
   try {
+    if (!conversaId) {
+      throw new Error("Conversation ID is required");
+    }
+
     const { data, error } = await supabase
       .from('mensagens')
       .select('*')
@@ -79,13 +117,52 @@ export const buscarMensagensConversa = async (conversaId: string): Promise<Mensa
 
 export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at">): Promise<Mensagem> => {
   try {
+    // Validate required fields
+    if (!mensagem.conversa_id || !mensagem.remetente_id || !mensagem.destinatario_id) {
+      throw new Error("Missing required message fields");
+    }
+
+    // Validate and sanitize content
+    if (!validateMessageContent(mensagem.conteudo, mensagem.tipo)) {
+      throw new Error("Invalid message content");
+    }
+
+    const sanitizedContent = sanitizeContent(mensagem.conteudo);
+
+    // Verify conversation participants before sending
+    const { data: conversa, error: conversaError } = await supabase
+      .from('conversas')
+      .select('professor_id, aluno_id')
+      .eq('id', mensagem.conversa_id)
+      .single();
+
+    if (conversaError || !conversa) {
+      throw new Error("Conversation not found or access denied");
+    }
+
+    // Verify sender is a participant in the conversation
+    const isParticipant = conversa.professor_id === mensagem.remetente_id || 
+                         conversa.aluno_id === mensagem.remetente_id;
+    
+    if (!isParticipant) {
+      throw new Error("Sender is not a participant in this conversation");
+    }
+
+    // Verify recipient is the other participant
+    const isValidRecipient = (conversa.professor_id === mensagem.destinatario_id && conversa.aluno_id === mensagem.remetente_id) ||
+                            (conversa.aluno_id === mensagem.destinatario_id && conversa.professor_id === mensagem.remetente_id);
+    
+    if (!isValidRecipient) {
+      throw new Error("Invalid recipient for this conversation");
+    }
+
     const { data, error } = await supabase
       .from('mensagens')
       .insert({
         conversa_id: mensagem.conversa_id,
         remetente_id: mensagem.remetente_id,
         destinatario_id: mensagem.destinatario_id,
-        conteudo: mensagem.conteudo,
+        conteudo: sanitizedContent,
         lida: false,
         tipo: mensagem.tipo || 'texto'
       })
@@ -98,7 +175,7 @@ export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at
     await supabase
       .from('conversas')
       .update({
-        ultima_mensagem: mensagem.conteudo,
+        ultima_mensagem: sanitizedContent,
         updated_at: new Date().toISOString()
       })
       .eq('id', mensagem.conversa_id);
@@ -121,6 +198,21 @@ export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at
 
 export const criarOuBuscarConversa = async (professorId: string, alunoId: string): Promise<string> => {
   try {
+    if (!professorId || !alunoId) {
+      throw new Error("Professor ID and Student ID are required");
+    }
+
+    // Verify that the student belongs to the professor
+    const { data: studentVerification, error: verificationError } = await supabase
+      .rpc('is_student_of_professor', { 
+        student_id: alunoId, 
+        professor_id: professorId 
+      });
+
+    if (verificationError || !studentVerification) {
+      throw new Error("Student does not belong to this professor");
+    }
+
     // Primeiro tenta buscar uma conversa existente
     const { data: conversaExistente, error: errorBusca } = await supabase
       .from('conversas')
@@ -153,6 +245,10 @@ export const criarOuBuscarConversa = async (professorId: string, alunoId: string
 
 export const marcarMensagensComoLidas = async (conversaId: string, usuarioId: string): Promise<void> => {
   try {
+    if (!conversaId || !usuarioId) {
+      throw new Error("Conversation ID and User ID are required");
+    }
+
     await supabase
       .from('mensagens')
       .update({ lida: true })

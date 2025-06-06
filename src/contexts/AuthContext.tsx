@@ -31,30 +31,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Loading user profile for:", authUser.id);
       
-      // Primeiro, verificar se o email contém "professor" para identificar professores
-      const isTeacherByEmail = authUser.email?.includes("professor");
+      // Use the secure database function to get user role
+      const { data: userRole, error: roleError } = await supabase
+        .rpc('get_user_role', { user_uuid: authUser.id });
       
-      // Verificar se é professor e buscar perfil
-      const profile = await buscarPerfilProfessor(authUser.id);
-      
-      // Determinar o tipo de usuário
-      let userType: "professor" | "aluno" = "aluno";
-      
-      if (profile) {
-        // Se tem perfil de professor, é professor
-        userType = "professor";
-      } else if (isTeacherByEmail) {
-        // Se o email contém "professor", mesmo sem perfil, é professor
-        userType = "professor";
-      } else if (authUser.user_metadata?.tipo) {
-        // Usar tipo dos metadados se disponível
-        userType = authUser.user_metadata.tipo;
+      if (roleError) {
+        console.error("Error getting user role:", roleError);
+        throw roleError;
       }
-      
+
+      let profile: ProfessorProfile | undefined;
+      let userName = authUser.email?.split('@')[0] || 'Usuário';
+
+      // If user is a professor, get their profile
+      if (userRole === 'professor') {
+        try {
+          profile = await buscarPerfilProfessor(authUser.id);
+          if (profile) {
+            userName = profile.nome;
+          }
+        } catch (profileError) {
+          console.warn("Could not load professor profile:", profileError);
+        }
+      }
+
+      // If user is a student, get their name from aluno_profiles
+      if (userRole === 'aluno') {
+        try {
+          const { data: alunoProfile, error: alunoError } = await supabase
+            .from('aluno_profiles')
+            .select('nome')
+            .eq('user_id', authUser.id)
+            .single();
+          
+          if (!alunoError && alunoProfile) {
+            userName = alunoProfile.nome;
+          }
+        } catch (alunoError) {
+          console.warn("Could not load student profile:", alunoError);
+        }
+      }
+
+      // If user is an admin, get their name from admin_users
+      if (userRole === 'admin') {
+        try {
+          const { data: adminProfile, error: adminError } = await supabase
+            .from('admin_users')
+            .select('nome')
+            .eq('user_id', authUser.id)
+            .single();
+          
+          if (!adminError && adminProfile) {
+            userName = adminProfile.nome;
+          }
+        } catch (adminError) {
+          console.warn("Could not load admin profile:", adminError);
+        }
+      }
+
       const enhancedUser: AuthUser = {
         ...authUser,
-        nome: profile?.nome || authUser.user_metadata?.nome || authUser.email?.split('@')[0],
-        tipo: userType,
+        nome: userName,
+        tipo: userRole as "professor" | "aluno" | "admin",
         profile: profile || undefined
       };
       
@@ -63,15 +101,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
       
-      // Em caso de erro, usar dados básicos mas ainda verificar o email
-      const isTeacherByEmail = authUser.email?.includes("professor");
-      
+      // In case of error, user type will be 'unknown' and they won't have access
       const basicUser: AuthUser = {
         ...authUser,
-        nome: authUser.user_metadata?.nome || authUser.email?.split('@')[0],
-        tipo: isTeacherByEmail ? "professor" : (authUser.user_metadata?.tipo || "aluno")
+        nome: authUser.email?.split('@')[0] || 'Usuário',
+        tipo: undefined // This will prevent access to protected areas
       };
-      console.log("Basic user:", basicUser.tipo, basicUser.nome);
+      console.log("Basic user (no access):", basicUser.nome);
       setUser(basicUser);
     }
   };
@@ -109,8 +145,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       console.log("Attempting login for:", email);
+      
+      // Input validation
+      if (!email || !password) {
+        throw new Error("Email and password are required");
+      }
+      
+      if (!email.includes('@')) {
+        throw new Error("Invalid email format");
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password
       });
 
@@ -145,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!user.tipo,
     login,
     logout
   };
