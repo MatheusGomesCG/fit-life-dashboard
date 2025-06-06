@@ -12,6 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Iniciando processo de login..."); // Added debug log
       if (!email || !password) throw new Error("Email e senha são obrigatórios");
       if (!email.includes("@")) throw new Error("Formato de e-mail inválido");
 
