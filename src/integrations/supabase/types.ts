@@ -143,6 +143,33 @@ export type Database = {
         }
         Relationships: []
       }
+      conversas: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          professor_id: string
+          ultima_mensagem: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          professor_id: string
+          ultima_mensagem?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          professor_id?: string
+          ultima_mensagem?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exercicios_treino: {
         Row: {
           carga_ideal: number
@@ -232,6 +259,54 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "aluno_profiles"
             referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      mensagens: {
+        Row: {
+          conteudo: string
+          conversa_id: string
+          created_at: string
+          destinatario_id: string
+          id: string
+          lida: boolean
+          remetente_id: string
+          tipo: string
+        }
+        Insert: {
+          conteudo: string
+          conversa_id: string
+          created_at?: string
+          destinatario_id: string
+          id?: string
+          lida?: boolean
+          remetente_id: string
+          tipo?: string
+        }
+        Update: {
+          conteudo?: string
+          conversa_id?: string
+          created_at?: string
+          destinatario_id?: string
+          id?: string
+          lida?: boolean
+          remetente_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "conversas_completas"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -401,6 +476,21 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      conversas_completas: {
+        Row: {
+          aluno_email: string | null
+          aluno_id: string | null
+          aluno_nome: string | null
+          created_at: string | null
+          id: string | null
+          mensagens_nao_lidas: number | null
+          professor_id: string | null
+          ultima_mensagem: string | null
+          ultima_mensagem_data: string | null
+          updated_at: string | null
+        }
+        Relationships: []
       }
       fichas_treino_completas: {
         Row: {

@@ -28,12 +28,21 @@ export interface Conversa {
 export const buscarConversasProfessor = async (professorId: string): Promise<Conversa[]> => {
   try {
     const { data, error } = await supabase
-      .from('conversas_completas')
-      .select('*')
-      .eq('professor_id', professorId)
+      .rpc('select_conversas_completas', { professor_id_param: professorId })
       .order('updated_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      // Fallback: try direct query to conversas_completas view
+      const { data: viewData, error: viewError } = await supabase
+        .from('conversas_completas')
+        .select('*')
+        .eq('professor_id', professorId)
+        .order('updated_at', { ascending: false });
+      
+      if (viewError) throw viewError;
+      return viewData || [];
+    }
+    
     return data || [];
   } catch (error) {
     console.error("Erro ao buscar conversas:", error);
