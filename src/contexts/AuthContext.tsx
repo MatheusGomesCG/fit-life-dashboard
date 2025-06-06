@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,9 +50,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Determine user role based on which table has the record
       let userRole: string;
-      if (professorCheck && !professorError) {
+      if (professorCheck) {
         userRole = 'professor';
-      } else if (alunoCheck && !alunoError) {
+      } else if (alunoCheck) {
         userRole = 'aluno';
       } else {
         // Check admin table as fallback - using maybeSingle to avoid errors
@@ -65,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         console.log("Admin check result:", adminCheck, adminError);
         
-        if (adminCheck && !adminError) {
+        if (adminCheck) {
           userRole = 'admin';
         } else {
           userRole = 'unknown';
