@@ -31,21 +31,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("Loading user profile for:", authUser.id, authUser.email);
       
-      // First check if user exists in professor_profiles
+      // Check if user exists in professor_profiles - using maybeSingle to avoid errors
       const { data: professorCheck, error: professorError } = await supabase
         .from('professor_profiles')
         .select('user_id')
         .eq('user_id', authUser.id)
-        .single();
+        .maybeSingle();
       
       console.log("Professor check result:", professorCheck, professorError);
       
-      // Then check if user exists in aluno_profiles
+      // Check if user exists in aluno_profiles - using maybeSingle to avoid errors
       const { data: alunoCheck, error: alunoError } = await supabase
         .from('aluno_profiles')
         .select('user_id')
         .eq('user_id', authUser.id)
-        .single();
+        .maybeSingle();
       
       console.log("Aluno check result:", alunoCheck, alunoError);
       
@@ -56,12 +56,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (alunoCheck && !alunoError) {
         userRole = 'aluno';
       } else {
-        // Check admin table as fallback
+        // Check admin table as fallback - using maybeSingle to avoid errors
         const { data: adminCheck, error: adminError } = await supabase
           .from('admin_users')
           .select('user_id')
           .eq('user_id', authUser.id)
-          .single();
+          .maybeSingle();
         
         console.log("Admin check result:", adminCheck, adminError);
         
