@@ -26,11 +26,13 @@ const Login: React.FC = () => {
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log("User authenticated, redirecting...", user.tipo);
+      console.log("User authenticated during login page, redirecting...", user.tipo);
       if (user.tipo === "professor") {
         navigate("/dashboard-professor", { replace: true });
-      } else {
+      } else if (user.tipo === "aluno") {
         navigate("/dashboard", { replace: true });
+      } else {
+        console.log("Unknown user type, staying on login");
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -42,14 +44,25 @@ const Login: React.FC = () => {
     try {
       console.log("Starting login process...");
       // Call login function with only email and password
-      const { error } = await login(email, password);
+      const { error, user: loggedInUser } = await login(email, password);
       
       if (error) {
         throw error;
       }
       
       toast.success("Login realizado com sucesso!");
-      // O redirecionamento será feito pelo useEffect acima
+      
+      // Manual redirect based on user type
+      if (loggedInUser?.tipo === "professor") {
+        console.log("Redirecting professor to dashboard-professor");
+        navigate("/dashboard-professor", { replace: true });
+      } else if (loggedInUser?.tipo === "aluno") {
+        console.log("Redirecting student to dashboard");
+        navigate("/dashboard", { replace: true });
+      } else {
+        console.log("Unknown user type after login:", loggedInUser?.tipo);
+        toast.error("Tipo de usuário não reconhecido");
+      }
     } catch (error) {
       console.error("Erro no login:", error);
       toast.error("Credenciais inválidas. Por favor, tente novamente.");
@@ -75,7 +88,7 @@ const Login: React.FC = () => {
             <Activity className="h-12 w-12 text-fitness-primary" />
           </div>
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-gray-900">
-            FitLife
+            GymCloud
           </h1>
           <p className="mt-2 text-sm text-gray-600">
             {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}

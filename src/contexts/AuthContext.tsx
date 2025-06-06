@@ -16,7 +16,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ error: any }>;
+  login: (email: string, password: string) => Promise<{ error: any; user?: AuthUser }>;
   logout: () => Promise<void>;
 }
 
@@ -39,6 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Error getting user role:", roleError);
         throw roleError;
       }
+
+      console.log("User role from database:", userRole);
 
       let profile: ProfessorProfile | undefined;
       let userName = authUser.email?.split('@')[0] || 'Usuário';
@@ -96,8 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile: profile || undefined
       };
       
-      console.log("Enhanced user:", enhancedUser.tipo, enhancedUser.nome);
+      console.log("Enhanced user created:", enhancedUser.tipo, enhancedUser.nome);
       setUser(enhancedUser);
+      return enhancedUser;
     } catch (error) {
       console.error("Erro ao carregar perfil do usuário:", error);
       
@@ -109,6 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
       console.log("Basic user (no access):", basicUser.nome);
       setUser(basicUser);
+      return basicUser;
     }
   };
 
@@ -164,7 +168,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log("Login successful:", data.user?.email);
       if (data.user) {
-        await loadUserProfile(data.user);
+        const enhancedUser = await loadUserProfile(data.user);
+        console.log("Login - Enhanced user type:", enhancedUser?.tipo);
+        return { error: null, user: enhancedUser };
       }
 
       return { error: null };
