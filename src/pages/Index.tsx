@@ -1,30 +1,23 @@
 import React from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { User, Users, ArrowRight, Activity, CheckCircle, Star, Calendar, BarChart3, Shield, Clock, Trophy, FileText } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+
 const Index: React.FC = () => {
-  const {
-    isAuthenticated,
-    loading,
-    user
-  } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
+    return (
+      <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="large" />
-      </div>;
+      </div>
+    );
   }
 
-  // Redirect to appropriate dashboard if already authenticated
-  if (isAuthenticated) {
-    if (user?.tipo === "professor") {
-      return <Navigate to="/dashboard-professor" replace />;
-    }
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  // Landing page for non-authenticated users
-  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+  // Landing page content (now accessible to both authenticated and non-authenticated users)
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-16 pb-24">
         <div className="container mx-auto px-4">
@@ -47,14 +40,30 @@ const Index: React.FC = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/login?tipo=professor" className="bg-fitness-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary/90 transition-colors inline-flex items-center justify-center">
-                <Users className="mr-2 h-5 w-5" />
-                Começar como Professor
-              </Link>
-              <Link to="/login?tipo=aluno" className="bg-white text-fitness-primary border-2 border-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary hover:text-white transition-colors inline-flex items-center justify-center">
-                <User className="mr-2 h-5 w-5" />
-                Entrar como Aluno
-              </Link>
+              {isAuthenticated ? (
+                // Show dashboard links for authenticated users
+                <>
+                  <Link 
+                    to={user?.tipo === "professor" ? "/dashboard-professor" : "/dashboard"} 
+                    className="bg-fitness-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary/90 transition-colors inline-flex items-center justify-center"
+                  >
+                    <Activity className="mr-2 h-5 w-5" />
+                    Ir para Dashboard
+                  </Link>
+                </>
+              ) : (
+                // Show login buttons for non-authenticated users
+                <>
+                  <Link to="/login?tipo=professor" className="bg-fitness-primary text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary/90 transition-colors inline-flex items-center justify-center">
+                    <Users className="mr-2 h-5 w-5" />
+                    Começar como Professor
+                  </Link>
+                  <Link to="/login?tipo=aluno" className="bg-white text-fitness-primary border-2 border-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-fitness-primary hover:text-white transition-colors inline-flex items-center justify-center">
+                    <User className="mr-2 h-5 w-5" />
+                    Entrar como Aluno
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -306,7 +315,9 @@ const Index: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                ))}
               </div>
               <p className="text-gray-600 mb-4">
                 "O FitLife revolucionou minha forma de trabalhar. Consigo acompanhar todos os meus alunos de forma organizada e profissional."
@@ -324,7 +335,9 @@ const Index: React.FC = () => {
 
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                ))}
               </div>
               <p className="text-gray-600 mb-4">
                 "Sistema completo e fácil de usar. Meus alunos adoram poder acessar os treinos pelo celular."
@@ -342,7 +355,9 @@ const Index: React.FC = () => {
 
             <div className="bg-gray-50 rounded-xl p-6">
               <div className="flex mb-4">
-                {[...Array(5)].map((_, i) => <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />)}
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                ))}
               </div>
               <p className="text-gray-600 mb-4">
                 "Excelente custo-benefício. O suporte é muito atencioso e o sistema é muito estável."
@@ -372,15 +387,26 @@ const Index: React.FC = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/login?tipo=professor" className="bg-white text-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
-              <Users className="mr-2 h-5 w-5" />
-              Começar teste grátis
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
+            {isAuthenticated ? (
+              <Link 
+                to={user?.tipo === "professor" ? "/dashboard-professor" : "/dashboard"} 
+                className="bg-white text-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-flex items-center justify-center"
+              >
+                <Activity className="mr-2 h-5 w-5" />
+                Acessar Dashboard
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            ) : (
+              <Link to="/login?tipo=professor" className="bg-white text-fitness-primary px-8 py-4 rounded-lg font-semibold text-lg hover:bg-gray-100 transition-colors inline-flex items-center justify-center">
+                <Users className="mr-2 h-5 w-5" />
+                Começar teste grátis
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            )}
           </div>
           
           <p className="text-sm mt-4 opacity-75">
-            Sem cartão de crédito • Cancele a qualquer momento
+            {isAuthenticated ? "Acesse todas as funcionalidades do sistema" : "Sem cartão de crédito • Cancele a qualquer momento"}
           </p>
         </div>
       </section>
@@ -392,7 +418,7 @@ const Index: React.FC = () => {
             <div className="flex justify-center mb-4">
               <Activity className="h-8 w-8 text-fitness-primary" />
             </div>
-            <h3 className="text-xl font-bold mb-2">GymClouod</h3>
+            <h3 className="text-xl font-bold mb-2">GymCloud</h3>
             <p className="text-gray-400 mb-8">
               Sistema de Avaliação Física para Professores
             </p>
@@ -403,6 +429,8 @@ const Index: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
