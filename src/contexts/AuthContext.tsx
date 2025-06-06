@@ -29,18 +29,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserProfile = async (authUser: User) => {
     try {
-      console.log("Loading user profile for:", authUser.id);
+      console.log("Loading user profile for:", authUser.id, authUser.email);
       
-      // Use the secure database function to get user role
-      const { data: userRole, error: roleError } = await supabase
-        .rpc('get_user_role', { user_uuid: authUser.id });
+      // First check if user exists in professor_profiles
+      const { data: professorCheck, error: professorError } = await supabase
+        .from('professor_profiles')
+        .select('user_id')
+        .eq('user_id', authUser.id)
+        .single();
       
-      if (roleError) {
-        console.error("Error getting user role:", roleError);
-        throw roleError;
+      console.log("Professor check result:", professorCheck, professorError);
+      
+      // Then check if user exists in aluno_profiles
+      const { data: alunoCheck, error: alunoError } = await supabase
+        .from('aluno_profiles')
+        .select('user_id')
+        .eq('user_id', authUser.id)
+        .single();
+      
+      console.log("Aluno check result:", alunoCheck, alunoError);
+      
+      // Determine user role based on which table has the record
+      let userRole: string;
+      if (professorCheck && !professorError) {
+        userRole = 'professor';
+      } else if (alunoCheck && !alunoError) {
+        userRole = 'aluno';
+      } else {
+        // Check admin table as fallback
+        const { data: adminCheck, error: adminError } = await supabase
+          .from('admin_users')
+          .select('user_id')
+          .eq('user_id', authUser.id)
+          .single();
+        
+        console.log("Admin check result:", adminCheck, adminError);
+        
+        if (adminCheck && !adminError) {
+          userRole = 'admin';
+        } else {
+          userRole = 'unknown';
+        }
       }
 
-      console.log("User role from database:", userRole);
+      console.log("Determined user role:", userRole);
 
       let profile: ProfessorProfile | undefined;
       let userName = authUser.email?.split('@')[0] || 'Usuário';
@@ -60,34 +92,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If user is a student, get their name from aluno_profiles
       if (userRole === 'aluno') {
         try {
-          const { data: alunoProfile, error: alunoError } = await supabase
+          const { data: alunoProfile, error: alunoProfileError } = await supabase
             .from('aluno_profiles')
             .select('nome')
             .eq('user_id', authUser.id)
             .single();
           
-          if (!alunoError && alunoProfile) {
+          if (!alunoProfileError && alunoProfile) {
             userName = alunoProfile.nome;
           }
-        } catch (alunoError) {
-          console.warn("Could not load student profile:", alunoError);
+        } catch (alunoProfileError) {
+          console.warn("Could not load student profile:", alunoProfileError);
         }
       }
 
       // If user is an admin, get their name from admin_users
       if (userRole === 'admin') {
         try {
-          const { data: adminProfile, error: adminError } = await supabase
+          const { data: adminProfile, error: adminProfileError } = await supabase
             .from('admin_users')
             .select('nome')
             .eq('user_id', authUser.id)
             .single();
           
-          if (!adminError && adminProfile) {
+          if (!adminProfileError && adminProfile) {
             userName = adminProfile.nome;
           }
-        } catch (adminError) {
-          console.warn("Could not load admin profile:", adminError);
+        } catch (adminProfileError) {
+          console.warn("Could not load admin profile:", adminProfileError);
         }
       }
 
