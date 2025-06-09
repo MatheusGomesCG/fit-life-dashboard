@@ -28,6 +28,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         console.log("✅ Login realizado com sucesso, carregando perfil...");
+        
+        // Aguardar um momento para o sistema processar a autenticação
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         const enhancedUser = await loadUserProfile(data.user);
         console.log("🎯 Usuário logado:", {
           id: enhancedUser.id,
@@ -35,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           nome: enhancedUser.nome,
           tipo: enhancedUser.tipo
         });
+        
         return { error: null, user: enhancedUser };
       }
 
@@ -61,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     loading,
-    isAuthenticated: !!user?.tipo,
+    isAuthenticated: !!user && !!user.tipo,
     login,
     logout
   };

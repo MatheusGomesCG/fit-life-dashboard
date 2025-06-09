@@ -4,85 +4,100 @@ import { buscarPerfilProfessor } from "@/services/professorService";
 
 export const getUserRole = async (userId: string): Promise<"professor" | "aluno" | "admin" | "unknown"> => {
   try {
-    console.log("Verificando tipo de usuário para:", userId);
+    console.log("🔍 Verificando tipo de usuário para:", userId);
 
-    const { data: professorCheck } = await supabase
+    // Verificar se é professor
+    const { data: professorCheck, error: professorError } = await supabase
       .from("professor_profiles")
       .select("user_id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    console.log("Professor check resultado:", professorCheck);
-
-    if (professorCheck) {
-      console.log("Usuário identificado como professor");
+    if (professorError) {
+      console.error("Erro ao verificar professor:", professorError);
+    } else if (professorCheck) {
+      console.log("✅ Usuário identificado como professor");
       return "professor";
     }
 
-    const { data: alunoCheck } = await supabase
+    // Verificar se é aluno
+    const { data: alunoCheck, error: alunoError } = await supabase
       .from("aluno_profiles")
       .select("user_id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    console.log("Aluno check resultado:", alunoCheck);
-
-    if (alunoCheck) {
-      console.log("Usuário identificado como aluno");
+    if (alunoError) {
+      console.error("Erro ao verificar aluno:", alunoError);
+    } else if (alunoCheck) {
+      console.log("✅ Usuário identificado como aluno");
       return "aluno";
     }
 
-    const { data: adminCheck } = await supabase
+    // Verificar se é admin
+    const { data: adminCheck, error: adminError } = await supabase
       .from("admin_users")
       .select("user_id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    console.log("Admin check resultado:", adminCheck);
-
-    if (adminCheck) {
-      console.log("Usuário identificado como admin");
+    if (adminError) {
+      console.error("Erro ao verificar admin:", adminError);
+    } else if (adminCheck) {
+      console.log("✅ Usuário identificado como admin");
       return "admin";
     }
 
-    console.log("Tipo de usuário não identificado");
+    console.log("❌ Tipo de usuário não identificado");
     return "unknown";
   } catch (error) {
-    console.error("Erro ao identificar tipo de usuário:", error);
+    console.error("❌ Erro crítico ao identificar tipo de usuário:", error);
     return "unknown";
   }
 };
 
 export const getUserName = async (userId: string, role: string): Promise<string> => {
   try {
+    console.log(`🔍 Buscando nome para usuário ${role}:`, userId);
+
     if (role === "professor") {
       const profile = await buscarPerfilProfessor(userId);
       return profile?.nome ?? "Professor";
     }
 
     if (role === "aluno") {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("aluno_profiles")
         .select("nome")
         .eq("user_id", userId)
         .single();
 
+      if (error) {
+        console.error("Erro ao buscar nome do aluno:", error);
+        return "Aluno";
+      }
+
       return data?.nome ?? "Aluno";
     }
 
     if (role === "admin") {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("admin_users")
         .select("nome")
         .eq("user_id", userId)
         .single();
+
+      if (error) {
+        console.error("Erro ao buscar nome do admin:", error);
+        return "Administrador";
+      }
 
       return data?.nome ?? "Administrador";
     }
 
     return "Usuário";
   } catch (error) {
-    console.warn(`Erro ao buscar nome para usuário (${role}):`, error);
+    console.error(`❌ Erro ao buscar nome para usuário (${role}):`, error);
     return "Usuário";
   }
 };

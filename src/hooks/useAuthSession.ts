@@ -14,8 +14,20 @@ export const useAuthSession = () => {
   const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
     try {
       console.log("🔍 Carregando perfil para usuário:", authUser.id);
+      
       const role = await getUserRole(authUser.id);
       console.log("✅ Tipo de usuário identificado:", role);
+      
+      if (role === "unknown") {
+        console.warn("⚠️ Usuário não tem perfil válido");
+        const fallbackUser: AuthUser = {
+          ...authUser,
+          nome: authUser.email?.split("@")[0] || "Usuário",
+          tipo: undefined
+        };
+        setUser(fallbackUser);
+        return fallbackUser;
+      }
       
       const nome = await getUserName(authUser.id, role);
       let profile: ProfessorProfile | undefined;
@@ -29,7 +41,7 @@ export const useAuthSession = () => {
       const enhancedUser: AuthUser = {
         ...authUser,
         nome,
-        tipo: role !== "unknown" ? role : undefined,
+        tipo: role,
         profile
       };
 
@@ -73,23 +85,36 @@ export const useAuthSession = () => {
           await loadUserProfile(session.user);
         } else {
           console.log("❌ Nenhum usuário na sessão");
+          setUser(null);
         }
 
         setLoading(false);
       } catch (error) {
         console.error("❌ Erro na inicialização:", error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setUser(null);
+          setSession(null);
+        }
       }
     };
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 Mudança de estado de auth:", event, session ? "com sessão" : "sem sessão");
+        
+        if (!mounted) return;
+        
         setSession(session);
 
         if (session?.user) {
           console.log("👤 Carregando perfil após mudança de estado...");
-          await loadUserProfile(session.user);
+          try {
+            await loadUserProfile(session.user);
+          } catch (error) {
+            console.error("❌ Erro ao carregar perfil:", error);
+            setUser(null);
+          }
         } else {
           console.log("❌ Limpando usuário após mudança de estado");
           setUser(null);
