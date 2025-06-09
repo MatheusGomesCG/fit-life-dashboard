@@ -1,98 +1,51 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Send, Plus, Image, Paperclip, User, Bot } from "lucide-react";
+import { Send, User, Bot } from "lucide-react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
-
-interface Message {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  timestamp: string;
-  isImage?: boolean;
-  isAI?: boolean;
-}
+import { 
+  Mensagem, 
+  Conversa, 
+  buscarMensagensConversa, 
+  enviarMensagem, 
+  marcarMensagensComoLidas,
+  criarOuBuscarConversa 
+} from "@/services/chatService";
 
 const Chat: React.FC = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [messages, setMessages] = useState<Mensagem[]>([]);
   const [inputMessage, setInputMessage] = useState("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Mock data para demonstração
-  const mockProfessor = {
-    id: "prof_01",
-    nome: "Professor Silva",
-    avatar: "https://placehold.co/200x200?text=PS"
-  };
-
-  // Mensagens fictícias para exemplo (incluindo mensagens da IA)
-  const mockMessages: Message[] = [
-    {
-      id: "m1",
-      senderId: mockProfessor.id,
-      receiverId: user?.id || "",
-      content: "Olá! Como posso te ajudar hoje?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-    },
-    {
-      id: "m2",
-      senderId: user?.id || "",
-      receiverId: mockProfessor.id,
-      content: "Olá professor! Tenho uma dúvida sobre o treino de peito.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString()
-    },
-    {
-      id: "m3",
-      senderId: mockProfessor.id,
-      receiverId: user?.id || "",
-      content: "Ótima pergunta! Para treino de peito, recomendo começar com exercícios compostos como supino reto. Quantos dias por semana você está treinando atualmente?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
-      isAI: true
-    },
-    {
-      id: "m4",
-      senderId: user?.id || "",
-      receiverId: mockProfessor.id,
-      content: "Estou treinando 3 vezes por semana. É suficiente?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 21).toISOString()
-    },
-    {
-      id: "m5",
-      senderId: mockProfessor.id,
-      receiverId: user?.id || "",
-      content: "Perfeito! 3 vezes por semana é uma frequência excelente para quem está começando. Lembre-se de manter uma boa técnica e progressão gradual no peso. O descanso entre os treinos é fundamental para a recuperação muscular.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-      isAI: true
-    }
-  ];
+  const [enviando, setEnviando] = useState(false);
+  const [conversa, setConversa] = useState<Conversa | null>(null);
 
   useEffect(() => {
-    // Simulação de carregamento de mensagens
-    setLoading(true);
-    setTimeout(() => {
-      setMessages(mockMessages);
-      setLoading(false);
-    }, 1000);
+    if (user?.id) {
+      inicializarChat();
+    }
+  }, [user?.id]);
 
-    // Set up real-time subscription for new messages (example)
+  useEffect(() => {
+    if (!conversa?.id) return;
+
+    // Set up real-time subscription for new messages
     const channel = supabase
-      .channel('student-chat-realtime')
+      .channel('mensagens-realtime-aluno')
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'mensagens'
+          table: 'mensagens',
+          filter: `conversa_id=eq.${conversa.id}`
         },
         (payload) => {
-          // Handle real-time message updates here
-          console.log('Nova mensagem recebida:', payload);
+          const novaMensagem = payload.new as Mensagem;
+          setMessages(prev => [...prev, novaMensagem]);
         }
       )
       .subscribe();
@@ -100,56 +53,100 @@ const Chat: React.FC = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [conversa?.id]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (conversa?.id && user?.id) {
+      marcarMensagensComoLidas(conversa.id, user.id);
+    }
+  }, [messages, conversa?.id, user?.id]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const inicializarChat = async () => {
+    try {
+      setLoading(true);
+      
+      if (!user?.id) return;
+
+      // Buscar dados do aluno para pegar o professor_id
+      const { data: alunoData, error: alunoError } = await supabase
+        .from('aluno_profiles')
+        .select('professor_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (alunoError || !alunoData?.professor_id) {
+        toast.error("Erro ao buscar dados do aluno");
+        return;
+      }
+
+      // Criar ou buscar conversa existente
+      const conversaId = await criarOuBuscarConversa(alunoData.professor_id, user.id);
+      
+      // Buscar dados completos da conversa
+      const { data: conversaData, error: conversaError } = await supabase
+        .from('conversas_completas')
+        .select('*')
+        .eq('id', conversaId)
+        .single();
+
+      if (conversaError || !conversaData) {
+        toast.error("Erro ao carregar conversa");
+        return;
+      }
+
+      const conversaCompleta: Conversa = {
+        id: conversaData.id,
+        professor_id: conversaData.professor_id,
+        aluno_id: conversaData.aluno_id,
+        aluno_nome: conversaData.aluno_nome || '',
+        aluno_email: conversaData.aluno_email || '',
+        ultima_mensagem: conversaData.ultima_mensagem,
+        ultima_mensagem_data: conversaData.ultima_mensagem_data,
+        mensagens_nao_lidas: conversaData.mensagens_nao_lidas || 0,
+        created_at: conversaData.created_at,
+        updated_at: conversaData.updated_at
+      };
+
+      setConversa(conversaCompleta);
+
+      // Carregar mensagens
+      const mensagensData = await buscarMensagensConversa(conversaId);
+      setMessages(mensagensData);
+
+    } catch (error) {
+      console.error("Erro ao inicializar chat:", error);
+      toast.error("Erro ao carregar chat");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || !user?.id || !conversa || enviando) return;
 
-    const newMessage: Message = {
-      id: `m${Date.now()}`,
-      senderId: user?.id || "",
-      receiverId: mockProfessor.id,
-      content: inputMessage,
-      timestamp: new Date().toISOString(),
-    };
+    try {
+      setEnviando(true);
+      await enviarMensagem({
+        conversa_id: conversa.id,
+        remetente_id: user.id,
+        destinatario_id: conversa.professor_id,
+        conteudo: inputMessage,
+        lida: false,
+        tipo: 'texto'
+      });
 
-    setMessages([...messages, newMessage]);
-    setInputMessage("");
-
-    // Simular resposta da IA após 2-3 segundos
-    setTimeout(() => {
-      const aiResponses = [
-        "Entendi sua dúvida! Vou te ajudar com isso. É importante manter a constância nos treinos e sempre focar na técnica correta.",
-        "Excelente pergunta! Para melhorar seus resultados, sugiro manter uma alimentação balanceada junto com os exercícios.",
-        "Boa! Continue assim. Lembre-se de sempre se aquecer antes dos exercícios e se alongar após o treino.",
-        "Perfeito! Se tiver mais dúvidas sobre exercícios ou nutrição, estou aqui para ajudar. Mantenha o foco nos seus objetivos!"
-      ];
-      
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
-      
-      const aiResponse: Message = {
-        id: `ai${Date.now()}`,
-        senderId: mockProfessor.id,
-        receiverId: user?.id || "",
-        content: randomResponse,
-        timestamp: new Date().toISOString(),
-        isAI: true
-      };
-      setMessages(prev => [...prev, aiResponse]);
-    }, 2000 + Math.random() * 1000);
+      setInputMessage("");
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem");
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const formatMessageDate = (timestamp: string) => {
-    const messageDate = new Date(timestamp);
+    const messageDate = parseISO(timestamp);
     const today = new Date();
     const yesterday = new Date();
     yesterday.setDate(today.getDate() - 1);
@@ -163,10 +160,24 @@ const Chat: React.FC = () => {
     }
   };
 
+  const isAIMessage = (conteudo: string) => {
+    return conteudo.startsWith('🤖');
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
         <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  if (!conversa) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <p className="text-gray-500">Erro ao carregar conversa</p>
+        </div>
       </div>
     );
   }
@@ -179,8 +190,8 @@ const Chat: React.FC = () => {
             <User className="h-5 w-5 text-fitness-primary" />
           </div>
           <div>
-            <h2 className="font-medium text-gray-900">{mockProfessor.nome}</h2>
-            <p className="text-xs text-green-600">Online</p>
+            <h2 className="font-medium text-gray-900">Seu Professor</h2>
+            <p className="text-xs text-green-600">Chat com IA ativa</p>
           </div>
         </div>
         <div className="ml-auto">
@@ -192,88 +203,71 @@ const Chat: React.FC = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.senderId === user?.id ? "justify-end" : "justify-start"
-            }`}
-          >
+        {messages.length === 0 ? (
+          <div className="text-center text-gray-500 mt-8">
+            <p>Nenhuma mensagem ainda</p>
+            <p className="text-sm">Envie a primeira mensagem para seu professor</p>
+          </div>
+        ) : (
+          messages.map((message) => (
             <div
-              className={`max-w-[75%] rounded-lg p-3 ${
-                message.senderId === user?.id
-                  ? "bg-fitness-primary text-white rounded-tr-none"
-                  : message.isAI
-                  ? "bg-blue-100 text-blue-900 rounded-tl-none border border-blue-200"
-                  : "bg-gray-100 text-gray-900 rounded-tl-none"
+              key={message.id}
+              className={`flex ${
+                message.remetente_id === user?.id ? "justify-end" : "justify-start"
               }`}
             >
-              {message.isAI && (
-                <div className="flex items-center mb-1 text-xs text-blue-600">
-                  <Bot className="h-3 w-3 mr-1" />
-                  Assistente IA
-                </div>
-              )}
-              {message.isImage ? (
-                <img
-                  src={message.content}
-                  alt="Imagem enviada"
-                  className="rounded-md max-h-40 object-contain"
-                />
-              ) : (
-                <p className="whitespace-pre-wrap break-words">{message.content}</p>
-              )}
-              <p 
-                className={`text-xs mt-1 ${
-                  message.senderId === user?.id 
-                    ? "text-white/70" 
-                    : message.isAI
-                    ? "text-blue-600/70"
-                    : "text-gray-500"
+              <div
+                className={`max-w-[75%] rounded-lg p-3 ${
+                  message.remetente_id === user?.id
+                    ? "bg-fitness-primary text-white rounded-tr-none"
+                    : isAIMessage(message.conteudo)
+                    ? "bg-blue-100 text-blue-900 rounded-tl-none border border-blue-200"
+                    : "bg-gray-100 text-gray-900 rounded-tl-none"
                 }`}
               >
-                {formatMessageDate(message.timestamp)}
-              </p>
+                {isAIMessage(message.conteudo) && (
+                  <div className="flex items-center mb-1 text-xs text-blue-600">
+                    <Bot className="h-3 w-3 mr-1" />
+                    Assistente IA
+                  </div>
+                )}
+                <p className="whitespace-pre-wrap break-words">
+                  {isAIMessage(message.conteudo) 
+                    ? message.conteudo.replace('🤖 ', '') 
+                    : message.conteudo
+                  }
+                </p>
+                <p 
+                  className={`text-xs mt-1 ${
+                    message.remetente_id === user?.id 
+                      ? "text-white/70" 
+                      : isAIMessage(message.conteudo)
+                      ? "text-blue-600/70"
+                      : "text-gray-500"
+                  }`}
+                >
+                  {formatMessageDate(message.created_at)}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+          ))
+        )}
       </div>
 
       <div className="border-t border-gray-200 p-4">
-        <form onSubmit={handleSendMessage} className="flex items-center">
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-            onClick={() => toast.info("Função de anexos em breve!")}
-          >
-            <Plus className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-            onClick={() => toast.info("Função de envio de imagens em breve!")}
-          >
-            <Image className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            className="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
-            onClick={() => toast.info("Função de anexos em breve!")}
-          >
-            <Paperclip className="h-5 w-5" />
-          </button>
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
           <input
             type="text"
             placeholder="Digite sua mensagem..."
-            className="flex-1 mx-2 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-fitness-primary focus:border-transparent"
+            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fitness-primary focus:border-transparent"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
+            disabled={enviando}
           />
           <button
             type="submit"
-            className="p-2 bg-fitness-primary text-white rounded-full hover:bg-fitness-primary/90 transition-colors"
-            disabled={!inputMessage.trim()}
+            className="p-3 bg-fitness-primary text-white rounded-lg hover:bg-fitness-primary/90 transition-colors disabled:opacity-50"
+            disabled={!inputMessage.trim() || enviando}
           >
             <Send className="h-5 w-5" />
           </button>
