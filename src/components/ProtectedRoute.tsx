@@ -30,7 +30,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Redirecionar para login se não estiver autenticado
-  if (!isAuthenticated || !user || user.tipo !== "professor") {
+  if (!isAuthenticated) {
     console.log("❌ [ProtectedRoute] Acesso negado, redirecionando para login");
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
