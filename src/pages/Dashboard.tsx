@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -10,27 +11,15 @@ import {
   MessageSquare,
   ChevronRight,
   CheckCircle,
-  Clock,
-  Menu,
-  User,
-  LogOut
+  Clock
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
 import { format } from "date-fns";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 
 const Dashboard: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,86 +42,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
-
   const proximoPagamento = pagamentos
     .filter(p => p.status === "pendente")
     .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())[0];
 
   return (
     <div>
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard do Aluno</h1>
-          <p className="text-gray-600 mt-1">
-            Bem-vindo ao sistema de avaliação física, {user?.nome || "Aluno"}
-          </p>
-        </div>
-        
-        {/* Menu Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Menu className="h-4 w-4" />
-              Menu
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              {user?.nome || "Aluno"}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem asChild>
-              <Link to="/meus-treinos" className="flex items-center gap-2 w-full">
-                <FileText className="h-4 w-4" />
-                Meus Treinos
-              </Link>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem asChild>
-              <Link to="/minhas-medidas" className="flex items-center gap-2 w-full">
-                <TrendingUp className="h-4 w-4" />
-                Minhas Medidas
-              </Link>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem asChild>
-              <Link to="/meus-pagamentos" className="flex items-center gap-2 w-full">
-                <DollarSign className="h-4 w-4" />
-                Pagamentos
-              </Link>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem asChild>
-              <Link to="/agendamento" className="flex items-center gap-2 w-full">
-                <Calendar className="h-4 w-4" />
-                Agendamento
-              </Link>
-            </DropdownMenuItem>
-            
-            <DropdownMenuItem asChild>
-              <Link to="/chat" className="flex items-center gap-2 w-full">
-                <MessageSquare className="h-4 w-4" />
-                Chat de Suporte
-              </Link>
-            </DropdownMenuItem>
-            
-            <DropdownMenuSeparator />
-            
-            <DropdownMenuItem 
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-red-600 focus:text-red-600"
-            >
-              <LogOut className="h-4 w-4" />
-              Sair
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard do Aluno</h1>
+        <p className="text-gray-600 mt-1">
+          Bem-vindo ao sistema de avaliação física, {user?.nome || "Aluno"}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
