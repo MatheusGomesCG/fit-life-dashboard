@@ -4,7 +4,7 @@ import ChatDashboard from "@/components/chat/ChatDashboard";
 
 const ChatProfessor: React.FC = () => {
   return (
-    <div>
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
           Chat com Alunos

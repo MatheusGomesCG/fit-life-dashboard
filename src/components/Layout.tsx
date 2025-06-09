@@ -2,8 +2,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
+import { LogOut, Activity } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
+import ProfessorNavigation from "./professor/ProfessorNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
   // Verificar se é a página inicial ou login
-  const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
+  const shouldHideNavigation = location.pathname === "/" || location.pathname === "/login";
 
   // Show loading spinner while auth is loading
   if (loading) {
@@ -39,61 +40,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
     );
   }
-
-  // Define os itens de menu com base no tipo de usuário (aluno ou professor)
-  const menuItems = user?.tipo === "professor" ? [{
-    to: "/dashboard-professor",
-    icon: Home,
-    label: "Dashboard"
-  }, {
-    to: "/gerenciar-alunos",
-    icon: Users,
-    label: "Alunos"
-  }, {
-    to: "/cadastrar-aluno",
-    icon: User,
-    label: "Novo Aluno"
-  }, {
-    to: "/gerenciar-fichas",
-    icon: FileText,
-    label: "Fichas de Treino"
-  }, {
-    to: "/gerenciar-pagamentos",
-    icon: DollarSign,
-    label: "Pagamentos"
-  }, {
-    to: "/agendamentos",
-    icon: Calendar,
-    label: "Agendamentos"
-  }, {
-    to: "/chat-professor",
-    icon: MessageSquare,
-    label: "Chat"
-  }] : [{
-    to: "/dashboard",
-    icon: Home,
-    label: "Dashboard"
-  }, {
-    to: "/meus-treinos",
-    icon: FileText,
-    label: "Meus Treinos"
-  }, {
-    to: "/minhas-medidas",
-    icon: TrendingUp,
-    label: "Medidas"
-  }, {
-    to: "/meus-pagamentos",
-    icon: DollarSign,
-    label: "Pagamentos"
-  }, {
-    to: "/agendamento",
-    icon: Calendar,
-    label: "Agendamento"
-  }, {
-    to: "/chat",
-    icon: MessageSquare,
-    label: "Chat"
-  }];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -146,41 +92,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Conteúdo principal com barra lateral */}
-      <div className="flex container mx-auto">
-        {/* Barra lateral - Mostrar apenas para usuários autenticados e não em rotas públicas */}
-        {!shouldHideSidebar && isAuthenticated && user?.tipo && (
-          <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
-            <nav className="space-y-1">
-              {menuItems.map(item => {
-                const isActive = location.pathname === item.to || 
-                  (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to)) ||
-                  (item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
-                
-                return (
-                  <Link 
-                    key={item.to} 
-                    to={item.to} 
-                    className={`flex items-center gap-2 p-3 rounded-md ${
-                      isActive 
-                        ? "bg-fitness-primary text-white" 
-                        : "hover:bg-gray-100"
-                    }`}
-                  >
-                    <item.icon size={18} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
-        )}
+      {/* Menu de Navegação do Professor - apenas para professores autenticados */}
+      {!shouldHideNavigation && isAuthenticated && user?.tipo === "professor" && (
+        <ProfessorNavigation />
+      )}
 
-        {/* Conteúdo principal */}
-        <main className={`flex-1 ${shouldHideSidebar ? 'p-0' : 'p-6'}`}>
-          {children}
-        </main>
-      </div>
+      {/* Conteúdo principal sem barra lateral */}
+      <main className="w-full">
+        {children}
+      </main>
     </div>
   );
 };
