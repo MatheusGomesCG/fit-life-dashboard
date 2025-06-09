@@ -1,216 +1,78 @@
 
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Layout from "@/components/Layout";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import DashboardProfessor from "@/pages/DashboardProfessor";
-import GerenciarAlunos from "@/pages/GerenciarAlunos";
-import CadastrarAluno from "@/pages/CadastrarAluno";
-import EditarAluno from "@/pages/EditarAluno";
-import ListarAlunos from "@/pages/ListarAlunos";
-import CadastrarTreino from "@/pages/CadastrarTreino";
-import GerenciarFichaTreino from "@/pages/GerenciarFichaTreino";
-import MeusTreinos from "@/pages/MeusTreinos";
-import FichaTreino from "@/pages/FichaTreino";
-import NovoAgendamento from "@/pages/NovoAgendamento";
-import GerenciarAgendamentos from "@/pages/GerenciarAgendamentos";
-import Agendamento from "@/pages/Agendamento";
-import CadastrarPagamento from "@/pages/CadastrarPagamento";
-import EditarPagamento from "@/pages/EditarPagamento";
-import GerenciarPagamentos from "@/pages/GerenciarPagamentos";
-import MeusPagamentos from "@/pages/MeusPagamentos";
-import ChatProfessor from "@/pages/ChatProfessor";
-import Chat from "@/pages/Chat";
-import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
-import MinhasMedidas from "@/pages/MinhasMedidas";
-import NotFound from "@/pages/NotFound";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import DashboardProfessor from "./pages/DashboardProfessor";
+import CadastrarAluno from "./pages/CadastrarAluno";
+import GerenciarAlunos from "./pages/GerenciarAlunos";
+import EditarAluno from "./pages/EditarAluno";
+import CadastrarTreino from "./pages/CadastrarTreino";
+import FichaTreino from "./pages/FichaTreino";
+import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
+import CadastrarPagamento from "./pages/CadastrarPagamento";
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import EditarPagamento from "./pages/EditarPagamento";
+import MeusPagamentos from "./pages/MeusPagamentos";
+import MeusTreinos from "./pages/MeusTreinos";
+import MinhasMedidas from "./pages/MinhasMedidas";
+import Chat from "./pages/Chat";
+import ChatProfessor from "./pages/ChatProfessor";
+import Agendamento from "./pages/Agendamento";
+import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
+import NovoAgendamento from "./pages/NovoAgendamento";
+import GerenciarFotosAluno from "./pages/GerenciarFotosAluno";
+import ListarAlunos from "./pages/ListarAlunos";
+import NotFound from "./pages/NotFound";
+import Layout from "./components/Layout";
+import { AuthProvider } from "./contexts/AuthContext";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <div className="min-h-screen bg-background font-sans antialiased">
-      <Router>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              }
-            />
-            <Route
-              path="/dashboard-professor"
-              element={
-                <Layout>
-                  <DashboardProfessor />
-                </Layout>
-              }
-            />
-            <Route
-              path="/gerenciar-alunos"
-              element={
-                <Layout>
-                  <GerenciarAlunos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/cadastrar-aluno"
-              element={
-                <Layout>
-                  <CadastrarAluno />
-                </Layout>
-              }
-            />
-            <Route
-              path="/editar-aluno/:id"
-              element={
-                <Layout>
-                  <EditarAluno />
-                </Layout>
-              }
-            />
-            <Route
-              path="/listar-alunos"
-              element={
-                <Layout>
-                  <ListarAlunos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/cadastrar-treino"
-              element={
-                <Layout>
-                  <CadastrarTreino />
-                </Layout>
-              }
-            />
-            <Route
-              path="/gerenciar-ficha-treino"
-              element={
-                <Layout>
-                  <GerenciarFichaTreino />
-                </Layout>
-              }
-            />
-            <Route
-              path="/meus-treinos"
-              element={
-                <Layout>
-                  <MeusTreinos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/ficha-treino/:id"
-              element={
-                <Layout>
-                  <FichaTreino />
-                </Layout>
-              }
-            />
-            <Route
-              path="/novo-agendamento"
-              element={
-                <Layout>
-                  <NovoAgendamento />
-                </Layout>
-              }
-            />
-            <Route
-              path="/gerenciar-agendamentos"
-              element={
-                <Layout>
-                  <GerenciarAgendamentos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/agendamento"
-              element={
-                <Layout>
-                  <Agendamento />
-                </Layout>
-              }
-            />
-            <Route
-              path="/cadastrar-pagamento"
-              element={
-                <Layout>
-                  <CadastrarPagamento />
-                </Layout>
-              }
-            />
-            <Route
-              path="/editar-pagamento/:id"
-              element={
-                <Layout>
-                  <EditarPagamento />
-                </Layout>
-              }
-            />
-            <Route
-              path="/gerenciar-pagamentos"
-              element={
-                <Layout>
-                  <GerenciarPagamentos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/meus-pagamentos"
-              element={
-                <Layout>
-                  <MeusPagamentos />
-                </Layout>
-              }
-            />
-            <Route
-              path="/chat-professor"
-              element={
-                <Layout>
-                  <ChatProfessor />
-                </Layout>
-              }
-            />
-            <Route
-              path="/chat"
-              element={
-                <Layout>
-                  <Chat />
-                </Layout>
-              }
-            />
-            <Route
-              path="/gerenciar-fotos-aluno/:id"
-              element={
-                <Layout>
-                  <GerenciarFotosAluno />
-                </Layout>
-              }
-            />
-            <Route
-              path="/minhas-medidas"
-              element={
-                <Layout>
-                  <MinhasMedidas />
-                </Layout>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </AuthProvider>
-      </Router>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/dashboard-professor" element={<DashboardProfessor />} />
+                  <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
+                  <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
+                  <Route path="/editar-aluno/:id" element={<EditarAluno />} />
+                  <Route path="/cadastrar-treino" element={<CadastrarTreino />} />
+                  <Route path="/ficha-treino/:alunoId" element={<FichaTreino />} />
+                  <Route path="/gerenciar-ficha-treino" element={<GerenciarFichaTreino />} />
+                  <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
+                  <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
+                  <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
+                  <Route path="/meus-pagamentos" element={<MeusPagamentos />} />
+                  <Route path="/meus-treinos" element={<MeusTreinos />} />
+                  <Route path="/minhas-medidas" element={<MinhasMedidas />} />
+                  <Route path="/chat" element={<Chat />} />
+                  <Route path="/chat-professor" element={<ChatProfessor />} />
+                  <Route path="/agendamento" element={<Agendamento />} />
+                  <Route path="/gerenciar-agendamentos" element={<GerenciarAgendamentos />} />
+                  <Route path="/novo-agendamento" element={<NovoAgendamento />} />
+                  <Route path="/fotos-aluno/:alunoId" element={<GerenciarFotosAluno />} />
+                  <Route path="/listar-alunos" element={<ListarAlunos />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </div>
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock, CreditCard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -27,9 +28,11 @@ import {
 } from "@/components/ui/tabs";
 import PagamentosAnuais from "@/components/pagamentos/PagamentosAnuais";
 import AlunosMensais from "@/components/alunos/AlunosMensais";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const DashboardProfessor: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [avaliacoesSemana, setAvaliacoesSemana] = useState(0);
   const [agendamentosSemana, setAgendamentosSemana] = useState<Agendamento[]>([]);
@@ -40,12 +43,41 @@ const DashboardProfessor: React.FC = () => {
   
   const [totalAlunosMensais] = useState(15); // Mock value
 
+  console.log("🔍 [DashboardProfessor] Estado atual:", {
+    isAuthenticated,
+    userType: user?.tipo,
+    userName: user?.nome,
+    authLoading,
+    userId: user?.id
+  });
+
+  // Verificar autenticação e tipo de usuário
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated) {
+        console.log("❌ [DashboardProfessor] Usuário não autenticado, redirecionando");
+        navigate("/login?tipo=professor");
+        return;
+      }
+      
+      if (user?.tipo !== "professor") {
+        console.log("❌ [DashboardProfessor] Usuário não é professor, redirecionando");
+        navigate("/");
+        return;
+      }
+      
+      console.log("✅ [DashboardProfessor] Usuário autenticado como professor");
+    }
+  }, [authLoading, isAuthenticated, user?.tipo, navigate]);
+
   useEffect(() => {
     const carregarDados = async () => {
-      if (!user?.id) return;
+      if (!user?.id || authLoading || !isAuthenticated || user?.tipo !== "professor") return;
       
       try {
         setIsLoading(true);
+        console.log("🚀 [DashboardProfessor] Carregando dados...");
+        
         const [pagamentosData, numAvaliacoes, agendamentos, planoData, numAlunos] = await Promise.all([
           listarPagamentos(),
           contarAvaliacoesSemana(),
@@ -59,15 +91,33 @@ const DashboardProfessor: React.FC = () => {
         setAgendamentosSemana(agendamentos);
         setPlano(planoData);
         setTotalAlunos(numAlunos);
+        
+        console.log("✅ [DashboardProfessor] Dados carregados com sucesso");
       } catch (error) {
-        console.error("Erro ao carregar dados:", error);
+        console.error("❌ [DashboardProfessor] Erro ao carregar dados:", error);
       } finally {
         setIsLoading(false);
       }
     };
     
     carregarDados();
-  }, [user?.id]);
+  }, [user?.id, authLoading, isAuthenticated, user?.tipo]);
+
+  // Mostrar loading enquanto carrega
+  if (authLoading || isLoading) {
+    return (
+      <div className="p-6">
+        <div className="flex justify-center items-center h-64">
+          <LoadingSpinner size="large" />
+        </div>
+      </div>
+    );
+  }
+
+  // Se não está autenticado ou não é professor, não renderizar nada
+  if (!isAuthenticated || user?.tipo !== "professor") {
+    return null;
+  }
 
   const totalRecebido = calcularTotalRecebido(pagamentos);
   const totalPendente = calcularTotalPendente(pagamentos);
@@ -101,7 +151,7 @@ const DashboardProfessor: React.FC = () => {
     <div className="p-6">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Olá, Professor {user?.nome || user?.profile?.nome || ""}
+          Olá, Professor {user?.nome || user?.email?.split("@")[0] || ""}
         </h1>
         <p className="text-gray-600 mt-1">
           Bem-vindo ao seu painel de controle

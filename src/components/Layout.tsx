@@ -14,16 +14,16 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user, logout, loading } = useAuth();
   const location = useLocation();
 
-  // Debug logs para identificar o problema
-  console.log("🔍 [Layout] Debug info:", {
+  console.log("🔍 [Layout] Estado atual:", {
     pathname: location.pathname,
     isAuthenticated,
     userType: user?.tipo,
+    userName: user?.nome,
     loading,
     userExists: !!user
   });
 
-  // Verificar se é uma rota pública (login, cadastro de professor ou home)
+  // Verificar se é uma rota pública
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
   // Show loading spinner while auth is loading
@@ -48,31 +48,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
-  // Lógica para determinar se deve mostrar o menu do professor
-  const shouldShowProfessorNavigation = !loading && 
-    isAuthenticated && 
+  // Determinar se deve mostrar o menu do professor
+  const shouldShowProfessorNavigation = isAuthenticated && 
     user && 
     user.tipo === "professor" && 
-    location.pathname !== "/" && 
-    location.pathname !== "/login" &&
-    location.pathname !== "/cadastrar-professor";
+    !isPublicRoute;
 
   console.log("📊 [Layout] Navigation decision:", {
     shouldShowProfessorNavigation,
-    conditions: {
-      notLoading: !loading,
-      isAuthenticated,
-      hasUser: !!user,
-      isProfessor: user?.tipo === "professor",
-      notHomePage: location.pathname !== "/",
-      notLoginPage: location.pathname !== "/login",
-      notSignupPage: location.pathname !== "/cadastrar-professor"
-    }
+    isAuthenticated,
+    hasUser: !!user,
+    isProfessor: user?.tipo === "professor",
+    isPublicRoute
   });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho - mostrar sempre */}
+      {/* Cabeçalho */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -82,11 +74,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </div>
           
-          {/* Mostrar info do usuário apenas se autenticado e não carregando */}
-          {isAuthenticated && user && user.tipo && (
+          {/* Mostrar info do usuário se autenticado */}
+          {isAuthenticated && user ? (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
-                Olá, <span className="font-medium">{user.nome}</span>
+                Olá, <span className="font-medium">{user.nome || user.email?.split("@")[0] || "Usuário"}</span>
                 <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                   {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
                 </span>
@@ -99,24 +91,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span>Sair</span>
               </button>
             </div>
-          )}
-
-          {/* Mostrar botões de login para usuários não autenticados em rotas públicas */}
-          {!isAuthenticated && isPublicRoute && location.pathname === "/" && (
-            <div className="flex items-center gap-2">
-              <Link 
-                to="/login?tipo=professor" 
-                className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
-              >
-                Professores
-              </Link>
-              <Link 
-                to="/login?tipo=aluno" 
-                className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
-              >
-                Alunos
-              </Link>
-            </div>
+          ) : (
+            /* Mostrar botões de login para usuários não autenticados */
+            isPublicRoute && location.pathname === "/" && (
+              <div className="flex items-center gap-2">
+                <Link 
+                  to="/login?tipo=professor" 
+                  className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
+                >
+                  Professores
+                </Link>
+                <Link 
+                  to="/login?tipo=aluno" 
+                  className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
+                >
+                  Alunos
+                </Link>
+              </div>
+            )
           )}
         </div>
       </header>
