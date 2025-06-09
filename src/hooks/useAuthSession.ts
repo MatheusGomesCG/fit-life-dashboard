@@ -84,8 +84,10 @@ export const useAuthSession = () => {
           setSession(null);
         }
       } finally {
+        // ALWAYS set loading to false after initialization, regardless of outcome
         if (mounted) {
           setLoading(false);
+          console.log("✅ [useAuthSession] Inicialização completa, loading = false");
         }
       }
     };
@@ -117,10 +119,12 @@ export const useAuthSession = () => {
               console.log("❌ [useAuthSession] Professor não válido");
               await supabase.auth.signOut();
             }
+            setLoading(false);
           }
-        }
-        if (mounted) {
-          setLoading(false);
+        } else {
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     });
