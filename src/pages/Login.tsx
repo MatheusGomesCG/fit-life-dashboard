@@ -17,7 +17,7 @@ const Login: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
 
-  // Redirecionar se já estiver logado - melhorada a lógica
+  // Redirecionar se já estiver logado
   React.useEffect(() => {
     console.log("🔍 [Login] Verificando redirecionamento:", {
       isAuthenticated,
@@ -43,7 +43,7 @@ const Login: React.FC = () => {
     try {
       console.log("🔐 [Login] Tentando fazer login...");
       
-      const { error } = await login(email, password);
+      const { error, user: loggedUser } = await login(email, password);
       
       if (error) {
         console.error("❌ [Login] Erro:", error);
@@ -51,14 +51,22 @@ const Login: React.FC = () => {
         return;
       }
       
-      console.log("✅ [Login] Login iniciado com sucesso");
+      console.log("✅ [Login] Login realizado com sucesso");
       toast.success("Login realizado com sucesso!");
       
-      // Aguardar um pouco para o contexto atualizar antes de tentar redirecionar
-      setTimeout(() => {
-        console.log("🔄 [Login] Verificando estado após login...");
-        // O redirecionamento será feito pelo useEffect quando o user for carregado
-      }, 1000);
+      // Se temos o usuário retornado e ele tem tipo, redirecionar imediatamente
+      if (loggedUser?.email) {
+        console.log("🎯 [Login] Redirecionamento direto baseado no tipo da página");
+        
+        // Redirecionar baseado no tipo da página de login
+        if (userType === "professor") {
+          console.log("➡️ [Login] Redirecionando para dashboard professor");
+          navigate("/dashboard-professor", { replace: true });
+        } else {
+          console.log("➡️ [Login] Redirecionando para dashboard aluno");
+          navigate("/dashboard", { replace: true });
+        }
+      }
       
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);

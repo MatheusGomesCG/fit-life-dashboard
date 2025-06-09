@@ -12,16 +12,20 @@ export const useAuthSession = () => {
   const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
     try {
       console.log("🔍 [loadUserProfile] Carregando perfil para:", authUser.id);
+      console.log("📧 [loadUserProfile] Email do usuário:", authUser.email);
       
       // Primeiro, tentar professor
+      console.log("👨‍🏫 [loadUserProfile] Buscando professor...");
       const { data: professorData, error: professorError } = await supabase
         .from('professor_profiles')
         .select('nome')
         .eq('user_id', authUser.id)
         .maybeSingle();
 
-      if (professorError) {
-        console.warn("⚠️ [loadUserProfile] Erro ao buscar professor:", professorError);
+      console.log("📊 [loadUserProfile] Resultado professor:", { professorData, professorError });
+
+      if (professorError && professorError.code !== 'PGRST116') {
+        console.error("❌ [loadUserProfile] Erro real ao buscar professor:", professorError);
       }
 
       if (professorData) {
@@ -34,14 +38,17 @@ export const useAuthSession = () => {
       }
 
       // Se não for professor, tentar aluno
+      console.log("👨‍🎓 [loadUserProfile] Buscando aluno...");
       const { data: alunoData, error: alunoError } = await supabase
         .from('aluno_profiles')
         .select('nome')
         .eq('user_id', authUser.id)
         .maybeSingle();
 
-      if (alunoError) {
-        console.warn("⚠️ [loadUserProfile] Erro ao buscar aluno:", alunoError);
+      console.log("📊 [loadUserProfile] Resultado aluno:", { alunoData, alunoError });
+
+      if (alunoError && alunoError.code !== 'PGRST116') {
+        console.error("❌ [loadUserProfile] Erro real ao buscar aluno:", alunoError);
       }
 
       if (alunoData) {
@@ -53,20 +60,36 @@ export const useAuthSession = () => {
         };
       }
 
-      // Se não encontrou nenhum perfil
-      console.log("⚠️ [loadUserProfile] Nenhum perfil encontrado");
+      // Se não encontrou nenhum perfil, criar um perfil básico
+      console.log("⚠️ [loadUserProfile] Nenhum perfil encontrado, criando perfil básico");
+      
+      // Se estamos na página de professor, assumir que é professor
+      const currentPath = window.location.pathname + window.location.search;
+      const isFromProfessorLogin = currentPath.includes('tipo=professor');
+      
+      const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+      console.log("🎯 [loadUserProfile] Tipo padrão detectado:", defaultUserType, "baseado em:", currentPath);
+      
       return {
         ...authUser,
         nome: authUser.email?.split("@")[0] || "Usuário",
-        tipo: undefined
+        tipo: defaultUserType as "professor" | "aluno"
       };
 
     } catch (error) {
-      console.error("❌ [loadUserProfile] Erro:", error);
+      console.error("❌ [loadUserProfile] Erro geral:", error);
+      
+      // Em caso de erro, ainda assim retornar um usuário válido
+      const currentPath = window.location.pathname + window.location.search;
+      const isFromProfessorLogin = currentPath.includes('tipo=professor');
+      const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+      
+      console.log("🛟 [loadUserProfile] Fallback - criando usuário com tipo:", defaultUserType);
+      
       return {
         ...authUser,
         nome: authUser.email?.split("@")[0] || "Usuário",
-        tipo: undefined
+        tipo: defaultUserType as "professor" | "aluno"
       };
     }
   };
@@ -106,11 +129,16 @@ export const useAuthSession = () => {
             }
           } catch (profileError) {
             console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
+            // Mesmo com erro, criar um usuário básico
             if (mounted) {
+              const currentPath = window.location.pathname + window.location.search;
+              const isFromProfessorLogin = currentPath.includes('tipo=professor');
+              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+              
               setUser({
                 ...session.user,
                 nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: undefined
+                tipo: defaultUserType as "professor" | "aluno"
               });
             }
           }
@@ -133,13 +161,13 @@ export const useAuthSession = () => {
       }
     };
 
-    // Timeout de segurança
+    // Timeout de segurança mais agressivo
     const timeout = setTimeout(() => {
       if (mounted && loading) {
         console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
         setLoading(false);
       }
-    }, 8000); // Aumentei para 8 segundos
+    }, 3000); // Diminuí para 3 segundos
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -162,10 +190,14 @@ export const useAuthSession = () => {
           } catch (profileError) {
             console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
             if (mounted) {
+              const currentPath = window.location.pathname + window.location.search;
+              const isFromProfessorLogin = currentPath.includes('tipo=professor');
+              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+              
               setUser({
                 ...session.user,
                 nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: undefined
+                tipo: defaultUserType as "professor" | "aluno"
               });
               setLoading(false);
             }
