@@ -1,96 +1,139 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AuthContextType, AuthUser } from "@/types/auth";
-import { useAuthSession } from "@/hooks/useAuthSession";
+import { buscarPerfilProfessor, ProfessorProfile } from "@/services/professorService";
+
+interface AuthUser extends User {
+  nome?: string;
+  tipo?: "professor" | "aluno" | "admin";
+  profile?: ProfessorProfile;
+}
+
+interface AuthContextType {
+  user: AuthUser | null;
+  session: Session | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session, loading, loadUserProfile } = useAuthSession();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadUserProfile = async (authUser: User) => {
+    try {
+      // Verificar se é professor e buscar perfil
+      const profile = await buscarPerfilProfessor(authUser.id);
+      
+      const enhancedUser: AuthUser = {
+        ...authUser,
+        nome: profile?.nome || authUser.user_metadata?.nome,
+        tipo: profile ? "professor" : "aluno", // Se tem perfil de professor, é professor
+        profile: profile || undefined
+      };
+      
+      setUser(enhancedUser);
+    } catch (error) {
+      console.error("Erro ao carregar perfil do usuário:", error);
+      // Em caso de erro, usar dados básicos
+      const basicUser: AuthUser = {
+        ...authUser,
+        nome: authUser.user_metadata?.nome,
+        tipo: authUser.user_metadata?.tipo || "aluno"
+      };
+      setUser(basicUser);
+    }
+  };
+
+  useEffect(() => {
+    // Configurar listener de mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("Auth state change:", event, session?.user?.email);
+        setSession(session);
+        
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setUser(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        loadUserProfile(session.user);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🚀 [AuthContext] Iniciando processo de login...");
-      
-      if (!email || !password) {
-        throw new Error("Email e senha são obrigatórios");
-      }
-      
-      if (!email.includes("@")) {
-        throw new Error("Formato de e-mail inválido");
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email,
         password
       });
 
-      if (error) {
-        console.error("❌ [AuthContext] Erro no login:", error);
-        
-        // Tratar diferentes tipos de erro
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
-        } else if (error.message.includes("Email not confirmed")) {
-          throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
-        } else {
-          throw new Error(error.message);
-        }
-      }
+      if (error) throw error;
 
       if (data.user) {
-        console.log("✅ [AuthContext] Login realizado, carregando perfil...");
-        
-        // Aguardar um momento para o sistema processar a autenticação
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        const enhancedUser = await loadUserProfile(data.user);
-        console.log("🎯 [AuthContext] Usuário logado:", {
-          id: enhancedUser.id,
-          email: enhancedUser.email,
-          nome: enhancedUser.nome,
-          tipo: enhancedUser.tipo
-        });
-        
-        return { error: null, user: enhancedUser };
+        await loadUserProfile(data.user);
       }
 
       return { error: null };
     } catch (error: any) {
-      console.error("❌ [AuthContext] Erro no login:", error);
+      console.error("Erro no login:", error);
       return { error };
     }
   };
 
   const logout = async () => {
     try {
-      console.log("🚪 [AuthContext] Fazendo logout...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      console.log("✅ [AuthContext] Logout realizado com sucesso");
+      
+      setUser(null);
+      setSession(null);
     } catch (error) {
-      console.error("❌ [AuthContext] Erro ao fazer logout:", error);
+      console.error("Erro no logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };
 
-  const value: AuthContextType = {
+  const value = {
     user,
     session,
     loading,
-    isAuthenticated: !!user && !!user.tipo,
+    isAuthenticated: !!user,
     login,
     logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

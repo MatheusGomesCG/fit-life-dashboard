@@ -30,7 +30,7 @@ const MinhasMedidas: React.FC = () => {
         if (user?.id) {
           const alunoData = await buscarAlunoPorId(user.id);
           setAluno(alunoData);
-          setFotos(alunoData?.fotos || []);
+          setFotos(alunoData.fotos || []);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -177,7 +177,7 @@ const MinhasMedidas: React.FC = () => {
                   />
                 </div>
                 <div className="p-2 bg-gray-50">
-                  <p className="text-xs text-gray-500">{format(new Date(foto.data || foto.data_upload), "dd/MM/yyyy")}</p>
+                  <p className="text-xs text-gray-500">{format(new Date(foto.data), "dd/MM/yyyy")}</p>
                   {foto.descricao && <p className="text-sm">{foto.descricao}</p>}
                 </div>
               </div>

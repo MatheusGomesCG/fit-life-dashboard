@@ -100,8 +100,6 @@ const EditarAluno: React.FC = () => {
         setLoading(true);
         const aluno = await buscarAlunoPorId(id);
         
-        if (!aluno) return;
-        
         // Preencher o formulário com os dados do aluno
         setForm({
           nome: aluno.nome,
@@ -109,7 +107,7 @@ const EditarAluno: React.FC = () => {
           telefone: aluno.telefone || "",
           idade: aluno.idade.toString(),
           dataNascimento: aluno.dataNascimento ? new Date(aluno.dataNascimento) : null,
-          genero: (aluno.genero === "outro" ? "" : aluno.genero) as "masculino" | "feminino" | "",
+          genero: aluno.genero,
           endereco: aluno.endereco || "",
           objetivo: aluno.objetivo || "",
           observacoes: aluno.observacoes || "",
@@ -117,15 +115,15 @@ const EditarAluno: React.FC = () => {
           dataVencimento: aluno.dataVencimento ? new Date(aluno.dataVencimento) : null,
           peso: aluno.peso.toString(),
           altura: aluno.altura.toString(),
-          experiencia: (aluno.experiencia || "") as "" | "iniciante" | "intermediario" | "avancado",
+          experiencia: aluno.experiencia,
           dobrasCutaneas: {
-            triceps: aluno.dobrasCutaneas?.triceps.toString() || "",
-            subescapular: aluno.dobrasCutaneas?.subescapular.toString() || "",
-            axilarMedia: aluno.dobrasCutaneas?.axilarMedia.toString() || "",
-            peitoral: aluno.dobrasCutaneas?.peitoral.toString() || "",
-            suprailiaca: aluno.dobrasCutaneas?.suprailiaca.toString() || "",
-            abdominal: aluno.dobrasCutaneas?.abdominal.toString() || "",
-            coxa: aluno.dobrasCutaneas?.coxa.toString() || "",
+            triceps: aluno.dobrasCutaneas.triceps.toString(),
+            subescapular: aluno.dobrasCutaneas.subescapular.toString(),
+            axilarMedia: aluno.dobrasCutaneas.axilarMedia.toString(),
+            peitoral: aluno.dobrasCutaneas.peitoral.toString(),
+            suprailiaca: aluno.dobrasCutaneas.suprailiaca.toString(),
+            abdominal: aluno.dobrasCutaneas.abdominal.toString(),
+            coxa: aluno.dobrasCutaneas.coxa.toString(),
           },
         });
 
@@ -290,13 +288,13 @@ const EditarAluno: React.FC = () => {
         email: form.email,
         telefone: form.telefone,
         idade: parseInt(form.idade),
-        dataNascimento: form.dataNascimento,
+        dataNascimento: form.dataNascimento?.toISOString(),
         genero: form.genero,
         endereco: form.endereco,
         objetivo: form.objetivo,
         observacoes: form.observacoes,
         valorMensalidade: form.valorMensalidade ? parseFloat(form.valorMensalidade) : undefined,
-        dataVencimento: form.dataVencimento,
+        dataVencimento: form.dataVencimento?.toISOString(),
         peso: parseFloat(form.peso),
         altura: parseInt(form.altura),
         experiencia: form.experiencia as "iniciante" | "intermediario" | "avancado",

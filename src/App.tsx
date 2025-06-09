@@ -27,14 +27,13 @@ import Agendamento from "./pages/Agendamento";
 import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
-import ChatProfessor from "./pages/ChatProfessor";
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Layout>
-          <Routes>
+        <Routes>
+          <Route path="/" element={<Layout />}>
             <Route index element={<Index />} />
             <Route path="login" element={<Login />} />
             <Route path="dashboard" element={<Dashboard />} />
@@ -56,11 +55,10 @@ function App() {
             <Route path="meus-pagamentos" element={<MeusPagamentos />} />
             <Route path="agendamento" element={<Agendamento />} />
             <Route path="chat" element={<Chat />} />
-            <Route path="chat-professor" element={<ChatProfessor />} />
             <Route path="fotos-aluno/:id" element={<GerenciarFotosAluno />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Layout>
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         <Toaster position="top-right" />
       </AuthProvider>
     </BrowserRouter>

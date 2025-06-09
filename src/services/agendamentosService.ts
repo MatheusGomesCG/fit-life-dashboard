@@ -1,12 +1,15 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import axios from "axios";
+import { Aluno } from "./alunosService";
 import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+const API_URL = "https://api.example.com"; // Substitua pela URL real da sua API
+
 export interface Agendamento {
   id: string;
-  aluno_id: string;
-  professor_id?: string;
+  alunoId: string;
+  professorId?: string;
   data: string; // Formato ISO YYYY-MM-DD
   horario: string; // Formato HH:MM
   hora: string; // Alias para horario para compatibilidade
@@ -14,9 +17,8 @@ export interface Agendamento {
   descricao?: string;
   observacoes?: string;
   status: "pendente" | "concluido" | "cancelado" | "agendado";
-  aluno_nome?: string;
-  aluno_email?: string;
-  aluno_telefone?: string;
+  aluno?: Aluno;
+  alunoNome?: string;
 }
 
 export const horariosPossiveis = [
@@ -43,32 +45,84 @@ export const formatarData = (dataString: string): string => {
   }
 };
 
-// Listar todos os agendamentos (com dados do aluno)
+// Mock data para agendamentos
+const mockAgendamentos: Record<string, Agendamento[]> = {
+  "aluno_01": [
+    {
+      id: "agd_001",
+      alunoId: "aluno_01",
+      alunoNome: "João Silva",
+      professorId: "prof_01",
+      data: "2025-05-25",
+      horario: "10:00",
+      hora: "10:00",
+      tipo: "avaliacao",
+      descricao: "Avaliação física mensal",
+      observacoes: "Avaliação física mensal",
+      status: "agendado"
+    },
+    {
+      id: "agd_002",
+      alunoId: "aluno_01",
+      alunoNome: "João Silva",
+      professorId: "prof_01",
+      data: "2025-04-15",
+      horario: "16:30",
+      hora: "16:30",
+      tipo: "consulta",
+      descricao: "Ajuste de plano alimentar",
+      observacoes: "Ajuste de plano alimentar",
+      status: "concluido"
+    }
+  ],
+  "aluno_02": [
+    {
+      id: "agd_003",
+      alunoId: "aluno_02",
+      alunoNome: "Maria Oliveira",
+      professorId: "prof_01",
+      data: "2025-05-18",
+      horario: "09:30",
+      hora: "09:30",
+      tipo: "treino",
+      descricao: "Acompanhamento de treino de pernas",
+      observacoes: "Acompanhamento de treino de pernas",
+      status: "agendado"
+    }
+  ],
+  "aluno_03": [
+    {
+      id: "agd_004",
+      alunoId: "aluno_03",
+      alunoNome: "Pedro Santos",
+      professorId: "prof_01",
+      data: "2025-05-20",
+      horario: "17:00",
+      hora: "17:00",
+      tipo: "avaliacao",
+      descricao: "Reavaliação após 3 meses",
+      observacoes: "Reavaliação após 3 meses",
+      status: "agendado"
+    }
+  ]
+};
+
+// Listar todos os agendamentos
 export const listarAgendamentos = async (): Promise<Agendamento[]> => {
   try {
-    const { data, error } = await supabase
-      .from('agendamentos_com_aluno')
-      .select('*')
-      .order('data', { ascending: true })
-      .order('horario', { ascending: true });
-
-    if (error) throw error;
-
-    return data?.map(item => ({
-      id: item.id,
-      aluno_id: item.aluno_id,
-      professor_id: item.professor_id,
-      data: item.data,
-      horario: item.horario,
-      hora: item.horario, // Compatibilidade
-      tipo: item.tipo,
-      descricao: item.descricao,
-      observacoes: item.observacoes,
-      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
-      aluno_nome: item.aluno_nome,
-      aluno_email: item.aluno_email,
-      aluno_telefone: item.aluno_telefone
-    })) || [];
+    // Em produção, usar axios para buscar da API real
+    // const response = await axios.get(`${API_URL}/agendamentos`);
+    // return response.data;
+    
+    // Para desenvolvimento, retornar todos os agendamentos mockados
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    const todosAgendamentos: Agendamento[] = [];
+    Object.values(mockAgendamentos).forEach(agendamentos => {
+      todosAgendamentos.push(...agendamentos);
+    });
+    
+    return todosAgendamentos;
   } catch (error) {
     console.error("Erro ao listar agendamentos:", error);
     throw error;
@@ -78,35 +132,15 @@ export const listarAgendamentos = async (): Promise<Agendamento[]> => {
 // Listar agendamentos da semana atual
 export const listarAgendamentosSemana = async (): Promise<Agendamento[]> => {
   try {
+    const agendamentos = await listarAgendamentos();
     const hoje = new Date();
     const inicioSemana = startOfWeek(hoje);
     const fimSemana = endOfWeek(hoje);
     
-    const { data, error } = await supabase
-      .from('agendamentos_com_aluno')
-      .select('*')
-      .gte('data', format(inicioSemana, 'yyyy-MM-dd'))
-      .lte('data', format(fimSemana, 'yyyy-MM-dd'))
-      .order('data', { ascending: true })
-      .order('horario', { ascending: true });
-
-    if (error) throw error;
-
-    return data?.map(item => ({
-      id: item.id,
-      aluno_id: item.aluno_id,
-      professor_id: item.professor_id,
-      data: item.data,
-      horario: item.horario,
-      hora: item.horario,
-      tipo: item.tipo,
-      descricao: item.descricao,
-      observacoes: item.observacoes,
-      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
-      aluno_nome: item.aluno_nome,
-      aluno_email: item.aluno_email,
-      aluno_telefone: item.aluno_telefone
-    })) || [];
+    return agendamentos.filter(agendamento => {
+      const dataAgendamento = parseISO(agendamento.data);
+      return isWithinInterval(dataAgendamento, { start: inicioSemana, end: fimSemana });
+    });
   } catch (error) {
     console.error("Erro ao listar agendamentos da semana:", error);
     throw error;
@@ -129,30 +163,14 @@ export const contarAvaliacoesSemana = async (): Promise<number> => {
 // Buscar todos os agendamentos de um aluno
 export const buscarAgendamentosPorAluno = async (alunoId: string): Promise<Agendamento[]> => {
   try {
-    const { data, error } = await supabase
-      .from('agendamentos_com_aluno')
-      .select('*')
-      .eq('aluno_id', alunoId)
-      .order('data', { ascending: false })
-      .order('horario', { ascending: false });
-
-    if (error) throw error;
-
-    return data?.map(item => ({
-      id: item.id,
-      aluno_id: item.aluno_id,
-      professor_id: item.professor_id,
-      data: item.data,
-      horario: item.horario,
-      hora: item.horario,
-      tipo: item.tipo,
-      descricao: item.descricao,
-      observacoes: item.observacoes,
-      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
-      aluno_nome: item.aluno_nome,
-      aluno_email: item.aluno_email,
-      aluno_telefone: item.aluno_telefone
-    })) || [];
+    // Em produção, usar axios para buscar da API real
+    // const response = await axios.get(`${API_URL}/agendamentos/aluno/${alunoId}`);
+    // return response.data;
+    
+    // Para desenvolvimento, retornar os dados mockados
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay de rede
+    
+    return mockAgendamentos[alunoId] || [];
   } catch (error) {
     console.error(`Erro ao buscar agendamentos para o aluno ${alunoId}:`, error);
     throw error;
@@ -162,30 +180,19 @@ export const buscarAgendamentosPorAluno = async (alunoId: string): Promise<Agend
 // Buscar todos os agendamentos de um professor
 export const buscarAgendamentosPorProfessor = async (professorId: string): Promise<Agendamento[]> => {
   try {
-    const { data, error } = await supabase
-      .from('agendamentos_com_aluno')
-      .select('*')
-      .eq('professor_id', professorId)
-      .order('data', { ascending: true })
-      .order('horario', { ascending: true });
-
-    if (error) throw error;
-
-    return data?.map(item => ({
-      id: item.id,
-      aluno_id: item.aluno_id,
-      professor_id: item.professor_id,
-      data: item.data,
-      horario: item.horario,
-      hora: item.horario,
-      tipo: item.tipo,
-      descricao: item.descricao,
-      observacoes: item.observacoes,
-      status: item.status as "pendente" | "concluido" | "cancelado" | "agendado",
-      aluno_nome: item.aluno_nome,
-      aluno_email: item.aluno_email,
-      aluno_telefone: item.aluno_telefone
-    })) || [];
+    // Em produção, usar axios para buscar da API real
+    // const response = await axios.get(`${API_URL}/agendamentos/professor/${professorId}`);
+    // return response.data;
+    
+    // Para desenvolvimento, retornar todos os agendamentos mockados
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay de rede
+    
+    const todosAgendamentos: Agendamento[] = [];
+    Object.values(mockAgendamentos).forEach(agendamentos => {
+      todosAgendamentos.push(...agendamentos);
+    });
+    
+    return todosAgendamentos.filter(agendamento => agendamento.professorId === professorId);
   } catch (error) {
     console.error(`Erro ao buscar agendamentos para o professor ${professorId}:`, error);
     throw error;
@@ -195,36 +202,26 @@ export const buscarAgendamentosPorProfessor = async (professorId: string): Promi
 // Criar um novo agendamento
 export const criarAgendamento = async (agendamento: Omit<Agendamento, "id">): Promise<Agendamento> => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error("Usuário não autenticado");
+    // Em produção, usar axios para enviar à API real
+    // const response = await axios.post(`${API_URL}/agendamentos`, agendamento);
+    // return response.data;
+    
+    // Para desenvolvimento, adicionar o novo agendamento aos dados mockados
+    await new Promise(resolve => setTimeout(resolve, 800)); // Simular delay de rede
+    
+    const novoAgendamento: Agendamento = {
+      id: `agd_${Date.now().toString(36)}`,
+      professorId: "prof_01", // Definindo um professor padrão para mock
+      hora: agendamento.horario, // Copiar horário para hora (compatibilidade)
+      ...agendamento
+    };
+    
+    if (!mockAgendamentos[agendamento.alunoId]) {
+      mockAgendamentos[agendamento.alunoId] = [];
     }
-
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .insert({
-        aluno_id: agendamento.aluno_id,
-        professor_id: userData.user.id,
-        data: agendamento.data,
-        horario: agendamento.horario,
-        tipo: agendamento.tipo,
-        descricao: agendamento.descricao,
-        observacoes: agendamento.observacoes,
-        status: agendamento.status || 'pendente'
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Buscar os dados completos com informações do aluno
-    const agendamentoCompleto = await buscarAgendamentosPorProfessor(userData.user.id);
-    const novoAgendamento = agendamentoCompleto.find(a => a.id === data.id);
-
-    if (!novoAgendamento) {
-      throw new Error("Erro ao recuperar agendamento criado");
-    }
-
+    
+    mockAgendamentos[agendamento.alunoId].push(novoAgendamento);
+    
     return novoAgendamento;
   } catch (error) {
     console.error("Erro ao criar agendamento:", error);
@@ -235,46 +232,39 @@ export const criarAgendamento = async (agendamento: Omit<Agendamento, "id">): Pr
 // Atualizar um agendamento existente
 export const atualizarAgendamento = async (id: string, agendamento: Partial<Agendamento>): Promise<Agendamento> => {
   try {
-    const { data, error } = await supabase
-      .from('agendamentos')
-      .update({
-        data: agendamento.data,
-        horario: agendamento.horario,
-        tipo: agendamento.tipo,
-        descricao: agendamento.descricao,
-        observacoes: agendamento.observacoes,
-        status: agendamento.status
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // Buscar dados completos com informações do aluno
-    const { data: agendamentoCompleto, error: fetchError } = await supabase
-      .from('agendamentos_com_aluno')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    return {
-      id: agendamentoCompleto.id,
-      aluno_id: agendamentoCompleto.aluno_id,
-      professor_id: agendamentoCompleto.professor_id,
-      data: agendamentoCompleto.data,
-      horario: agendamentoCompleto.horario,
-      hora: agendamentoCompleto.horario,
-      tipo: agendamentoCompleto.tipo,
-      descricao: agendamentoCompleto.descricao,
-      observacoes: agendamentoCompleto.observacoes,
-      status: agendamentoCompleto.status as "pendente" | "concluido" | "cancelado" | "agendado",
-      aluno_nome: agendamentoCompleto.aluno_nome,
-      aluno_email: agendamentoCompleto.aluno_email,
-      aluno_telefone: agendamentoCompleto.aluno_telefone
-    };
+    // Em produção, usar axios para enviar à API real
+    // const response = await axios.put(`${API_URL}/agendamentos/${id}`, agendamento);
+    // return response.data;
+    
+    // Para desenvolvimento, atualizar o agendamento nos dados mockados
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay de rede
+    
+    let agendamentoAtualizado: Agendamento | null = null;
+    
+    // Procurar e atualizar o agendamento
+    Object.keys(mockAgendamentos).forEach(alunoId => {
+      const index = mockAgendamentos[alunoId].findIndex(a => a.id === id);
+      
+      if (index !== -1) {
+        mockAgendamentos[alunoId][index] = {
+          ...mockAgendamentos[alunoId][index],
+          ...agendamento
+        };
+        
+        // Se atualizou horario, também atualiza hora
+        if (agendamento.horario) {
+          mockAgendamentos[alunoId][index].hora = agendamento.horario;
+        }
+        
+        agendamentoAtualizado = mockAgendamentos[alunoId][index];
+      }
+    });
+    
+    if (!agendamentoAtualizado) {
+      throw new Error(`Agendamento com ID ${id} não encontrado`);
+    }
+    
+    return agendamentoAtualizado;
   } catch (error) {
     console.error(`Erro ao atualizar agendamento com ID ${id}:`, error);
     throw error;
@@ -284,12 +274,27 @@ export const atualizarAgendamento = async (id: string, agendamento: Partial<Agen
 // Excluir um agendamento
 export const excluirAgendamento = async (id: string): Promise<void> => {
   try {
-    const { error } = await supabase
-      .from('agendamentos')
-      .delete()
-      .eq('id', id);
-
-    if (error) throw error;
+    // Em produção, usar axios para enviar à API real
+    // await axios.delete(`${API_URL}/agendamentos/${id}`);
+    
+    // Para desenvolvimento, remover o agendamento dos dados mockados
+    await new Promise(resolve => setTimeout(resolve, 500)); // Simular delay de rede
+    
+    let encontrado = false;
+    
+    // Procurar e remover o agendamento
+    Object.keys(mockAgendamentos).forEach(alunoId => {
+      const index = mockAgendamentos[alunoId].findIndex(a => a.id === id);
+      
+      if (index !== -1) {
+        mockAgendamentos[alunoId].splice(index, 1);
+        encontrado = true;
+      }
+    });
+    
+    if (!encontrado) {
+      throw new Error(`Agendamento com ID ${id} não encontrado`);
+    }
   } catch (error) {
     console.error(`Erro ao excluir agendamento com ID ${id}:`, error);
     throw error;
@@ -299,22 +304,27 @@ export const excluirAgendamento = async (id: string): Promise<void> => {
 // Verificar disponibilidade de horário
 export const verificarDisponibilidadeHorario = async (data: string, horario: string): Promise<boolean> => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) {
-      throw new Error("Usuário não autenticado");
-    }
-
-    const { data: agendamentos, error } = await supabase
-      .from('agendamentos')
-      .select('id')
-      .eq('professor_id', userData.user.id)
-      .eq('data', data)
-      .eq('horario', horario)
-      .neq('status', 'cancelado');
-
-    if (error) throw error;
-
-    return agendamentos.length === 0;
+    // Em produção, usar axios para verificar na API real
+    // const response = await axios.get(`${API_URL}/agendamentos/disponibilidade?data=${data}&horario=${horario}`);
+    // return response.data.disponivel;
+    
+    // Para desenvolvimento, verificar nos dados mockados
+    await new Promise(resolve => setTimeout(resolve, 300)); // Simular delay de rede
+    
+    const todosAgendamentos: Agendamento[] = [];
+    Object.values(mockAgendamentos).forEach(agendamentos => {
+      todosAgendamentos.push(...agendamentos);
+    });
+    
+    // Verificar se já existe algum agendamento nesse horário
+    const horarioOcupado = todosAgendamentos.some(
+      agendamento => 
+        agendamento.data === data && 
+        agendamento.horario === horario &&
+        agendamento.status !== "cancelado"
+    );
+    
+    return !horarioOcupado;
   } catch (error) {
     console.error(`Erro ao verificar disponibilidade para ${data} às ${horario}:`, error);
     throw error;

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ProfessorProfile {
@@ -64,30 +65,16 @@ export const criarPerfilProfessor = async (professorData: Omit<ProfessorProfile,
 
 export const buscarPerfilProfessor = async (userId: string): Promise<ProfessorProfile | null> => {
   try {
-    console.log("🔍 [buscarPerfilProfessor] Buscando perfil para userId:", userId);
-    
     const { data, error } = await supabase
       .from('professor_profiles')
       .select('*')
       .eq('user_id', userId)
-      .maybeSingle();
+      .single();
 
-    console.log("🔍 [buscarPerfilProfessor] Resultado da consulta:", { 
-      data, 
-      error,
-      hasData: !!data 
-    });
-
-    if (error && error.code !== 'PGRST116') {
-      console.error("❌ [buscarPerfilProfessor] Erro na consulta:", error);
-      throw error;
-    }
-    
-    const result = data ? (data as ProfessorProfile) : null;
-    console.log("🔍 [buscarPerfilProfessor] Retornando:", result?.nome || "null");
-    return result;
+    if (error && error.code !== 'PGRST116') throw error;
+    return data ? (data as ProfessorProfile) : null;
   } catch (error) {
-    console.error("❌ [buscarPerfilProfessor] Erro ao buscar perfil do professor:", error);
+    console.error("Erro ao buscar perfil do professor:", error);
     throw error;
   }
 };

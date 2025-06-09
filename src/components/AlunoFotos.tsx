@@ -44,13 +44,10 @@ const AlunoFotos: React.FC<AlunoFotosProps> = ({ alunoId, fotos, onUpdate }) => 
       // For our mock implementation, we'll use a local URL
       const imageUrl = URL.createObjectURL(file);
 
-      // Add the photo to the student's record with correct properties
+      // Add the photo to the student's record
       const novaFoto = await adicionarFotoAluno(alunoId, {
         url: imageUrl,
-        tipo: "frente",
-        descricao: `Foto ${fotos.length + 1}`,
-        data_upload: new Date().toISOString(),
-        observacoes: ""
+        descricao: `Foto ${fotos.length + 1}`
       });
 
       // Update the local state
@@ -70,7 +67,7 @@ const AlunoFotos: React.FC<AlunoFotosProps> = ({ alunoId, fotos, onUpdate }) => 
 
   const handleRemovePhoto = async (fotoId: string) => {
     try {
-      await removerFotoAluno(fotoId);
+      await removerFotoAluno(alunoId, fotoId);
       
       // Update the local state
       const fotosAtualizadas = fotos.filter(foto => foto.id !== fotoId);
@@ -129,7 +126,7 @@ const AlunoFotos: React.FC<AlunoFotosProps> = ({ alunoId, fotos, onUpdate }) => 
             </div>
             <div className="p-2 bg-gray-50 flex justify-between items-center">
               <span className="text-xs">
-                {format(new Date(foto.data || foto.data_upload), "dd/MM/yyyy")}
+                {format(new Date(foto.data), "dd/MM/yyyy")}
               </span>
               <button
                 onClick={() => foto.id && handleRemovePhoto(foto.id)}

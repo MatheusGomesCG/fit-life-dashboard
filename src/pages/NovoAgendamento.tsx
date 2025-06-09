@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -76,8 +75,8 @@ const NovoAgendamento: React.FC = () => {
       }
       
       const novoAgendamento: Omit<Agendamento, "id"> = {
-        aluno_id: formData.alunoId,
-        aluno_nome: alunoSelecionado.nome,
+        alunoId: formData.alunoId,
+        alunoNome: alunoSelecionado.nome,
         tipo: formData.tipo as "avaliacao" | "consulta" | "outro",
         data: dataFormatada,
         horario: formData.hora,

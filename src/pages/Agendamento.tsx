@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Calendar, Plus, Trash, Clock } from "lucide-react";
+import { Calendar, Plus, Trash, Clock, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
@@ -83,10 +84,10 @@ const Agendamento: React.FC = () => {
       if (user?.id) {
         const dataFormatada = format(date, "yyyy-MM-dd");
         const novoAgendamento = await criarAgendamento({
-          aluno_id: user.id,
+          alunoId: user.id,
           data: dataFormatada,
           horario,
-          hora: horario,
+          hora: horario, // Add this line to fix the error
           tipo,
           descricao,
           status: "pendente"
