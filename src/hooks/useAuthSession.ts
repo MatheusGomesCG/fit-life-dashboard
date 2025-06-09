@@ -10,11 +10,16 @@ export const useAuthSession = () => {
   const [loading, setLoading] = useState(true);
 
   const createAuthUser = (authUser: User): AuthUser => {
-    // Criar usuário básico sem consultar o banco por enquanto
+    console.log("🔧 [useAuthSession] Creating auth user:", {
+      id: authUser.id,
+      email: authUser.email,
+      userMetadata: authUser.user_metadata
+    });
+    
     return {
       ...authUser,
-      nome: authUser.email?.split("@")[0] || "Usuário",
-      tipo: "professor" // Definir como professor por padrão
+      nome: authUser.user_metadata?.nome || authUser.email?.split("@")[0] || "Professor",
+      tipo: "professor" // Sempre professor neste sistema
     };
   };
 
@@ -22,7 +27,10 @@ export const useAuthSession = () => {
     let mounted = true;
 
     const handleAuthChange = (event: string, currentSession: Session | null) => {
-      console.log("🔄 [useAuthSession] Auth event:", event);
+      console.log("🔄 [useAuthSession] Auth event:", event, {
+        hasSession: !!currentSession,
+        userId: currentSession?.user?.id
+      });
       
       if (!mounted) return;
 
@@ -30,7 +38,11 @@ export const useAuthSession = () => {
         const enhancedUser = createAuthUser(currentSession.user);
         setUser(enhancedUser);
         setSession(currentSession);
-        console.log("✅ [useAuthSession] User set:", enhancedUser.tipo);
+        console.log("✅ [useAuthSession] User authenticated:", {
+          userId: enhancedUser.id,
+          email: enhancedUser.email,
+          tipo: enhancedUser.tipo
+        });
       } else {
         setUser(null);
         setSession(null);
@@ -40,15 +52,27 @@ export const useAuthSession = () => {
       setLoading(false);
     };
 
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
-
-    // Verificar sessão inicial
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    // Verificar sessão atual primeiro
+    console.log("🔍 [useAuthSession] Checking existing session...");
+    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
+      if (error) {
+        console.error("❌ [useAuthSession] Error getting session:", error);
+        setLoading(false);
+        return;
+      }
+      
+      console.log("📋 [useAuthSession] Initial session check:", {
+        hasSession: !!initialSession,
+        userId: initialSession?.user?.id
+      });
+      
       if (mounted) {
         handleAuthChange('INITIAL_SESSION', initialSession);
       }
     });
+
+    // Configurar listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
 
     return () => {
       mounted = false;

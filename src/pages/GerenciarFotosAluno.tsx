@@ -3,28 +3,68 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { buscarAlunoPorId, Aluno, FotoAluno } from "@/services/alunosService";
 import AlunoFotosTracking from "@/components/AlunoFotosTracking";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const GerenciarFotosAluno: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [loading, setLoading] = useState(true);
   const [fotos, setFotos] = useState<FotoAluno[]>([]);
 
+  console.log("🔍 [GerenciarFotosAluno] Estado:", {
+    alunoId,
+    isAuthenticated,
+    userId: user?.id,
+    authLoading
+  });
+
+  // Verificar autenticação
+  useEffect(() => {
+    if (!authLoading) {
+      if (!isAuthenticated || !user) {
+        console.log("❌ [GerenciarFotosAluno] Usuário não autenticado, redirecionando");
+        toast.error("Você precisa estar logado para acessar esta página");
+        navigate("/login");
+        return;
+      }
+
+      if (user.tipo !== "professor") {
+        console.log("❌ [GerenciarFotosAluno] Usuário não é professor");
+        toast.error("Acesso negado");
+        navigate("/dashboard-professor");
+        return;
+      }
+    }
+  }, [authLoading, isAuthenticated, user, navigate]);
+
   useEffect(() => {
     const fetchAluno = async () => {
-      if (!id) return;
+      if (!alunoId || authLoading || !isAuthenticated || !user) {
+        console.log("⏸️ [GerenciarFotosAluno] Aguardando autenticação...");
+        return;
+      }
       
       try {
         setLoading(true);
-        const alunoData = await buscarAlunoPorId(id);
+        console.log("🔍 [GerenciarFotosAluno] Buscando aluno:", alunoId);
+        
+        const alunoData = await buscarAlunoPorId(alunoId);
+        
+        console.log("✅ [GerenciarFotosAluno] Aluno encontrado:", {
+          id: alunoData.id,
+          nome: alunoData.nome,
+          fotos: alunoData.fotos?.length || 0
+        });
+        
         setAluno(alunoData);
         setFotos(alunoData.fotos || []);
       } catch (error) {
-        console.error("Erro ao buscar dados do aluno:", error);
+        console.error("❌ [GerenciarFotosAluno] Erro ao buscar aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
         navigate("/gerenciar-alunos");
       } finally {
@@ -33,13 +73,26 @@ const GerenciarFotosAluno: React.FC = () => {
     };
 
     fetchAluno();
-  }, [id, navigate]);
+  }, [alunoId, authLoading, isAuthenticated, user, navigate]);
 
   const handleUpdateFotos = (fotosAtualizadas: FotoAluno[]) => {
+    console.log("📸 [GerenciarFotosAluno] Atualizando fotos:", fotosAtualizadas.length);
     setFotos(fotosAtualizadas);
-    // No need to call atualizarAluno here, since adicionarFotoAluno and removerFotoAluno
-    // already update the aluno record directly
   };
+
+  // Mostrar loading durante autenticação
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  // Não renderizar se não estiver autenticado
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   if (loading) {
     return (

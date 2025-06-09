@@ -19,6 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     isAuthenticated,
     userType: user?.tipo,
     userName: user?.nome,
+    userEmail: user?.email,
     loading,
     userExists: !!user
   });

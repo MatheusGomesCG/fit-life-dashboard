@@ -12,7 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🚀 [AuthContext] Iniciando login...");
+      console.log("🚀 [AuthContext] Iniciando login para:", email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -24,12 +24,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      if (data.user) {
-        console.log("✅ [AuthContext] Login realizado com sucesso");
+      if (data.user && data.session) {
+        console.log("✅ [AuthContext] Login realizado com sucesso:", {
+          userId: data.user.id,
+          email: data.user.email
+        });
         return { error: null, user: data.user };
       }
 
-      throw new Error("Falha na autenticação");
+      throw new Error("Falha na autenticação - dados incompletos");
     } catch (error: any) {
       console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
@@ -52,15 +55,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: user || null,
     session: session || null,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!session,
     login,
     logout
   };
 
-  console.log("🔍 [AuthContext] Estado atual:", {
+  console.log("🔍 [AuthContext] Estado do contexto:", {
     hasUser: !!user,
+    hasSession: !!session,
+    userEmail: user?.email,
     userType: user?.tipo,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!session,
     loading
   });
 
