@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Send, Plus, Image, Paperclip, User } from "lucide-react";
+import { Send, Plus, Image, Paperclip, User, Bot } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Message {
@@ -13,6 +14,7 @@ interface Message {
   content: string;
   timestamp: string;
   isImage?: boolean;
+  isAI?: boolean;
 }
 
 const Chat: React.FC = () => {
@@ -29,42 +31,44 @@ const Chat: React.FC = () => {
     avatar: "https://placehold.co/200x200?text=PS"
   };
 
-  // Mensagens fictícias para exemplo
+  // Mensagens fictícias para exemplo (incluindo mensagens da IA)
   const mockMessages: Message[] = [
     {
       id: "m1",
       senderId: mockProfessor.id,
       receiverId: user?.id || "",
       content: "Olá! Como posso te ajudar hoje?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString() // 1 dia atrás
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
     },
     {
       id: "m2",
       senderId: user?.id || "",
       receiverId: mockProfessor.id,
       content: "Olá professor! Tenho uma dúvida sobre o treino de peito.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString() // 23 horas atrás
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString()
     },
     {
       id: "m3",
       senderId: mockProfessor.id,
       receiverId: user?.id || "",
-      content: "Claro, me diga qual é a sua dúvida específica.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString() // 22 horas atrás
+      content: "Ótima pergunta! Para treino de peito, recomendo começar com exercícios compostos como supino reto. Quantos dias por semana você está treinando atualmente?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
+      isAI: true
     },
     {
       id: "m4",
       senderId: user?.id || "",
       receiverId: mockProfessor.id,
-      content: "Estou sentindo dificuldade para completar as séries de supino. É normal?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 21).toISOString() // 21 horas atrás
+      content: "Estou treinando 3 vezes por semana. É suficiente?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 21).toISOString()
     },
     {
       id: "m5",
       senderId: mockProfessor.id,
       receiverId: user?.id || "",
-      content: "Sim, é normal sentir dificuldade no início. Sugiro reduzir um pouco o peso e focar na técnica correta. Quando se sentir confortável, vamos aumentar o peso gradualmente.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 minutos atrás
+      content: "Perfeito! 3 vezes por semana é uma frequência excelente para quem está começando. Lembre-se de manter uma boa técnica e progressão gradual no peso. O descanso entre os treinos é fundamental para a recuperação muscular.",
+      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      isAI: true
     }
   ];
 
@@ -75,6 +79,27 @@ const Chat: React.FC = () => {
       setMessages(mockMessages);
       setLoading(false);
     }, 1000);
+
+    // Set up real-time subscription for new messages (example)
+    const channel = supabase
+      .channel('student-chat-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'mensagens'
+        },
+        (payload) => {
+          // Handle real-time message updates here
+          console.log('Nova mensagem recebida:', payload);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
@@ -100,17 +125,27 @@ const Chat: React.FC = () => {
     setMessages([...messages, newMessage]);
     setInputMessage("");
 
-    // Simular resposta do professor após 1 segundo
+    // Simular resposta da IA após 2-3 segundos
     setTimeout(() => {
-      const professorResponse: Message = {
-        id: `m${Date.now() + 1}`,
+      const aiResponses = [
+        "Entendi sua dúvida! Vou te ajudar com isso. É importante manter a constância nos treinos e sempre focar na técnica correta.",
+        "Excelente pergunta! Para melhorar seus resultados, sugiro manter uma alimentação balanceada junto com os exercícios.",
+        "Boa! Continue assim. Lembre-se de sempre se aquecer antes dos exercícios e se alongar após o treino.",
+        "Perfeito! Se tiver mais dúvidas sobre exercícios ou nutrição, estou aqui para ajudar. Mantenha o foco nos seus objetivos!"
+      ];
+      
+      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+      
+      const aiResponse: Message = {
+        id: `ai${Date.now()}`,
         senderId: mockProfessor.id,
         receiverId: user?.id || "",
-        content: "Recebida sua mensagem! Vou analisar e responder em breve.",
+        content: randomResponse,
         timestamp: new Date().toISOString(),
+        isAI: true
       };
-      setMessages(prev => [...prev, professorResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, aiResponse]);
+    }, 2000 + Math.random() * 1000);
   };
 
   const formatMessageDate = (timestamp: string) => {
@@ -148,6 +183,12 @@ const Chat: React.FC = () => {
             <p className="text-xs text-green-600">Online</p>
           </div>
         </div>
+        <div className="ml-auto">
+          <div className="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+            <Bot className="h-3 w-3 mr-1" />
+            IA Ativa
+          </div>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -162,9 +203,17 @@ const Chat: React.FC = () => {
               className={`max-w-[75%] rounded-lg p-3 ${
                 message.senderId === user?.id
                   ? "bg-fitness-primary text-white rounded-tr-none"
+                  : message.isAI
+                  ? "bg-blue-100 text-blue-900 rounded-tl-none border border-blue-200"
                   : "bg-gray-100 text-gray-900 rounded-tl-none"
               }`}
             >
+              {message.isAI && (
+                <div className="flex items-center mb-1 text-xs text-blue-600">
+                  <Bot className="h-3 w-3 mr-1" />
+                  Assistente IA
+                </div>
+              )}
               {message.isImage ? (
                 <img
                   src={message.content}
@@ -176,7 +225,11 @@ const Chat: React.FC = () => {
               )}
               <p 
                 className={`text-xs mt-1 ${
-                  message.senderId === user?.id ? "text-white/70" : "text-gray-500"
+                  message.senderId === user?.id 
+                    ? "text-white/70" 
+                    : message.isAI
+                    ? "text-blue-600/70"
+                    : "text-gray-500"
                 }`}
               >
                 {formatMessageDate(message.timestamp)}
@@ -225,6 +278,10 @@ const Chat: React.FC = () => {
             <Send className="h-5 w-5" />
           </button>
         </form>
+        <p className="text-xs text-gray-500 mt-2 flex items-center">
+          <Bot className="h-3 w-3 mr-1" />
+          Assistente IA responderá automaticamente quando o professor não estiver disponível
+        </p>
       </div>
     </div>
   );

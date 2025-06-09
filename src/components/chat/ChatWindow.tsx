@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, User, MessageCircle } from "lucide-react";
+import { Send, User, MessageCircle, Bot } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
@@ -10,6 +10,7 @@ import {
   enviarMensagem, 
   marcarMensagensComoLidas 
 } from "@/services/chatService";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface ChatWindowProps {
@@ -26,6 +27,28 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
 
   useEffect(() => {
     carregarMensagens();
+    
+    // Set up real-time subscription for new messages
+    const channel = supabase
+      .channel('mensagens-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'mensagens',
+          filter: `conversa_id=eq.${conversa.id}`
+        },
+        (payload) => {
+          const novaMensagem = payload.new as Mensagem;
+          setMensagens(prev => [...prev, novaMensagem]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [conversa.id]);
 
   useEffect(() => {
@@ -71,7 +94,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
         tipo: 'texto'
       });
 
-      setMensagens(prev => [...prev, mensagem]);
       setNovaMensagem("");
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
@@ -94,6 +116,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
     } else {
       return format(messageDate, "dd/MM/yyyy, HH:mm");
     }
+  };
+
+  const isAIMessage = (conteudo: string) => {
+    return conteudo.startsWith('🤖');
   };
 
   if (isLoading) {
@@ -119,6 +145,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
             <h3 className="font-medium text-gray-900">{conversa.aluno_nome}</h3>
             <p className="text-sm text-gray-500">{conversa.aluno_email}</p>
           </div>
+          <div className="ml-auto">
+            <div className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+              <Bot className="h-3 w-3 mr-1" />
+              IA Ativa
+            </div>
+          </div>
         </div>
       </div>
 
@@ -142,13 +174,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
                 className={`max-w-[75%] rounded-lg p-3 ${
                   mensagem.remetente_id === user?.id
                     ? "bg-fitness-primary text-white rounded-tr-none"
+                    : isAIMessage(mensagem.conteudo)
+                    ? "bg-blue-100 text-blue-900 rounded-tl-none border border-blue-200"
                     : "bg-gray-100 text-gray-900 rounded-tl-none"
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
+                {isAIMessage(mensagem.conteudo) && (
+                  <div className="flex items-center mb-1 text-xs text-blue-600">
+                    <Bot className="h-3 w-3 mr-1" />
+                    Assistente IA
+                  </div>
+                )}
+                <p className="whitespace-pre-wrap break-words">
+                  {isAIMessage(mensagem.conteudo) 
+                    ? mensagem.conteudo.replace('🤖 ', '') 
+                    : mensagem.conteudo
+                  }
+                </p>
                 <p 
                   className={`text-xs mt-1 ${
-                    mensagem.remetente_id === user?.id ? "text-white/70" : "text-gray-500"
+                    mensagem.remetente_id === user?.id 
+                      ? "text-white/70" 
+                      : isAIMessage(mensagem.conteudo)
+                      ? "text-blue-600/70"
+                      : "text-gray-500"
                   }`}
                 >
                   {formatarDataMensagem(mensagem.created_at)}
@@ -179,6 +228,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
             <Send className="h-5 w-5" />
           </button>
         </form>
+        <p className="text-xs text-gray-500 mt-2 flex items-center">
+          <Bot className="h-3 w-3 mr-1" />
+          Assistente IA responderá automaticamente quando o professor não estiver disponível
+        </p>
       </div>
     </div>
   );

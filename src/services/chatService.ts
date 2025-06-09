@@ -180,7 +180,7 @@ export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at
       })
       .eq('id', mensagem.conversa_id);
 
-    return {
+    const novaMensagem = {
       id: data.id,
       conversa_id: data.conversa_id,
       remetente_id: data.remetente_id,
@@ -190,6 +190,22 @@ export const enviarMensagem = async (mensagem: Omit<Mensagem, "id" | "created_at
       lida: data.lida,
       tipo: (data.tipo === 'imagem' ? 'imagem' : 'texto') as 'texto' | 'imagem'
     };
+
+    // Trigger AI response if message is from student
+    const isStudentMessage = conversa.aluno_id === mensagem.remetente_id;
+    if (isStudentMessage) {
+      // Get student name for context
+      const { data: studentData } = await supabase
+        .from('aluno_profiles')
+        .select('nome')
+        .eq('id', conversa.aluno_id)
+        .single();
+
+      // Trigger AI response in background
+      triggerAIResponse(mensagem.conversa_id, sanitizedContent, studentData?.nome || 'Aluno');
+    }
+
+    return novaMensagem;
   } catch (error) {
     console.error("Erro ao enviar mensagem:", error);
     throw error;
@@ -258,5 +274,28 @@ export const marcarMensagensComoLidas = async (conversaId: string, usuarioId: st
   } catch (error) {
     console.error("Erro ao marcar mensagens como lidas:", error);
     throw error;
+  }
+};
+
+// Function to trigger AI response (runs in background)
+const triggerAIResponse = async (conversaId: string, message: string, alunoNome: string) => {
+  try {
+    // Call the edge function for AI response
+    const { data, error } = await supabase.functions.invoke('ai-chat-response', {
+      body: {
+        message,
+        conversaId,
+        alunoNome,
+        contexto: 'Resposta automática do assistente quando o professor não está disponível.'
+      }
+    });
+
+    if (error) {
+      console.error('Erro ao gerar resposta da IA:', error);
+    } else {
+      console.log('Resposta da IA gerada com sucesso:', data);
+    }
+  } catch (error) {
+    console.error('Erro ao chamar função de IA:', error);
   }
 };
