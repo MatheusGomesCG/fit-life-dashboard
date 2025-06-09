@@ -15,46 +15,55 @@ export const useAuthSession = () => {
     try {
       console.log("🔍 [loadUserProfile] Iniciando carregamento do perfil para:", authUser.id);
       
-      const role = await getUserRole(authUser.id);
-      console.log("✅ [loadUserProfile] Tipo de usuário identificado:", role);
-      
-      if (role === "unknown") {
-        console.warn("⚠️ [loadUserProfile] Usuário não tem perfil válido");
-        const fallbackUser: AuthUser = {
+      // Adicionar timeout para evitar travamento
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout ao carregar perfil do usuário")), 30000);
+      });
+
+      const profilePromise = async () => {
+        const role = await getUserRole(authUser.id);
+        console.log("✅ [loadUserProfile] Tipo de usuário identificado:", role);
+        
+        if (role === "unknown") {
+          console.warn("⚠️ [loadUserProfile] Usuário não tem perfil válido");
+          const fallbackUser: AuthUser = {
+            ...authUser,
+            nome: authUser.email?.split("@")[0] || "Usuário",
+            tipo: undefined
+          };
+          return fallbackUser;
+        }
+        
+        console.log("🔍 [loadUserProfile] Buscando nome do usuário...");
+        const nome = await getUserName(authUser.id, role);
+        console.log("✅ [loadUserProfile] Nome obtido:", nome);
+        
+        let profile: ProfessorProfile | undefined;
+
+        if (role === "professor") {
+          console.log("👨‍🏫 [loadUserProfile] Carregando perfil do professor...");
+          profile = await buscarPerfilProfessor(authUser.id);
+          console.log("👨‍🏫 [loadUserProfile] Perfil do professor carregado:", profile?.nome);
+        }
+
+        const enhancedUser: AuthUser = {
           ...authUser,
-          nome: authUser.email?.split("@")[0] || "Usuário",
-          tipo: undefined
+          nome,
+          tipo: role,
+          profile
         };
-        return fallbackUser;
-      }
-      
-      console.log("🔍 [loadUserProfile] Buscando nome do usuário...");
-      const nome = await getUserName(authUser.id, role);
-      console.log("✅ [loadUserProfile] Nome obtido:", nome);
-      
-      let profile: ProfessorProfile | undefined;
 
-      if (role === "professor") {
-        console.log("👨‍🏫 [loadUserProfile] Carregando perfil do professor...");
-        profile = await buscarPerfilProfessor(authUser.id);
-        console.log("👨‍🏫 [loadUserProfile] Perfil do professor carregado:", profile?.nome);
-      }
-
-      const enhancedUser: AuthUser = {
-        ...authUser,
-        nome,
-        tipo: role,
-        profile
+        console.log("🎯 [loadUserProfile] Usuário final montado:", {
+          id: enhancedUser.id,
+          email: enhancedUser.email,
+          nome: enhancedUser.nome,
+          tipo: enhancedUser.tipo
+        });
+        
+        return enhancedUser;
       };
 
-      console.log("🎯 [loadUserProfile] Usuário final montado:", {
-        id: enhancedUser.id,
-        email: enhancedUser.email,
-        nome: enhancedUser.nome,
-        tipo: enhancedUser.tipo
-      });
-      
-      return enhancedUser;
+      return await Promise.race([profilePromise(), timeoutPromise]) as AuthUser;
     } catch (error) {
       console.error("❌ [loadUserProfile] Erro ao carregar perfil do usuário:", error);
       const fallbackUser: AuthUser = {

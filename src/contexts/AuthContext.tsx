@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +21,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Formato de e-mail inválido");
       }
 
+      // Teste básico de conexão com Supabase
+      console.log("🔗 [AuthContext] Testando conexão com Supabase...");
+      try {
+        const { data: connectionTest, error: connectionError } = await supabase
+          .from('professor_profiles')
+          .select('count')
+          .limit(1);
+        
+        console.log("🔗 [AuthContext] Resultado do teste de conexão:", { connectionTest, connectionError });
+        
+        if (connectionError) {
+          console.error("❌ [AuthContext] Erro na conexão com Supabase:", connectionError);
+          throw new Error(`Erro de conexão com o banco de dados: ${connectionError.message}`);
+        }
+        
+        console.log("✅ [AuthContext] Conexão com Supabase OK");
+      } catch (testError) {
+        console.error("❌ [AuthContext] Falha no teste de conexão:", testError);
+        throw new Error("Falha na conexão com o banco de dados. Verifique sua conexão de internet.");
+      }
+
+      console.log("🔐 [AuthContext] Fazendo autenticação...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password

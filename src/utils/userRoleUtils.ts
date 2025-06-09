@@ -1,134 +1,118 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { buscarPerfilProfessor } from "@/services/professorService";
 
 export const getUserRole = async (userId: string): Promise<"professor" | "aluno" | "admin" | "unknown"> => {
   try {
     console.log("🔍 [getUserRole] Iniciando verificação para usuário:", userId);
-
-    // Verificar se é professor com logs detalhados
+    
+    // Verificar se é professor
     console.log("🔍 [getUserRole] Verificando se é professor...");
-    const { data: professorCheck, error: professorError } = await supabase
-      .from("professor_profiles")
-      .select("user_id")
-      .eq("user_id", userId)
+    const { data: professorData, error: professorError } = await supabase
+      .from('professor_profiles')
+      .select('id')
+      .eq('user_id', userId)
       .maybeSingle();
 
-    console.log("🔍 [getUserRole] Resultado da consulta professor:", { 
-      data: professorCheck, 
-      error: professorError 
-    });
+    console.log("🔍 [getUserRole] Resultado professor:", { professorData, professorError });
 
-    if (professorError) {
+    if (professorError && professorError.code !== 'PGRST116') {
       console.error("❌ [getUserRole] Erro ao verificar professor:", professorError);
-    } else if (professorCheck) {
-      console.log("✅ [getUserRole] Usuário identificado como professor");
+      throw professorError;
+    }
+
+    if (professorData) {
+      console.log("✅ [getUserRole] Usuário é professor");
       return "professor";
-    } else {
-      console.log("❌ [getUserRole] Usuário NÃO é professor");
     }
 
     // Verificar se é aluno
     console.log("🔍 [getUserRole] Verificando se é aluno...");
-    const { data: alunoCheck, error: alunoError } = await supabase
-      .from("aluno_profiles")
-      .select("user_id")
-      .eq("user_id", userId)
+    const { data: alunoData, error: alunoError } = await supabase
+      .from('aluno_profiles')
+      .select('id')
+      .eq('user_id', userId)
       .maybeSingle();
 
-    console.log("🔍 [getUserRole] Resultado da consulta aluno:", { 
-      data: alunoCheck, 
-      error: alunoError 
-    });
+    console.log("🔍 [getUserRole] Resultado aluno:", { alunoData, alunoError });
 
-    if (alunoError) {
+    if (alunoError && alunoError.code !== 'PGRST116') {
       console.error("❌ [getUserRole] Erro ao verificar aluno:", alunoError);
-    } else if (alunoCheck) {
-      console.log("✅ [getUserRole] Usuário identificado como aluno");
-      return "aluno";
-    } else {
-      console.log("❌ [getUserRole] Usuário NÃO é aluno");
+      throw alunoError;
     }
 
-    // Verificar se é admin
+    if (alunoData) {
+      console.log("✅ [getUserRole] Usuário é aluno");
+      return "aluno";
+    }
+
+    // Se não é professor nem aluno, verificar se é admin (opcional)
     console.log("🔍 [getUserRole] Verificando se é admin...");
-    const { data: adminCheck, error: adminError } = await supabase
-      .from("admin_users")
-      .select("user_id")
-      .eq("user_id", userId)
+    const { data: adminData, error: adminError } = await supabase
+      .from('admin_profiles')
+      .select('id')
+      .eq('user_id', userId)
       .maybeSingle();
 
-    console.log("🔍 [getUserRole] Resultado da consulta admin:", { 
-      data: adminCheck, 
-      error: adminError 
-    });
+    console.log("🔍 [getUserRole] Resultado admin:", { adminData, adminError });
 
-    if (adminError) {
+    if (adminError && adminError.code !== 'PGRST116') {
       console.error("❌ [getUserRole] Erro ao verificar admin:", adminError);
-    } else if (adminCheck) {
-      console.log("✅ [getUserRole] Usuário identificado como admin");
-      return "admin";
-    } else {
-      console.log("❌ [getUserRole] Usuário NÃO é admin");
+      // Não vamos falhar por erro de admin, pode não existir a tabela
     }
 
-    console.log("❌ [getUserRole] Tipo de usuário não identificado - retornando 'unknown'");
+    if (adminData) {
+      console.log("✅ [getUserRole] Usuário é admin");
+      return "admin";
+    }
+
+    console.log("⚠️ [getUserRole] Nenhum perfil encontrado para o usuário");
     return "unknown";
+
   } catch (error) {
-    console.error("❌ [getUserRole] Erro crítico ao identificar tipo de usuário:", error);
+    console.error("❌ [getUserRole] Erro geral:", error);
     return "unknown";
   }
 };
 
-export const getUserName = async (userId: string, role: string): Promise<string> => {
+export const getUserName = async (userId: string, role: "professor" | "aluno" | "admin"): Promise<string> => {
   try {
-    console.log(`🔍 [getUserName] Buscando nome para usuário ${role}:`, userId);
+    console.log("🔍 [getUserName] Buscando nome para:", { userId, role });
 
-    if (role === "professor") {
-      console.log("🔍 [getUserName] Buscando perfil do professor...");
-      const profile = await buscarPerfilProfessor(userId);
-      console.log("🔍 [getUserName] Perfil do professor encontrado:", profile?.nome);
-      return profile?.nome ?? "Professor";
+    let tableName = '';
+    switch (role) {
+      case 'professor':
+        tableName = 'professor_profiles';
+        break;
+      case 'aluno':
+        tableName = 'aluno_profiles';
+        break;
+      case 'admin':
+        tableName = 'admin_profiles';
+        break;
+      default:
+        console.log("⚠️ [getUserName] Tipo de usuário não reconhecido:", role);
+        return "Usuário";
     }
 
-    if (role === "aluno") {
-      console.log("🔍 [getUserName] Buscando nome do aluno...");
-      const { data, error } = await supabase
-        .from("aluno_profiles")
-        .select("nome")
-        .eq("user_id", userId)
-        .single();
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('nome')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-      if (error) {
-        console.error("❌ [getUserName] Erro ao buscar nome do aluno:", error);
-        return "Aluno";
-      }
+    console.log("🔍 [getUserName] Resultado da consulta:", { data, error, tableName });
 
-      console.log("🔍 [getUserName] Nome do aluno encontrado:", data?.nome);
-      return data?.nome ?? "Aluno";
+    if (error && error.code !== 'PGRST116') {
+      console.error("❌ [getUserName] Erro ao buscar nome:", error);
+      throw error;
     }
 
-    if (role === "admin") {
-      console.log("🔍 [getUserName] Buscando nome do admin...");
-      const { data, error } = await supabase
-        .from("admin_users")
-        .select("nome")
-        .eq("user_id", userId)
-        .single();
+    const nome = data?.nome || "Usuário";
+    console.log("✅ [getUserName] Nome encontrado:", nome);
+    return nome;
 
-      if (error) {
-        console.error("❌ [getUserName] Erro ao buscar nome do admin:", error);
-        return "Administrador";
-      }
-
-      console.log("🔍 [getUserName] Nome do admin encontrado:", data?.nome);
-      return data?.nome ?? "Administrador";
-    }
-
-    console.log("❌ [getUserName] Tipo de usuário desconhecido, retornando 'Usuário'");
-    return "Usuário";
   } catch (error) {
-    console.error(`❌ [getUserName] Erro ao buscar nome para usuário (${role}):`, error);
+    console.error("❌ [getUserName] Erro geral:", error);
     return "Usuário";
   }
 };
