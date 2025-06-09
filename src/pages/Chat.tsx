@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Send, User, Bot } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ const Chat: React.FC = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [conversa, setConversa] = useState<Conversa | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -30,11 +31,17 @@ const Chat: React.FC = () => {
   }, [user?.id]);
 
   useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
     if (!conversa?.id) return;
 
+    console.log('🔔 Configurando realtime para conversa:', conversa.id);
+    
     // Set up real-time subscription for new messages
     const channel = supabase
-      .channel('mensagens-realtime-aluno')
+      .channel(`mensagens-${conversa.id}`)
       .on(
         'postgres_changes',
         {
@@ -44,13 +51,22 @@ const Chat: React.FC = () => {
           filter: `conversa_id=eq.${conversa.id}`
         },
         (payload) => {
+          console.log('📨 Nova mensagem recebida via realtime:', payload);
           const novaMensagem = payload.new as Mensagem;
-          setMessages(prev => [...prev, novaMensagem]);
+          setMessages(prev => {
+            // Evitar duplicatas
+            const exists = prev.some(msg => msg.id === novaMensagem.id);
+            if (exists) return prev;
+            return [...prev, novaMensagem];
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Status do canal realtime:', status);
+      });
 
     return () => {
+      console.log('🔌 Removendo canal realtime');
       supabase.removeChannel(channel);
     };
   }, [conversa?.id]);
@@ -61,11 +77,17 @@ const Chat: React.FC = () => {
     }
   }, [messages, conversa?.id, user?.id]);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   const inicializarChat = async () => {
     try {
       setLoading(true);
       
       if (!user?.id) return;
+
+      console.log('🚀 Inicializando chat para aluno:', user.id);
 
       // Buscar dados do aluno para pegar o professor_id
       const { data: alunoData, error: alunoError } = await supabase
@@ -75,12 +97,16 @@ const Chat: React.FC = () => {
         .single();
 
       if (alunoError || !alunoData?.professor_id) {
+        console.error('❌ Erro ao buscar dados do aluno:', alunoError);
         toast.error("Erro ao buscar dados do aluno");
         return;
       }
 
+      console.log('👨‍🏫 Professor encontrado:', alunoData.professor_id);
+
       // Criar ou buscar conversa existente
       const conversaId = await criarOuBuscarConversa(alunoData.professor_id, user.id);
+      console.log('💬 Conversa ID:', conversaId);
       
       // Buscar dados completos da conversa
       const { data: conversaData, error: conversaError } = await supabase
@@ -90,6 +116,7 @@ const Chat: React.FC = () => {
         .single();
 
       if (conversaError || !conversaData) {
+        console.error('❌ Erro ao carregar conversa:', conversaError);
         toast.error("Erro ao carregar conversa");
         return;
       }
@@ -111,10 +138,11 @@ const Chat: React.FC = () => {
 
       // Carregar mensagens
       const mensagensData = await buscarMensagensConversa(conversaId);
+      console.log('📨 Mensagens carregadas:', mensagensData.length);
       setMessages(mensagensData);
 
     } catch (error) {
-      console.error("Erro ao inicializar chat:", error);
+      console.error("❌ Erro ao inicializar chat:", error);
       toast.error("Erro ao carregar chat");
     } finally {
       setLoading(false);
@@ -125,21 +153,51 @@ const Chat: React.FC = () => {
     e.preventDefault();
     if (!inputMessage.trim() || !user?.id || !conversa || enviando) return;
 
+    const mensagemTexto = inputMessage.trim();
+    console.log('📤 Enviando mensagem:', mensagemTexto);
+
     try {
       setEnviando(true);
-      await enviarMensagem({
+      
+      // Adicionar mensagem otimisticamente
+      const mensagemOtimista: Mensagem = {
+        id: 'temp-' + Date.now(),
         conversa_id: conversa.id,
         remetente_id: user.id,
         destinatario_id: conversa.professor_id,
-        conteudo: inputMessage,
+        conteudo: mensagemTexto,
+        lida: false,
+        tipo: 'texto',
+        created_at: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, mensagemOtimista]);
+      setInputMessage("");
+
+      const novaMensagem = await enviarMensagem({
+        conversa_id: conversa.id,
+        remetente_id: user.id,
+        destinatario_id: conversa.professor_id,
+        conteudo: mensagemTexto,
         lida: false,
         tipo: 'texto'
       });
 
-      setInputMessage("");
+      console.log('✅ Mensagem enviada com sucesso:', novaMensagem);
+
+      // Remover mensagem otimista e adicionar a real
+      setMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== mensagemOtimista.id);
+        const exists = filtered.some(msg => msg.id === novaMensagem.id);
+        if (exists) return filtered;
+        return [...filtered, novaMensagem];
+      });
+
     } catch (error) {
-      console.error("Erro ao enviar mensagem:", error);
+      console.error("❌ Erro ao enviar mensagem:", error);
       toast.error("Erro ao enviar mensagem");
+      // Remover mensagem otimista em caso de erro
+      setMessages(prev => prev.filter(msg => msg.id !== mensagemOtimista.id));
     } finally {
       setEnviando(false);
     }
@@ -252,6 +310,7 @@ const Chat: React.FC = () => {
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="border-t border-gray-200 p-4">

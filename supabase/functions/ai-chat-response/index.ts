@@ -14,12 +14,18 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🤖 Iniciando resposta da IA...');
+    
     const { message, conversaId, alunoNome, contexto } = await req.json();
+    console.log('📝 Dados recebidos:', { message, conversaId, alunoNome });
     
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
+      console.error('❌ Chave da API Gemini não configurada');
       throw new Error('Gemini API key not configured');
     }
+
+    console.log('🔑 Chave da API encontrada, fazendo chamada para Gemini...');
 
     // Create a contextual prompt for the AI
     const systemPrompt = `Você é um assistente de professor de academia/personal trainer. 
@@ -30,7 +36,10 @@ serve(async (req) => {
     Mantenha respostas concisas e práticas.
     ${contexto ? `Contexto adicional: ${contexto}` : ''}`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`, {
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+    console.log('🌐 URL da API Gemini:', geminiUrl.replace(geminiApiKey, 'API_KEY_HIDDEN'));
+
+    const response = await fetch(geminiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,16 +59,25 @@ serve(async (req) => {
       }),
     });
 
+    console.log('📡 Status da resposta da API:', response.status);
+
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ Erro na API Gemini:', response.status, errorText);
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
+    console.log('📊 Resposta da API recebida:', JSON.stringify(data, null, 2));
+    
     const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!aiResponse) {
+      console.error('❌ Nenhuma resposta da API Gemini');
       throw new Error('No response from Gemini API');
     }
+
+    console.log('✅ Resposta da IA gerada:', aiResponse);
 
     // Initialize Supabase client
     const supabase = createClient(
@@ -75,8 +93,11 @@ serve(async (req) => {
       .single();
 
     if (conversaError || !conversa) {
+      console.error('❌ Erro ao buscar conversa:', conversaError);
       throw new Error('Conversation not found');
     }
+
+    console.log('💬 Conversa encontrada:', conversa);
 
     // Save AI response as a message from the professor
     const { data: mensagem, error: mensagemError } = await supabase
@@ -93,8 +114,11 @@ serve(async (req) => {
       .single();
 
     if (mensagemError) {
+      console.error('❌ Erro ao salvar mensagem da IA:', mensagemError);
       throw new Error('Error saving AI response');
     }
+
+    console.log('💾 Mensagem da IA salva:', mensagem);
 
     // Update conversation with last message
     await supabase
@@ -105,6 +129,8 @@ serve(async (req) => {
       })
       .eq('id', conversaId);
 
+    console.log('🔄 Conversa atualizada com última mensagem');
+
     return new Response(JSON.stringify({ 
       success: true, 
       response: aiResponse,
@@ -114,7 +140,7 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in ai-chat-response:', error);
+    console.error('❌ Erro na função ai-chat-response:', error);
     return new Response(JSON.stringify({ 
       error: error.message 
     }), {
