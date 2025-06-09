@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Send, User, Bot } from "lucide-react";
@@ -156,21 +155,22 @@ const Chat: React.FC = () => {
     const mensagemTexto = inputMessage.trim();
     console.log('📤 Enviando mensagem:', mensagemTexto);
 
+    // Criar mensagem otimista antes do try/catch
+    const mensagemOtimista: Mensagem = {
+      id: 'temp-' + Date.now(),
+      conversa_id: conversa.id,
+      remetente_id: user.id,
+      destinatario_id: conversa.professor_id,
+      conteudo: mensagemTexto,
+      lida: false,
+      tipo: 'texto',
+      created_at: new Date().toISOString()
+    };
+
     try {
       setEnviando(true);
       
       // Adicionar mensagem otimisticamente
-      const mensagemOtimista: Mensagem = {
-        id: 'temp-' + Date.now(),
-        conversa_id: conversa.id,
-        remetente_id: user.id,
-        destinatario_id: conversa.professor_id,
-        conteudo: mensagemTexto,
-        lida: false,
-        tipo: 'texto',
-        created_at: new Date().toISOString()
-      };
-      
       setMessages(prev => [...prev, mensagemOtimista]);
       setInputMessage("");
 
