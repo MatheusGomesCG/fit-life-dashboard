@@ -9,74 +9,146 @@ export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const validateProfessorProfile = async (authUser: User): Promise<AuthUser | null> => {
+  const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
     try {
-      console.log("🔍 [useAuthSession] Validando perfil de professor para:", authUser.id);
+      console.log("🔍 [loadUserProfile] Carregando perfil para:", authUser.id);
+      console.log("📧 [loadUserProfile] Email do usuário:", authUser.email);
       
-      const { data: professorProfile, error } = await supabase
+      // Primeiro, tentar professor
+      console.log("👨‍🏫 [loadUserProfile] Buscando professor...");
+      const { data: professorData, error: professorError } = await supabase
         .from('professor_profiles')
-        .select('*')
+        .select('nome')
         .eq('user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
-      if (error || !professorProfile) {
-        console.error("❌ [useAuthSession] Usuário não é um professor válido:", error);
-        return null;
+      console.log("📊 [loadUserProfile] Resultado professor:", { professorData, professorError });
+
+      if (professorError && professorError.code !== 'PGRST116') {
+        console.error("❌ [loadUserProfile] Erro real ao buscar professor:", professorError);
       }
 
-      console.log("✅ [useAuthSession] Professor válido encontrado:", {
-        id: professorProfile.id,
-        nome: professorProfile.nome
-      });
+      if (professorData) {
+        console.log("✅ [loadUserProfile] Professor encontrado:", professorData.nome);
+        return {
+          ...authUser,
+          nome: professorData.nome,
+          tipo: "professor"
+        };
+      }
 
+      // Se não for professor, tentar aluno
+      console.log("👨‍🎓 [loadUserProfile] Buscando aluno...");
+      const { data: alunoData, error: alunoError } = await supabase
+        .from('aluno_profiles')
+        .select('nome')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+
+      console.log("📊 [loadUserProfile] Resultado aluno:", { alunoData, alunoError });
+
+      if (alunoError && alunoError.code !== 'PGRST116') {
+        console.error("❌ [loadUserProfile] Erro real ao buscar aluno:", alunoError);
+      }
+
+      if (alunoData) {
+        console.log("✅ [loadUserProfile] Aluno encontrado:", alunoData.nome);
+        return {
+          ...authUser,
+          nome: alunoData.nome,
+          tipo: "aluno"
+        };
+      }
+
+      // Se não encontrou nenhum perfil, criar um perfil básico baseado na URL
+      console.log("⚠️ [loadUserProfile] Nenhum perfil encontrado, criando perfil básico");
+      
+      const currentPath = window.location.pathname + window.location.search;
+      const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+      
+      const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+      console.log("🎯 [loadUserProfile] Tipo padrão detectado:", defaultUserType, "baseado em:", currentPath);
+      
       return {
         ...authUser,
-        nome: professorProfile.nome,
-        tipo: "professor" as const,
-        profile: {
-          ...professorProfile,
-          status: professorProfile.status as "ativo" | "inativo" | "suspenso"
-        }
+        nome: authUser.email?.split("@")[0] || "Usuário",
+        tipo: defaultUserType as "professor" | "aluno"
       };
+
     } catch (error) {
-      console.error("❌ [useAuthSession] Erro ao validar professor:", error);
-      return null;
+      console.error("❌ [loadUserProfile] Erro geral:", error);
+      
+      // Em caso de erro, ainda assim retornar um usuário válido
+      const currentPath = window.location.pathname + window.location.search;
+      const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+      const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+      
+      console.log("🛟 [loadUserProfile] Fallback - criando usuário com tipo:", defaultUserType);
+      
+      return {
+        ...authUser,
+        nome: authUser.email?.split("@")[0] || "Usuário",
+        tipo: defaultUserType as "professor" | "aluno"
+      };
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    let profileLoaded = false;
 
-    const initializeAuth = async () => {
+    const initialize = async () => {
       try {
-        console.log("🔍 [useAuthSession] Inicializando autenticação...");
+        console.log("🚀 [useAuthSession] Inicializando...");
         
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
+        if (error) {
+          console.error("❌ [useAuthSession] Erro ao obter sessão:", error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+
         if (!mounted) return;
 
-        if (initialSession?.user) {
-          console.log("👤 [useAuthSession] Sessão encontrada, validando professor...");
-          const validatedUser = await validateProfessorProfile(initialSession.user);
-          
-          if (mounted) {
-            if (validatedUser) {
-              setUser(validatedUser);
-              setSession(initialSession);
-              console.log("✅ [useAuthSession] Usuário autenticado:", validatedUser.nome);
-            } else {
-              console.log("❌ [useAuthSession] Professor não válido, limpando sessão");
-              setUser(null);
-              setSession(null);
+        console.log("📝 [useAuthSession] Sessão inicial:", session ? "encontrada" : "não encontrada");
+        
+        setSession(session);
+
+        if (session?.user && !profileLoaded) {
+          console.log("👤 [useAuthSession] Carregando perfil inicial...");
+          profileLoaded = true;
+          try {
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+              console.log("✅ [useAuthSession] Perfil carregado:", enhancedUser.tipo);
+            }
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
+            // Mesmo com erro, criar um usuário básico
+            if (mounted) {
+              const currentPath = window.location.pathname + window.location.search;
+              const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+              
+              setUser({
+                ...session.user,
+                nome: session.user.email?.split("@")[0] || "Usuário",
+                tipo: defaultUserType as "professor" | "aluno"
+              });
             }
           }
         } else {
           if (mounted) {
             setUser(null);
-            setSession(null);
-            console.log("👤 [useAuthSession] Nenhuma sessão encontrada");
           }
         }
+
       } catch (error) {
         console.error("❌ [useAuthSession] Erro na inicialização:", error);
         if (mounted) {
@@ -86,48 +158,78 @@ export const useAuthSession = () => {
       } finally {
         if (mounted) {
           setLoading(false);
-          console.log("✅ [useAuthSession] Inicialização completa, loading = false");
         }
       }
     };
 
-    // Configurar listener de mudanças de auth
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      console.log("🔄 [useAuthSession] Auth event:", event);
-      
-      if (!mounted) return;
-
-      if (event === 'SIGNED_OUT' || !currentSession) {
-        setUser(null);
-        setSession(null);
-        console.log("👤 [useAuthSession] Usuário deslogado");
-        return;
+    // Timeout de segurança - reduzido para 2 segundos
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
+        setLoading(false);
       }
+    }, 2000);
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        if (currentSession?.user) {
-          const validatedUser = await validateProfessorProfile(currentSession.user);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log("🔄 [useAuthSession] Evento de auth:", event);
+        
+        if (!mounted) return;
+        
+        // Ignorar eventos de refresh de token para evitar loop
+        if (event === 'TOKEN_REFRESHED') {
+          console.log("🔄 [useAuthSession] Token refreshed - ignorando para evitar loop");
+          return;
+        }
+        
+        setSession(session);
+
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log("👤 [useAuthSession] Carregando perfil após login...");
           
-          if (mounted) {
-            if (validatedUser) {
-              setUser(validatedUser);
-              setSession(currentSession);
-              console.log("✅ [useAuthSession] Usuário validado:", validatedUser.nome);
-            } else {
-              console.log("❌ [useAuthSession] Professor não válido");
-              setUser(null);
-              setSession(null);
+          // Usar um setTimeout para quebrar o ciclo e evitar deadlock
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            try {
+              const enhancedUser = await loadUserProfile(session.user);
+              if (mounted) {
+                setUser(enhancedUser);
+                setLoading(false);
+                console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+              }
+            } catch (profileError) {
+              console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+              if (mounted) {
+                const currentPath = window.location.pathname + window.location.search;
+                const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+                const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+                
+                setUser({
+                  ...session.user,
+                  nome: session.user.email?.split("@")[0] || "Usuário",
+                  tipo: defaultUserType as "professor" | "aluno"
+                });
+                setLoading(false);
+              }
             }
+          }, 100);
+        } else if (!session) {
+          console.log("❌ [useAuthSession] Limpando usuário");
+          if (mounted) {
+            setUser(null);
+            setLoading(false);
           }
         }
       }
-    });
+    );
 
-    // Inicializar
-    initializeAuth();
+    initialize();
 
     return () => {
       mounted = false;
+      profileLoaded = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

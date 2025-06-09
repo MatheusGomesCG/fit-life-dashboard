@@ -5,15 +5,24 @@ import { toast } from "sonner";
 import { AuthContextType, AuthUser } from "@/types/auth";
 import { useAuthSession } from "@/hooks/useAuthSession";
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, session, loading } = useAuthSession();
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🚀 [AuthContext] Iniciando login para:", email);
+      console.log("🚀 [AuthContext] Iniciando login...");
       
+      if (!email || !password) {
+        throw new Error("Email e senha são obrigatórios");
+      }
+      
+      if (!email.includes("@")) {
+        throw new Error("Formato de e-mail inválido");
+      }
+
+      console.log("🔐 [AuthContext] Fazendo autenticação...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
@@ -21,11 +30,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error("❌ [AuthContext] Erro no login:", error);
-        return { error };
+        
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+        } else if (error.message.includes("Email not confirmed")) {
+          throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else if (error.message.includes("Too many requests")) {
+          throw new Error("Muitas tentativas de login. Aguarde alguns minutos.");
+        } else {
+          throw new Error(`Erro de autenticação: ${error.message}`);
+        }
       }
 
-      console.log("✅ [AuthContext] Login realizado com sucesso");
-      return { error: null, user: data.user };
+      if (data.user) {
+        console.log("✅ [AuthContext] Login realizado com sucesso");
+        return { error: null, user: data.user };
+      }
+
+      throw new Error("Falha na autenticação");
     } catch (error: any) {
       console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
@@ -38,30 +60,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       console.log("✅ [AuthContext] Logout realizado com sucesso");
-      toast.success("Logout realizado com sucesso!");
     } catch (error) {
       console.error("❌ [AuthContext] Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };
 
-  const isAuthenticated = !!user && !!session && user.tipo === "professor";
-
   const value: AuthContextType = {
     user: user || null,
     session: session || null,
     loading,
-    isAuthenticated,
+    isAuthenticated: !!user && !!user.tipo,
     login,
     logout
   };
 
-  console.log("🔍 [AuthContext] Estado do contexto:", {
+  console.log("🔍 [AuthContext] Estado atual:", {
     hasUser: !!user,
-    hasSession: !!session,
-    userEmail: user?.email,
     userType: user?.tipo,
-    isAuthenticated,
+    isAuthenticated: !!user && !!user.tipo,
     loading
   });
 
@@ -70,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;

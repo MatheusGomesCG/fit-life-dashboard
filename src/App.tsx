@@ -1,141 +1,216 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import DashboardProfessor from "./pages/DashboardProfessor";
-import CadastrarAluno from "./pages/CadastrarAluno";
-import GerenciarAlunos from "./pages/GerenciarAlunos";
-import EditarAluno from "./pages/EditarAluno";
-import CadastrarTreino from "./pages/CadastrarTreino";
-import FichaTreino from "./pages/FichaTreino";
-import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
-import CadastrarPagamento from "./pages/CadastrarPagamento";
-import GerenciarPagamentos from "./pages/GerenciarPagamentos";
-import EditarPagamento from "./pages/EditarPagamento";
-import ChatProfessor from "./pages/ChatProfessor";
-import Agendamento from "./pages/Agendamento";
-import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
-import NovoAgendamento from "./pages/NovoAgendamento";
-import GerenciarFotosAluno from "./pages/GerenciarFotosAluno";
-import ListarAlunos from "./pages/ListarAlunos";
-import NotFound from "./pages/NotFound";
-import Layout from "./components/Layout";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./contexts/AuthContext";
-
-const queryClient = new QueryClient();
+import { AuthProvider } from "@/contexts/AuthContext";
+import Layout from "@/components/Layout";
+import Index from "@/pages/Index";
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import DashboardProfessor from "@/pages/DashboardProfessor";
+import GerenciarAlunos from "@/pages/GerenciarAlunos";
+import CadastrarAluno from "@/pages/CadastrarAluno";
+import EditarAluno from "@/pages/EditarAluno";
+import ListarAlunos from "@/pages/ListarAlunos";
+import CadastrarTreino from "@/pages/CadastrarTreino";
+import GerenciarFichaTreino from "@/pages/GerenciarFichaTreino";
+import MeusTreinos from "@/pages/MeusTreinos";
+import FichaTreino from "@/pages/FichaTreino";
+import NovoAgendamento from "@/pages/NovoAgendamento";
+import GerenciarAgendamentos from "@/pages/GerenciarAgendamentos";
+import Agendamento from "@/pages/Agendamento";
+import CadastrarPagamento from "@/pages/CadastrarPagamento";
+import EditarPagamento from "@/pages/EditarPagamento";
+import GerenciarPagamentos from "@/pages/GerenciarPagamentos";
+import MeusPagamentos from "@/pages/MeusPagamentos";
+import ChatProfessor from "@/pages/ChatProfessor";
+import Chat from "@/pages/Chat";
+import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+import MinhasMedidas from "@/pages/MinhasMedidas";
+import NotFound from "@/pages/NotFound";
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
+    <div className="min-h-screen bg-background font-sans antialiased">
+      <Router>
         <AuthProvider>
-          <BrowserRouter>
-            <div className="min-h-screen bg-gray-50">
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  
-                  {/* Rotas protegidas para professores */}
-                  <Route path="/dashboard-professor" element={
-                    <ProtectedRoute>
-                      <DashboardProfessor />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/cadastrar-aluno" element={
-                    <ProtectedRoute>
-                      <CadastrarAluno />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/gerenciar-alunos" element={
-                    <ProtectedRoute>
-                      <GerenciarAlunos />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/editar-aluno/:id" element={
-                    <ProtectedRoute>
-                      <EditarAluno />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/cadastrar-treino" element={
-                    <ProtectedRoute>
-                      <CadastrarTreino />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/cadastrar-treino/:alunoId" element={
-                    <ProtectedRoute>
-                      <CadastrarTreino />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/ficha-treino/:alunoId" element={
-                    <ProtectedRoute>
-                      <FichaTreino />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/gerenciar-ficha-treino" element={
-                    <ProtectedRoute>
-                      <GerenciarFichaTreino />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/cadastrar-pagamento" element={
-                    <ProtectedRoute>
-                      <CadastrarPagamento />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/gerenciar-pagamentos" element={
-                    <ProtectedRoute>
-                      <GerenciarPagamentos />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/editar-pagamento/:id" element={
-                    <ProtectedRoute>
-                      <EditarPagamento />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/chat-professor" element={
-                    <ProtectedRoute>
-                      <ChatProfessor />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/agendamento" element={
-                    <ProtectedRoute>
-                      <Agendamento />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/gerenciar-agendamentos" element={
-                    <ProtectedRoute>
-                      <GerenciarAgendamentos />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/novo-agendamento" element={
-                    <ProtectedRoute>
-                      <NovoAgendamento />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/fotos-aluno/:alunoId" element={
-                    <ProtectedRoute>
-                      <GerenciarFotosAluno />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/listar-alunos" element={
-                    <ProtectedRoute>
-                      <ListarAlunos />
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Layout>
-            </div>
-            <Toaster />
-          </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              }
+            />
+            <Route
+              path="/dashboard-professor"
+              element={
+                <Layout>
+                  <DashboardProfessor />
+                </Layout>
+              }
+            />
+            <Route
+              path="/gerenciar-alunos"
+              element={
+                <Layout>
+                  <GerenciarAlunos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/cadastrar-aluno"
+              element={
+                <Layout>
+                  <CadastrarAluno />
+                </Layout>
+              }
+            />
+            <Route
+              path="/editar-aluno/:id"
+              element={
+                <Layout>
+                  <EditarAluno />
+                </Layout>
+              }
+            />
+            <Route
+              path="/listar-alunos"
+              element={
+                <Layout>
+                  <ListarAlunos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/cadastrar-treino"
+              element={
+                <Layout>
+                  <CadastrarTreino />
+                </Layout>
+              }
+            />
+            <Route
+              path="/gerenciar-ficha-treino"
+              element={
+                <Layout>
+                  <GerenciarFichaTreino />
+                </Layout>
+              }
+            />
+            <Route
+              path="/meus-treinos"
+              element={
+                <Layout>
+                  <MeusTreinos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/ficha-treino/:id"
+              element={
+                <Layout>
+                  <FichaTreino />
+                </Layout>
+              }
+            />
+            <Route
+              path="/novo-agendamento"
+              element={
+                <Layout>
+                  <NovoAgendamento />
+                </Layout>
+              }
+            />
+            <Route
+              path="/gerenciar-agendamentos"
+              element={
+                <Layout>
+                  <GerenciarAgendamentos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/agendamento"
+              element={
+                <Layout>
+                  <Agendamento />
+                </Layout>
+              }
+            />
+            <Route
+              path="/cadastrar-pagamento"
+              element={
+                <Layout>
+                  <CadastrarPagamento />
+                </Layout>
+              }
+            />
+            <Route
+              path="/editar-pagamento/:id"
+              element={
+                <Layout>
+                  <EditarPagamento />
+                </Layout>
+              }
+            />
+            <Route
+              path="/gerenciar-pagamentos"
+              element={
+                <Layout>
+                  <GerenciarPagamentos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/meus-pagamentos"
+              element={
+                <Layout>
+                  <MeusPagamentos />
+                </Layout>
+              }
+            />
+            <Route
+              path="/chat-professor"
+              element={
+                <Layout>
+                  <ChatProfessor />
+                </Layout>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <Layout>
+                  <Chat />
+                </Layout>
+              }
+            />
+            <Route
+              path="/gerenciar-fotos-aluno/:id"
+              element={
+                <Layout>
+                  <GerenciarFotosAluno />
+                </Layout>
+              }
+            />
+            <Route
+              path="/minhas-medidas"
+              element={
+                <Layout>
+                  <MinhasMedidas />
+                </Layout>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
         </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+      </Router>
+    </div>
   );
 }
 

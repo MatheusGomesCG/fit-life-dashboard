@@ -14,36 +14,65 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user, logout, loading } = useAuth();
   const location = useLocation();
 
-  console.log("🔍 [Layout] Estado atual:", {
+  // Debug logs para identificar o problema
+  console.log("🔍 [Layout] Debug info:", {
     pathname: location.pathname,
     isAuthenticated,
     userType: user?.tipo,
-    userName: user?.nome,
-    userEmail: user?.email,
     loading,
     userExists: !!user
   });
 
-  // Verificar se é uma rota pública
-  const isPublicRoute = ["/login", "/"].includes(location.pathname);
+  // Verificar se é uma rota pública (login, cadastro de professor ou home)
+  const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
-  // Determinar se deve mostrar o menu do professor
-  const shouldShowProfessorNavigation = isAuthenticated && 
+  // Show loading spinner while auth is loading
+  if (loading) {
+    console.log("⏳ [Layout] Showing loading spinner");
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Activity className="h-8 w-8 text-fitness-primary" />
+              <Link to="/" className="text-xl font-bold text-fitness-dark hover:text-fitness-primary">
+                GymCloud
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="large" />
+        </div>
+      </div>
+    );
+  }
+
+  // Lógica para determinar se deve mostrar o menu do professor
+  const shouldShowProfessorNavigation = !loading && 
+    isAuthenticated && 
     user && 
     user.tipo === "professor" && 
-    !isPublicRoute;
+    location.pathname !== "/" && 
+    location.pathname !== "/login" &&
+    location.pathname !== "/cadastrar-professor";
 
-  console.log("📊 [Layout] Decisão de navegação:", {
+  console.log("📊 [Layout] Navigation decision:", {
     shouldShowProfessorNavigation,
-    isAuthenticated,
-    hasUser: !!user,
-    isProfessor: user?.tipo === "professor",
-    isPublicRoute
+    conditions: {
+      notLoading: !loading,
+      isAuthenticated,
+      hasUser: !!user,
+      isProfessor: user?.tipo === "professor",
+      notHomePage: location.pathname !== "/",
+      notLoginPage: location.pathname !== "/login",
+      notSignupPage: location.pathname !== "/cadastrar-professor"
+    }
   });
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho */}
+      {/* Cabeçalho - mostrar sempre */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
@@ -53,13 +82,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </div>
           
-          {/* Mostrar info do usuário se autenticado como professor */}
-          {isAuthenticated && user && user.tipo === "professor" ? (
+          {/* Mostrar info do usuário apenas se autenticado e não carregando */}
+          {isAuthenticated && user && user.tipo && (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
-                Olá, <span className="font-medium">{user.nome || user.email?.split("@")[0] || "Professor"}</span>
-                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                  Professor
+                Olá, <span className="font-medium">{user.nome}</span>
+                <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                  {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
                 </span>
               </div>
               <button 
@@ -70,18 +99,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span>Sair</span>
               </button>
             </div>
-          ) : (
-            /* Mostrar botão de login para usuários não autenticados em rotas públicas */
-            isPublicRoute && location.pathname === "/" && (
-              <div className="flex items-center gap-2">
-                <Link 
-                  to="/login" 
-                  className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
-                >
-                  Entrar
-                </Link>
-              </div>
-            )
+          )}
+
+          {/* Mostrar botões de login para usuários não autenticados em rotas públicas */}
+          {!isAuthenticated && isPublicRoute && location.pathname === "/" && (
+            <div className="flex items-center gap-2">
+              <Link 
+                to="/login?tipo=professor" 
+                className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
+              >
+                Professores
+              </Link>
+              <Link 
+                to="/login?tipo=aluno" 
+                className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
+              >
+                Alunos
+              </Link>
+            </div>
           )}
         </div>
       </header>
@@ -93,13 +128,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Conteúdo principal */}
       <main className="w-full">
-        {loading && isPublicRoute ? (
-          <div className="flex items-center justify-center h-64">
-            <LoadingSpinner size="large" />
-          </div>
-        ) : (
-          children
-        )}
+        {children}
       </main>
     </div>
   );

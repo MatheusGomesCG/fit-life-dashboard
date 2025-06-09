@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Activity, LogIn, ArrowLeft } from "lucide-react";
@@ -10,33 +10,51 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated, loading: authLoading } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
+  
+  const searchParams = new URLSearchParams(location.search);
+  const userType = searchParams.get("tipo") || "aluno";
 
-  useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      console.log("✅ [Login] Redirecionando usuário autenticado");
-      navigate("/dashboard-professor", { replace: true });
+  // Redirecionar se já estiver logado
+  React.useEffect(() => {
+    console.log("🔍 [Login] Verificando redirecionamento:", {
+      isAuthenticated,
+      userTipo: user?.tipo,
+      hasUser: !!user
+    });
+
+    if (isAuthenticated && user?.tipo) {
+      console.log("✅ [Login] Redirecionando usuário autenticado:", user.tipo);
+      
+      if (user.tipo === "professor") {
+        navigate("/dashboard-professor", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, user?.tipo, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    if (loading || authLoading) return;
-    
     setLoading(true);
 
     try {
       console.log("🔐 [Login] Tentando fazer login...");
       
-      const { error } = await login(email, password);
+      const { error, user: loggedUser } = await login(email, password);
       
       if (error) {
         console.error("❌ [Login] Erro:", error);
         
+        // Mensagens de erro mais amigáveis
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos. Verifique seus dados e tente novamente.");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else if (error.message.includes("Too many requests")) {
+          toast.error("Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.");
         } else {
           toast.error("Erro no login. Tente novamente.");
         }
@@ -46,6 +64,20 @@ const Login: React.FC = () => {
       console.log("✅ [Login] Login realizado com sucesso");
       toast.success("Login realizado com sucesso!");
       
+      // Se temos o usuário retornado e ele tem tipo, redirecionar imediatamente
+      if (loggedUser?.email) {
+        console.log("🎯 [Login] Redirecionamento direto baseado no tipo da página");
+        
+        // Redirecionar baseado no tipo da página de login
+        if (userType === "professor") {
+          console.log("➡️ [Login] Redirecionando para dashboard professor");
+          navigate("/dashboard-professor", { replace: true });
+        } else {
+          console.log("➡️ [Login] Redirecionando para dashboard aluno");
+          navigate("/dashboard", { replace: true });
+        }
+      }
+      
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);
       toast.error("Erro inesperado no login");
@@ -53,15 +85,6 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
-  // Mostrar loading se ainda está verificando autenticação
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
@@ -74,7 +97,7 @@ const Login: React.FC = () => {
             GymCloud
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            Acesso para Professores
+            {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}
           </p>
         </div>
 
