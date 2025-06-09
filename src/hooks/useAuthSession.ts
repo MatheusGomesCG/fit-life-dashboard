@@ -65,7 +65,7 @@ export const useAuthSession = () => {
       
       // Se estamos na página de professor, assumir que é professor
       const currentPath = window.location.pathname + window.location.search;
-      const isFromProfessorLogin = currentPath.includes('tipo=professor');
+      const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
       
       const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
       console.log("🎯 [loadUserProfile] Tipo padrão detectado:", defaultUserType, "baseado em:", currentPath);
@@ -81,7 +81,7 @@ export const useAuthSession = () => {
       
       // Em caso de erro, ainda assim retornar um usuário válido
       const currentPath = window.location.pathname + window.location.search;
-      const isFromProfessorLogin = currentPath.includes('tipo=professor');
+      const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
       const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
       
       console.log("🛟 [loadUserProfile] Fallback - criando usuário com tipo:", defaultUserType);
@@ -132,7 +132,7 @@ export const useAuthSession = () => {
             // Mesmo com erro, criar um usuário básico
             if (mounted) {
               const currentPath = window.location.pathname + window.location.search;
-              const isFromProfessorLogin = currentPath.includes('tipo=professor');
+              const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
               const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
               
               setUser({
@@ -170,7 +170,7 @@ export const useAuthSession = () => {
     }, 3000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log("🔄 [useAuthSession] Evento de auth:", event);
         
         if (!mounted) return;
@@ -180,31 +180,29 @@ export const useAuthSession = () => {
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança...");
           
-          // Use setTimeout to defer the async operation
-          setTimeout(async () => {
-            try {
-              const enhancedUser = await loadUserProfile(session.user);
-              if (mounted) {
-                setUser(enhancedUser);
-                setLoading(false);
-                console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
-              }
-            } catch (profileError) {
-              console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
-              if (mounted) {
-                const currentPath = window.location.pathname + window.location.search;
-                const isFromProfessorLogin = currentPath.includes('tipo=professor');
-                const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
-                
-                setUser({
-                  ...session.user,
-                  nome: session.user.email?.split("@")[0] || "Usuário",
-                  tipo: defaultUserType as "professor" | "aluno"
-                });
-                setLoading(false);
-              }
+          // IMPORTANTE: Não usar setTimeout aqui para evitar loop infinito
+          try {
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+              setLoading(false);
+              console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
             }
-          }, 0);
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+            if (mounted) {
+              const currentPath = window.location.pathname + window.location.search;
+              const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+              
+              setUser({
+                ...session.user,
+                nome: session.user.email?.split("@")[0] || "Usuário",
+                tipo: defaultUserType as "professor" | "aluno"
+              });
+              setLoading(false);
+            }
+          }
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
           if (mounted) {
