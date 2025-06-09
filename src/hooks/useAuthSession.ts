@@ -56,6 +56,7 @@ export const useAuthSession = () => {
         if (!mounted) return;
 
         if (initialSession?.user) {
+          console.log("👤 [useAuthSession] Sessão encontrada, validando professor...");
           const validatedUser = await validateProfessorProfile(initialSession.user);
           
           if (mounted) {
@@ -64,8 +65,7 @@ export const useAuthSession = () => {
               setSession(initialSession);
               console.log("✅ [useAuthSession] Usuário autenticado:", validatedUser.nome);
             } else {
-              console.log("❌ [useAuthSession] Professor não válido, fazendo logout");
-              await supabase.auth.signOut();
+              console.log("❌ [useAuthSession] Professor não válido, limpando sessão");
               setUser(null);
               setSession(null);
             }
@@ -84,7 +84,6 @@ export const useAuthSession = () => {
           setSession(null);
         }
       } finally {
-        // ALWAYS set loading to false after initialization, regardless of outcome
         if (mounted) {
           setLoading(false);
           console.log("✅ [useAuthSession] Inicialização completa, loading = false");
@@ -101,7 +100,6 @@ export const useAuthSession = () => {
       if (event === 'SIGNED_OUT' || !currentSession) {
         setUser(null);
         setSession(null);
-        setLoading(false);
         console.log("👤 [useAuthSession] Usuário deslogado");
         return;
       }
@@ -117,13 +115,9 @@ export const useAuthSession = () => {
               console.log("✅ [useAuthSession] Usuário validado:", validatedUser.nome);
             } else {
               console.log("❌ [useAuthSession] Professor não válido");
-              await supabase.auth.signOut();
+              setUser(null);
+              setSession(null);
             }
-            setLoading(false);
-          }
-        } else {
-          if (mounted) {
-            setLoading(false);
           }
         }
       }
