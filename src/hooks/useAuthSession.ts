@@ -102,6 +102,7 @@ export const useAuthSession = () => {
             const enhancedUser = await loadUserProfile(session.user);
             if (mounted) {
               setUser(enhancedUser);
+              console.log("✅ [useAuthSession] Perfil carregado:", enhancedUser.tipo);
             }
           } catch (profileError) {
             console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
@@ -132,13 +133,13 @@ export const useAuthSession = () => {
       }
     };
 
-    // Timeout de segurança para garantir que o loading nunca fique infinito
+    // Timeout de segurança mais agressivo
     const timeout = setTimeout(() => {
       if (mounted && loading) {
         console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
         setLoading(false);
       }
-    }, 10000); // 10 segundos
+    }, 5000); // 5 segundos
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -150,25 +151,35 @@ export const useAuthSession = () => {
 
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança...");
-          try {
-            const enhancedUser = await loadUserProfile(session.user);
-            if (mounted) {
-              setUser(enhancedUser);
+          
+          // Use setTimeout para evitar bloqueio
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            try {
+              const enhancedUser = await loadUserProfile(session.user);
+              if (mounted) {
+                setUser(enhancedUser);
+                setLoading(false);
+                console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+              }
+            } catch (profileError) {
+              console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+              if (mounted) {
+                setUser({
+                  ...session.user,
+                  nome: session.user.email?.split("@")[0] || "Usuário",
+                  tipo: undefined
+                });
+                setLoading(false);
+              }
             }
-          } catch (profileError) {
-            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: undefined
-              });
-            }
-          }
+          }, 100);
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
           if (mounted) {
             setUser(null);
+            setLoading(false);
           }
         }
       }

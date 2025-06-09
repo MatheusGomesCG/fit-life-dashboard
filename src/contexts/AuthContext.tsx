@@ -75,6 +75,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout
   };
 
+  console.log("🔍 [AuthContext] Estado atual:", {
+    hasUser: !!user,
+    userType: user?.tipo,
+    isAuthenticated: !!user && !!user.tipo,
+    loading
+  });
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
