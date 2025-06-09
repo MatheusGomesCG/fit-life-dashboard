@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Activity } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
@@ -13,6 +13,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user, logout, loading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Debug logs para identificar o problema
   console.log("🔍 [Layout] Debug info:", {
@@ -47,6 +48,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
     );
   }
+
+  // Função para fazer logout e redirecionar para home
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   // Lógica para determinar se deve mostrar o menu do professor
   const shouldShowProfessorNavigation = !loading && 
@@ -92,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </span>
               </div>
               <button 
-                onClick={logout} 
+                onClick={handleLogout} 
                 className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors"
               >
                 <LogOut size={16} />
