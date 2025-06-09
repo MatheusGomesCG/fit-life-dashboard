@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Activity } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
 import ProfessorNavigation from "./professor/ProfessorNavigation";
+import AlunoNavigation from "./aluno/AlunoNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -64,13 +65,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     location.pathname !== "/login" &&
     location.pathname !== "/cadastrar-professor";
 
+  // Lógica para determinar se deve mostrar o menu do aluno
+  const shouldShowAlunoNavigation = !loading && 
+    isAuthenticated && 
+    user && 
+    user.tipo === "aluno" && 
+    location.pathname !== "/" && 
+    location.pathname !== "/login" &&
+    location.pathname !== "/cadastrar-professor";
+
   console.log("📊 [Layout] Navigation decision:", {
     shouldShowProfessorNavigation,
+    shouldShowAlunoNavigation,
     conditions: {
       notLoading: !loading,
       isAuthenticated,
       hasUser: !!user,
       isProfessor: user?.tipo === "professor",
+      isAluno: user?.tipo === "aluno",
       notHomePage: location.pathname !== "/",
       notLoginPage: location.pathname !== "/login",
       notSignupPage: location.pathname !== "/cadastrar-professor"
@@ -131,6 +143,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Menu de Navegação do Professor */}
       {shouldShowProfessorNavigation && (
         <ProfessorNavigation />
+      )}
+
+      {/* Menu de Navegação do Aluno */}
+      {shouldShowAlunoNavigation && (
+        <AlunoNavigation />
       )}
 
       {/* Conteúdo principal */}
