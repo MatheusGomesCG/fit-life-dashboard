@@ -13,29 +13,33 @@ export const useAuthSession = () => {
 
   const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
     try {
-      console.log("🔍 Carregando perfil para usuário:", authUser.id);
+      console.log("🔍 [loadUserProfile] Iniciando carregamento do perfil para:", authUser.id);
       
       const role = await getUserRole(authUser.id);
-      console.log("✅ Tipo de usuário identificado:", role);
+      console.log("✅ [loadUserProfile] Tipo de usuário identificado:", role);
       
       if (role === "unknown") {
-        console.warn("⚠️ Usuário não tem perfil válido");
+        console.warn("⚠️ [loadUserProfile] Usuário não tem perfil válido");
         const fallbackUser: AuthUser = {
           ...authUser,
           nome: authUser.email?.split("@")[0] || "Usuário",
           tipo: undefined
         };
+        console.log("🔄 [loadUserProfile] Definindo usuário fallback:", fallbackUser.nome);
         setUser(fallbackUser);
         return fallbackUser;
       }
       
+      console.log("🔍 [loadUserProfile] Buscando nome do usuário...");
       const nome = await getUserName(authUser.id, role);
+      console.log("✅ [loadUserProfile] Nome obtido:", nome);
+      
       let profile: ProfessorProfile | undefined;
 
       if (role === "professor") {
-        console.log("👨‍🏫 Carregando perfil do professor...");
+        console.log("👨‍🏫 [loadUserProfile] Carregando perfil do professor...");
         profile = await buscarPerfilProfessor(authUser.id);
-        console.log("👨‍🏫 Perfil do professor carregado:", profile?.nome);
+        console.log("👨‍🏫 [loadUserProfile] Perfil do professor carregado:", profile?.nome);
       }
 
       const enhancedUser: AuthUser = {
@@ -45,7 +49,7 @@ export const useAuthSession = () => {
         profile
       };
 
-      console.log("🎯 Usuário final montado:", {
+      console.log("🎯 [loadUserProfile] Usuário final montado:", {
         id: enhancedUser.id,
         email: enhancedUser.email,
         nome: enhancedUser.nome,
@@ -55,12 +59,13 @@ export const useAuthSession = () => {
       setUser(enhancedUser);
       return enhancedUser;
     } catch (error) {
-      console.error("❌ Erro ao carregar perfil do usuário:", error);
+      console.error("❌ [loadUserProfile] Erro ao carregar perfil do usuário:", error);
       const fallbackUser: AuthUser = {
         ...authUser,
         nome: authUser.email?.split("@")[0] || "Usuário",
         tipo: undefined
       };
+      console.log("🔄 [loadUserProfile] Definindo usuário fallback após erro:", fallbackUser.nome);
       setUser(fallbackUser);
       return fallbackUser;
     }
@@ -71,26 +76,26 @@ export const useAuthSession = () => {
 
     const initialize = async () => {
       try {
-        console.log("🚀 Inicializando sessão de autenticação...");
+        console.log("🚀 [useAuthSession] Inicializando sessão de autenticação...");
         const { data } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
         const session = data.session;
-        console.log("📋 Sessão atual:", session ? "Encontrada" : "Não encontrada");
+        console.log("📋 [useAuthSession] Sessão atual:", session ? "Encontrada" : "Não encontrada");
         setSession(session);
 
         if (session?.user) {
-          console.log("👤 Usuário encontrado na sessão, carregando perfil...");
+          console.log("👤 [useAuthSession] Usuário encontrado na sessão, carregando perfil...");
           await loadUserProfile(session.user);
         } else {
-          console.log("❌ Nenhum usuário na sessão");
+          console.log("❌ [useAuthSession] Nenhum usuário na sessão");
           setUser(null);
         }
 
         setLoading(false);
       } catch (error) {
-        console.error("❌ Erro na inicialização:", error);
+        console.error("❌ [useAuthSession] Erro na inicialização:", error);
         if (mounted) {
           setLoading(false);
           setUser(null);
@@ -101,22 +106,22 @@ export const useAuthSession = () => {
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("🔄 Mudança de estado de auth:", event, session ? "com sessão" : "sem sessão");
+        console.log("🔄 [useAuthSession] Mudança de estado de auth:", event, session ? "com sessão" : "sem sessão");
         
         if (!mounted) return;
         
         setSession(session);
 
         if (session?.user) {
-          console.log("👤 Carregando perfil após mudança de estado...");
+          console.log("👤 [useAuthSession] Carregando perfil após mudança de estado...");
           try {
             await loadUserProfile(session.user);
           } catch (error) {
-            console.error("❌ Erro ao carregar perfil:", error);
+            console.error("❌ [useAuthSession] Erro ao carregar perfil:", error);
             setUser(null);
           }
         } else {
-          console.log("❌ Limpando usuário após mudança de estado");
+          console.log("❌ [useAuthSession] Limpando usuário após mudança de estado");
           setUser(null);
         }
 
