@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   // Show loading spinner while auth is loading
   if (loading) {
-    console.log("⏳ [Layout] Showing loading spinner");
+    console.log("⏳ [Layout] Mostrando spinner de carregamento");
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
@@ -55,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     user.tipo === "professor" && 
     !isPublicRoute;
 
-  console.log("📊 [Layout] Navigation decision:", {
+  console.log("📊 [Layout] Decisão de navegação:", {
     shouldShowProfessorNavigation,
     isAuthenticated,
     hasUser: !!user,
@@ -75,12 +75,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Link>
           </div>
           
-          {/* Mostrar info do usuário se autenticado */}
-          {isAuthenticated && user ? (
+          {/* Mostrar info do usuário se autenticado como professor */}
+          {isAuthenticated && user && user.tipo === "professor" ? (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
-                Olá, <span className="font-medium">{user.nome || user.email?.split("@")[0] || "Usuário"}</span>
-                <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
+                Olá, <span className="font-medium">{user.nome || user.email?.split("@")[0] || "Professor"}</span>
+                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
                   Professor
                 </span>
               </div>
@@ -93,7 +93,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </button>
             </div>
           ) : (
-            /* Mostrar botão de login para usuários não autenticados */
+            /* Mostrar botão de login para usuários não autenticados em rotas públicas */
             isPublicRoute && location.pathname === "/" && (
               <div className="flex items-center gap-2">
                 <Link 

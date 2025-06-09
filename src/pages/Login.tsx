@@ -35,6 +35,8 @@ const Login: React.FC = () => {
         
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos. Verifique seus dados e tente novamente.");
+        } else if (error.message.includes("não é um professor válido")) {
+          toast.error("Esta conta não tem permissão de professor. Entre em contato com o administrador.");
         } else {
           toast.error("Erro no login. Tente novamente.");
         }

@@ -23,6 +23,7 @@ import GerenciarFotosAluno from "./pages/GerenciarFotosAluno";
 import ListarAlunos from "./pages/ListarAlunos";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -38,23 +39,94 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/dashboard-professor" element={<DashboardProfessor />} />
-                  <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
-                  <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
-                  <Route path="/editar-aluno/:id" element={<EditarAluno />} />
-                  <Route path="/cadastrar-treino" element={<CadastrarTreino />} />
-                  <Route path="/cadastrar-treino/:alunoId" element={<CadastrarTreino />} />
-                  <Route path="/ficha-treino/:alunoId" element={<FichaTreino />} />
-                  <Route path="/gerenciar-ficha-treino" element={<GerenciarFichaTreino />} />
-                  <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
-                  <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-                  <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
-                  <Route path="/chat-professor" element={<ChatProfessor />} />
-                  <Route path="/agendamento" element={<Agendamento />} />
-                  <Route path="/gerenciar-agendamentos" element={<GerenciarAgendamentos />} />
-                  <Route path="/novo-agendamento" element={<NovoAgendamento />} />
-                  <Route path="/fotos-aluno/:alunoId" element={<GerenciarFotosAluno />} />
-                  <Route path="/listar-alunos" element={<ListarAlunos />} />
+                  
+                  {/* Rotas protegidas para professores */}
+                  <Route path="/dashboard-professor" element={
+                    <ProtectedRoute>
+                      <DashboardProfessor />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/cadastrar-aluno" element={
+                    <ProtectedRoute>
+                      <CadastrarAluno />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/gerenciar-alunos" element={
+                    <ProtectedRoute>
+                      <GerenciarAlunos />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/editar-aluno/:id" element={
+                    <ProtectedRoute>
+                      <EditarAluno />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/cadastrar-treino" element={
+                    <ProtectedRoute>
+                      <CadastrarTreino />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/cadastrar-treino/:alunoId" element={
+                    <ProtectedRoute>
+                      <CadastrarTreino />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/ficha-treino/:alunoId" element={
+                    <ProtectedRoute>
+                      <FichaTreino />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/gerenciar-ficha-treino" element={
+                    <ProtectedRoute>
+                      <GerenciarFichaTreino />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/cadastrar-pagamento" element={
+                    <ProtectedRoute>
+                      <CadastrarPagamento />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/gerenciar-pagamentos" element={
+                    <ProtectedRoute>
+                      <GerenciarPagamentos />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/editar-pagamento/:id" element={
+                    <ProtectedRoute>
+                      <EditarPagamento />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chat-professor" element={
+                    <ProtectedRoute>
+                      <ChatProfessor />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/agendamento" element={
+                    <ProtectedRoute>
+                      <Agendamento />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/gerenciar-agendamentos" element={
+                    <ProtectedRoute>
+                      <GerenciarAgendamentos />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/novo-agendamento" element={
+                    <ProtectedRoute>
+                      <NovoAgendamento />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/fotos-aluno/:alunoId" element={
+                    <ProtectedRoute>
+                      <GerenciarFotosAluno />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/listar-alunos" element={
+                    <ProtectedRoute>
+                      <ListarAlunos />
+                    </ProtectedRoute>
+                  } />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Layout>

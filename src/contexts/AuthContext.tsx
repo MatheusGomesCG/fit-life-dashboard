@@ -29,6 +29,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           userId: data.user.id,
           email: data.user.email
         });
+        
+        // A validação do professor será feita pelo useAuthSession
         return { error: null, user: data.user };
       }
 
@@ -55,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: user || null,
     session: session || null,
     loading,
-    isAuthenticated: !!user && !!session,
+    isAuthenticated: !!user && !!session && user.tipo === "professor",
     login,
     logout
   };
@@ -65,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasSession: !!session,
     userEmail: user?.email,
     userType: user?.tipo,
-    isAuthenticated: !!user && !!session,
+    isAuthenticated: !!user && !!session && user.tipo === "professor",
     loading
   });
 
