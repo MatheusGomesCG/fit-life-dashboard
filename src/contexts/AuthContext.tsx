@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,12 +14,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("🚀 [AuthContext] Iniciando processo de login...");
       
+      // Validação básica dos dados de entrada
       if (!email || !password) {
         throw new Error("Email e senha são obrigatórios");
       }
       
       if (!email.includes("@")) {
         throw new Error("Formato de e-mail inválido");
+      }
+
+      // Verificação da configuração do Supabase
+      console.log("🔗 [AuthContext] Verificando configuração do Supabase...");
+      const supabaseUrl = "https://attubruszbhhkjbbqcgp.supabase.co";
+      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dHVicnVzemJoaGtqYmJxY2dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5MDU0NzUsImV4cCI6MjA2NDQ4MTQ3NX0.ERPeTiDlE6mk74APuh4Pd6TS2-ZUl42dh_qDsuQALVE";
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error("❌ [AuthContext] Variáveis do Supabase não encontradas!");
+        throw new Error("Erro de configuração: Credenciais do Supabase não encontradas");
       }
 
       // Teste básico de conexão com Supabase
@@ -31,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         console.log("🔗 [AuthContext] Resultado do teste de conexão:", { connectionTest, connectionError });
         
-        if (connectionError) {
+        if (connectionError && connectionError.code !== 'PGRST301') {
           console.error("❌ [AuthContext] Erro na conexão com Supabase:", connectionError);
           throw new Error(`Erro de conexão com o banco de dados: ${connectionError.message}`);
         }
@@ -49,14 +61,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error("❌ [AuthContext] Erro no login:", error);
+        console.error("❌ [AuthContext] Erro no login:", {
+          code: error.code,
+          message: error.message,
+          status: error.status
+        });
         
+        // Tratamento específico de erros comuns
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Credenciais inválidas. Verifique seu email e senha.");
         } else if (error.message.includes("Email not confirmed")) {
           throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else if (error.message.includes("Too many requests")) {
+          throw new Error("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
+        } else if (error.message.includes("Invalid API key")) {
+          throw new Error("Erro de configuração: Chave de API inválida. Entre em contato com o suporte.");
         } else {
-          throw new Error(error.message);
+          throw new Error(`Erro de autenticação: ${error.message}`);
         }
       }
 
