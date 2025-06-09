@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import DashboardProfessor from "./pages/DashboardProfessor";
 import CadastrarAluno from "./pages/CadastrarAluno";
 import GerenciarAlunos from "./pages/GerenciarAlunos";
@@ -16,10 +15,6 @@ import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
 import CadastrarPagamento from "./pages/CadastrarPagamento";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import EditarPagamento from "./pages/EditarPagamento";
-import MeusPagamentos from "./pages/MeusPagamentos";
-import MeusTreinos from "./pages/MeusTreinos";
-import MinhasMedidas from "./pages/MinhasMedidas";
-import Chat from "./pages/Chat";
 import ChatProfessor from "./pages/ChatProfessor";
 import Agendamento from "./pages/Agendamento";
 import GerenciarAgendamentos from "./pages/GerenciarAgendamentos";
@@ -43,21 +38,17 @@ function App() {
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/login" element={<Login />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/dashboard-professor" element={<DashboardProfessor />} />
                   <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
                   <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
                   <Route path="/editar-aluno/:id" element={<EditarAluno />} />
                   <Route path="/cadastrar-treino" element={<CadastrarTreino />} />
+                  <Route path="/cadastrar-treino/:alunoId" element={<CadastrarTreino />} />
                   <Route path="/ficha-treino/:alunoId" element={<FichaTreino />} />
                   <Route path="/gerenciar-ficha-treino" element={<GerenciarFichaTreino />} />
                   <Route path="/cadastrar-pagamento" element={<CadastrarPagamento />} />
                   <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
                   <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
-                  <Route path="/meus-pagamentos" element={<MeusPagamentos />} />
-                  <Route path="/meus-treinos" element={<MeusTreinos />} />
-                  <Route path="/minhas-medidas" element={<MinhasMedidas />} />
-                  <Route path="/chat" element={<Chat />} />
                   <Route path="/chat-professor" element={<ChatProfessor />} />
                   <Route path="/agendamento" element={<Agendamento />} />
                   <Route path="/gerenciar-agendamentos" element={<GerenciarAgendamentos />} />

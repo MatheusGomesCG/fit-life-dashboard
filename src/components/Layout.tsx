@@ -24,7 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   });
 
   // Verificar se é uma rota pública
-  const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
+  const isPublicRoute = ["/login", "/"].includes(location.pathname);
 
   // Show loading spinner while auth is loading
   if (loading) {
@@ -80,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome || user.email?.split("@")[0] || "Usuário"}</span>
                 <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                  {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
+                  Professor
                 </span>
               </div>
               <button 
@@ -92,20 +92,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </button>
             </div>
           ) : (
-            /* Mostrar botões de login para usuários não autenticados */
+            /* Mostrar botão de login para usuários não autenticados */
             isPublicRoute && location.pathname === "/" && (
               <div className="flex items-center gap-2">
                 <Link 
-                  to="/login?tipo=professor" 
+                  to="/login" 
                   className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
                 >
-                  Professores
-                </Link>
-                <Link 
-                  to="/login?tipo=aluno" 
-                  className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
-                >
-                  Alunos
+                  Entrar
                 </Link>
               </div>
             )

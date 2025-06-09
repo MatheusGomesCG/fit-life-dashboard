@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Activity, LogIn, ArrowLeft } from "lucide-react";
@@ -11,11 +11,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
-  
-  const searchParams = new URLSearchParams(location.search);
-  const userType = searchParams.get("tipo") || "aluno";
 
   // Redirecionar se já estiver logado
   React.useEffect(() => {
@@ -70,7 +66,7 @@ const Login: React.FC = () => {
             GymCloud
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}
+            Acesso para Professores
           </p>
         </div>
 
