@@ -44,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (data.user) {
         console.log("✅ [AuthContext] Login realizado com sucesso");
-        return { error: null };
+        return { error: null, user: data.user };
       }
 
       throw new Error("Falha na autenticação");

@@ -10,23 +10,31 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
 
-  // Redirecionar se já estiver logado
+  // Redirecionar se já estiver logado - melhorada a lógica
   React.useEffect(() => {
-    if (user?.tipo) {
+    console.log("🔍 [Login] Verificando redirecionamento:", {
+      isAuthenticated,
+      userTipo: user?.tipo,
+      hasUser: !!user
+    });
+
+    if (isAuthenticated && user?.tipo) {
+      console.log("✅ [Login] Redirecionando usuário autenticado:", user.tipo);
+      
       if (user.tipo === "professor") {
         navigate("/dashboard-professor", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
     }
-  }, [user, navigate]);
+  }, [isAuthenticated, user?.tipo, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,7 +54,11 @@ const Login: React.FC = () => {
       console.log("✅ [Login] Login iniciado com sucesso");
       toast.success("Login realizado com sucesso!");
       
-      // O redirecionamento será feito pelo useEffect quando o user for carregado
+      // Aguardar um pouco para o contexto atualizar antes de tentar redirecionar
+      setTimeout(() => {
+        console.log("🔄 [Login] Verificando estado após login...");
+        // O redirecionamento será feito pelo useEffect quando o user for carregado
+      }, 1000);
       
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);
