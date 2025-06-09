@@ -31,8 +31,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
+        <AuthProvider>
+          <BrowserRouter>
             <div className="min-h-screen bg-gray-50">
               <Layout>
                 <Routes>
@@ -59,9 +59,9 @@ function App() {
                 </Routes>
               </Layout>
             </div>
-          </AuthProvider>
-        </BrowserRouter>
-        <Toaster />
+            <Toaster />
+          </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
