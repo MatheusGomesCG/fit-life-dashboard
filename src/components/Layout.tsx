@@ -1,6 +1,6 @@
 
-import React, { useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
 
@@ -15,79 +15,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     logout
   } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
-
-  // Enhanced route protection
-  useEffect(() => {
-    if (!isAuthenticated && !isPublicRoute) {
-      console.log("Redirecting unauthenticated user to home");
-      navigate("/");
-      return;
-    }
-
-    // Verify user has proper role and redirect if not
-    if (isAuthenticated && user) {
-      if (!user.tipo) {
-        console.log("User has no valid role, redirecting to home");
-        navigate("/");
-        return;
-      }
-
-      // Role-based route protection
-      const currentPath = location.pathname;
-      
-      // Professor-only routes
-      const professorRoutes = [
-        "/dashboard-professor", 
-        "/gerenciar-alunos", 
-        "/cadastrar-aluno", 
-        "/gerenciar-fichas", 
-        "/gerenciar-pagamentos",
-        "/agendamentos",
-        "/chat-professor"
-      ];
-      
-      // Student-only routes
-      const studentRoutes = [
-        "/dashboard",
-        "/meus-treinos",
-        "/minhas-medidas", 
-        "/meus-pagamentos",
-        "/agendamento",
-        "/chat"
-      ];
-
-      if (user.tipo === "professor" && studentRoutes.includes(currentPath)) {
-        console.log("Professor trying to access student route, redirecting");
-        navigate("/dashboard-professor");
-        return;
-      }
-
-      if (user.tipo === "aluno" && professorRoutes.includes(currentPath)) {
-        console.log("Student trying to access professor route, redirecting");
-        navigate("/dashboard");
-        return;
-      }
-
-      // Check for edit routes that require additional validation
-      if (currentPath.startsWith("/editar-aluno/") || 
-          currentPath.startsWith("/ficha-treino/") ||
-          currentPath.startsWith("/cadastrar-treino/") ||
-          currentPath.startsWith("/fotos-aluno/")) {
-        if (user.tipo !== "professor") {
-          console.log("Non-professor trying to access edit route, redirecting");
-          navigate("/dashboard");
-          return;
-        }
-      }
-    }
-  }, [isAuthenticated, isPublicRoute, navigate, user, location.pathname]);
 
   // Define os itens de menu com base no tipo de usuário (aluno ou professor)
   const menuItems = user?.tipo === "professor" ? [{

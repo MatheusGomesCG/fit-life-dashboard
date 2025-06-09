@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -10,33 +10,13 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user, isAuthenticated } = useAuth();
+  const { login } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
   // Get user type from query string (?tipo=aluno or ?tipo=professor)
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
-  
-  // Redirect authenticated users to appropriate dashboard
-  useEffect(() => {
-    if (isAuthenticated && user?.tipo) {
-      console.log("🔄 Usuário já autenticado, redirecionando...", {
-        tipo: user.tipo,
-        nome: user.nome
-      });
-      
-      if (user.tipo === "professor") {
-        console.log("👨‍🏫 Redirecionando professor para dashboard");
-        navigate("/dashboard-professor", { replace: true });
-      } else if (user.tipo === "aluno") {
-        console.log("👨‍🎓 Redirecionando aluno para dashboard");
-        navigate("/dashboard", { replace: true });
-      } else {
-        console.log("❓ Tipo de usuário desconhecido:", user.tipo);
-      }
-    }
-  }, [isAuthenticated, user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -70,15 +50,6 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
-
-  // Don't render login form if user is already authenticated
-  if (isAuthenticated && user?.tipo) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
