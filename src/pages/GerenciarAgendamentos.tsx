@@ -150,7 +150,7 @@ const GerenciarAgendamentos: React.FC = () => {
                       <div className="flex items-center">
                         <User size={18} className="text-gray-400 mr-2" />
                         <div className="text-sm font-medium text-gray-900">
-                          {agendamento.alunoNome}
+                          {agendamento.aluno_nome}
                         </div>
                       </div>
                     </TableCell>
@@ -233,7 +233,7 @@ const GerenciarAgendamentos: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500">Aluno</p>
-                <p className="font-medium">{detalhesAgendamento.alunoNome}</p>
+                <p className="font-medium">{detalhesAgendamento.aluno_nome}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock, User, CreditCard } from "lucide-react";
+import { Users, UserPlus, Activity, ChevronRight, DollarSign, CalendarClock, Calendar, Clock, User, CreditCard, MessageSquare } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   Pagamento, 
@@ -328,7 +328,7 @@ const DashboardProfessor: React.FC = () => {
                   <div key={agendamento.id} className="border-b border-gray-100 pb-3">
                     <div className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium">{agendamento.alunoNome}</p>
+                        <p className="font-medium">{agendamento.aluno_nome}</p>
                         <div className="flex items-center text-sm text-gray-500">
                           <Calendar className="h-4 w-4 mr-1 text-gray-400" />
                           <span>{format(new Date(agendamento.data), "dd/MM/yyyy")}</span>
