@@ -30,7 +30,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error("❌ [AuthContext] Erro no login:", error);
         
-        // Tratar diferentes tipos de erro
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Credenciais inválidas. Verifique seu email e senha.");
         } else if (error.message.includes("Email not confirmed")) {
@@ -43,9 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.user) {
         console.log("✅ [AuthContext] Login realizado, carregando perfil...");
         
-        // Aguardar um momento para o sistema processar a autenticação
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
+        // Carregar o perfil completo do usuário
         const enhancedUser = await loadUserProfile(data.user);
         console.log("🎯 [AuthContext] Usuário logado:", {
           id: enhancedUser.id,
@@ -53,6 +50,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           nome: enhancedUser.nome,
           tipo: enhancedUser.tipo
         });
+        
+        // Verificar se o usuário tem um tipo válido
+        if (!enhancedUser.tipo) {
+          throw new Error("Perfil de usuário não encontrado. Entre em contato com o suporte.");
+        }
         
         return { error: null, user: enhancedUser };
       }

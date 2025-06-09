@@ -14,7 +14,6 @@ const Login: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get user type from query string (?tipo=aluno or ?tipo=professor)
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
   
@@ -40,6 +39,9 @@ const Login: React.FC = () => {
           navigate("/dashboard-professor", { replace: true });
         } else if (loggedInUser.tipo === "aluno") {
           console.log("👨‍🎓 Redirecionando aluno para dashboard");
+          navigate("/dashboard", { replace: true });
+        } else if (loggedInUser.tipo === "admin") {
+          console.log("👨‍💼 Redirecionando admin para dashboard");
           navigate("/dashboard", { replace: true });
         } else {
           console.log("❓ Tipo de usuário não reconhecido:", loggedInUser.tipo);

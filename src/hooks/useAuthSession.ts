@@ -25,8 +25,6 @@ export const useAuthSession = () => {
           nome: authUser.email?.split("@")[0] || "Usuário",
           tipo: undefined
         };
-        console.log("🔄 [loadUserProfile] Definindo usuário fallback:", fallbackUser.nome);
-        setUser(fallbackUser);
         return fallbackUser;
       }
       
@@ -56,7 +54,6 @@ export const useAuthSession = () => {
         tipo: enhancedUser.tipo
       });
       
-      setUser(enhancedUser);
       return enhancedUser;
     } catch (error) {
       console.error("❌ [loadUserProfile] Erro ao carregar perfil do usuário:", error);
@@ -65,8 +62,6 @@ export const useAuthSession = () => {
         nome: authUser.email?.split("@")[0] || "Usuário",
         tipo: undefined
       };
-      console.log("🔄 [loadUserProfile] Definindo usuário fallback após erro:", fallbackUser.nome);
-      setUser(fallbackUser);
       return fallbackUser;
     }
   };
@@ -78,13 +73,12 @@ export const useAuthSession = () => {
       try {
         console.log("🚀 [useAuthSession] Inicializando sessão de autenticação...");
         
-        // Adicionar timeout para evitar loading infinito
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Session timeout')), 10000)
-        );
+        const { data, error } = await supabase.auth.getSession();
         
-        const { data } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+        if (error) {
+          console.error("❌ [useAuthSession] Erro ao obter sessão:", error);
+          throw error;
+        }
         
         if (!mounted) return;
 
@@ -95,14 +89,21 @@ export const useAuthSession = () => {
         if (currentSession?.user) {
           console.log("👤 [useAuthSession] Usuário encontrado na sessão, carregando perfil...");
           try {
-            await loadUserProfile(currentSession.user);
+            const enhancedUser = await loadUserProfile(currentSession.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
           } catch (profileError) {
             console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
-            setUser(null);
+            if (mounted) {
+              setUser(null);
+            }
           }
         } else {
           console.log("❌ [useAuthSession] Nenhum usuário na sessão");
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         }
 
       } catch (error) {
@@ -112,7 +113,6 @@ export const useAuthSession = () => {
           setSession(null);
         }
       } finally {
-        // Garantir que loading seja sempre definido como false
         if (mounted) {
           console.log("✅ [useAuthSession] Finalizando loading da inicialização");
           setLoading(false);
@@ -131,20 +131,28 @@ export const useAuthSession = () => {
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança de estado...");
           try {
-            await loadUserProfile(session.user);
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
           } catch (error) {
             console.error("❌ [useAuthSession] Erro ao carregar perfil:", error);
-            setUser(null);
+            if (mounted) {
+              setUser(null);
+            }
           }
         } else {
           console.log("❌ [useAuthSession] Limpando usuário após mudança de estado");
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         }
 
-        // Garantir que loading seja sempre definido como false após mudanças de estado
         if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
           console.log("✅ [useAuthSession] Finalizando loading após evento:", event);
-          setLoading(false);
+          if (mounted) {
+            setLoading(false);
+          }
         }
       }
     );
