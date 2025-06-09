@@ -122,14 +122,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Create context value with safe defaults while loading
   const value: AuthContextType = {
-    user,
-    session,
+    user: user || null,
+    session: session || null,
     loading,
     isAuthenticated: !!user && !!user.tipo,
     login,
     logout
   };
+
+  // Don't render children until we have determined the auth state
+  // This prevents the useAuth hook from being called before the context is ready
+  if (loading) {
+    return (
+      <AuthContext.Provider value={value}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

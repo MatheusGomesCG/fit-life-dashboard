@@ -3,25 +3,50 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
+import LoadingSpinner from "./LoadingSpinner";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const {
-    isAuthenticated,
-    user,
-    logout,
-    loading
-  } = useAuth();
+  const authContext = useAuth();
   const location = useLocation();
+
+  // Safe destructuring with fallbacks
+  const {
+    isAuthenticated = false,
+    user = null,
+    logout = () => {},
+    loading = true
+  } = authContext || {};
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
   // Verificar se é a página inicial ou login
   const shouldHideSidebar = location.pathname === "/" || location.pathname === "/login";
+
+  // Show loading spinner while auth is loading
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Activity className="h-8 w-8 text-fitness-primary" />
+              <Link to="/" className="text-xl font-bold text-fitness-dark hover:text-fitness-primary">
+                GymCloud
+              </Link>
+            </div>
+          </div>
+        </header>
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="large" />
+        </div>
+      </div>
+    );
+  }
 
   // Define os itens de menu com base no tipo de usuário (aluno ou professor)
   const menuItems = user?.tipo === "professor" ? [{
@@ -91,7 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           
           {/* Mostrar info do usuário apenas se autenticado e não carregando */}
-          {!loading && isAuthenticated && user && user.tipo && (
+          {isAuthenticated && user && user.tipo && (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
@@ -110,7 +135,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
 
           {/* Mostrar botões de login para usuários não autenticados em rotas públicas */}
-          {!loading && !isAuthenticated && isPublicRoute && location.pathname === "/" && (
+          {!isAuthenticated && isPublicRoute && location.pathname === "/" && (
             <div className="flex items-center gap-2">
               <Link 
                 to="/login?tipo=professor" 
@@ -132,7 +157,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
         {/* Barra lateral - Mostrar apenas para usuários autenticados e não em rotas públicas */}
-        {!loading && !shouldHideSidebar && isAuthenticated && user?.tipo && (
+        {!shouldHideSidebar && isAuthenticated && user?.tipo && (
           <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map(item => {
