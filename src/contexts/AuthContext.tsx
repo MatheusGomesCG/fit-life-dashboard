@@ -8,7 +8,7 @@ import { useAuthSession } from "@/hooks/useAuthSession";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, session, loading, loadUserProfile } = useAuthSession();
+  const { user, session, loading } = useAuthSession();
 
   const login = async (email: string, password: string) => {
     try {

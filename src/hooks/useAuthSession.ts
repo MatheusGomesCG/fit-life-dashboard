@@ -70,45 +70,21 @@ export const useAuthSession = () => {
       try {
         console.log("🚀 [useAuthSession] Inicializando...");
         
-        // Primeiro verificar se há sessão
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("❌ [useAuthSession] Erro ao obter sessão:", error);
-          if (mounted) {
-            setUser(null);
-            setSession(null);
-            setLoading(false);
-          }
-          return;
-        }
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (!mounted) return;
 
-        const currentSession = data?.session;
-        console.log("📝 [useAuthSession] Sessão atual:", currentSession ? "encontrada" : "não encontrada");
+        console.log("📝 [useAuthSession] Sessão inicial:", session ? "encontrada" : "não encontrada");
         
-        setSession(currentSession);
+        setSession(session);
 
-        if (currentSession?.user) {
-          console.log("👤 [useAuthSession] Usuário encontrado, carregando perfil...");
-          try {
-            const enhancedUser = await loadUserProfile(currentSession.user);
-            if (mounted) {
-              setUser(enhancedUser);
-            }
-          } catch (profileError) {
-            console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
-            if (mounted) {
-              setUser({
-                ...currentSession.user,
-                nome: currentSession.user.email?.split("@")[0] || "Usuário",
-                tipo: undefined
-              });
-            }
+        if (session?.user) {
+          console.log("👤 [useAuthSession] Carregando perfil inicial...");
+          const enhancedUser = await loadUserProfile(session.user);
+          if (mounted) {
+            setUser(enhancedUser);
           }
         } else {
-          console.log("❌ [useAuthSession] Nenhum usuário na sessão");
           if (mounted) {
             setUser(null);
           }
@@ -127,8 +103,7 @@ export const useAuthSession = () => {
       }
     };
 
-    // Configurar listener de mudanças de auth
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 [useAuthSession] Evento de auth:", event);
         
@@ -138,20 +113,9 @@ export const useAuthSession = () => {
 
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança...");
-          try {
-            const enhancedUser = await loadUserProfile(session.user);
-            if (mounted) {
-              setUser(enhancedUser);
-            }
-          } catch (profileError) {
-            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: undefined
-              });
-            }
+          const enhancedUser = await loadUserProfile(session.user);
+          if (mounted) {
+            setUser(enhancedUser);
           }
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
@@ -162,19 +126,17 @@ export const useAuthSession = () => {
       }
     );
 
-    // Inicializar
     initialize();
 
     return () => {
       mounted = false;
-      listener.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
   return {
     user,
     session,
-    loading,
-    loadUserProfile
+    loading
   };
 };
