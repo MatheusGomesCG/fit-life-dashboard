@@ -161,13 +161,13 @@ export const useAuthSession = () => {
       }
     };
 
-    // Timeout de segurança
+    // Timeout de segurança - reduzido para 3 segundos
     const timeout = setTimeout(() => {
       if (mounted && loading) {
         console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
         setLoading(false);
       }
-    }, 5000);
+    }, 3000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {

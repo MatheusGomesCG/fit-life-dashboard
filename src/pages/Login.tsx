@@ -47,7 +47,17 @@ const Login: React.FC = () => {
       
       if (error) {
         console.error("❌ [Login] Erro:", error);
-        toast.error(error.message || "Erro no login");
+        
+        // Mensagens de erro mais amigáveis
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email ou senha incorretos. Verifique seus dados e tente novamente.");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else if (error.message.includes("Too many requests")) {
+          toast.error("Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.");
+        } else {
+          toast.error("Erro no login. Tente novamente.");
+        }
         return;
       }
       
