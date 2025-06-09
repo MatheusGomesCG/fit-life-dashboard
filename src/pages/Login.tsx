@@ -3,94 +3,54 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Activity, LogIn, ArrowLeft, AlertCircle } from "lucide-react";
+import { Activity, LogIn, ArrowLeft } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<string>("");
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
+
+  // Redirecionar se já estiver logado
+  React.useEffect(() => {
+    if (user?.tipo) {
+      if (user.tipo === "professor") {
+        navigate("/dashboard-professor", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setDebugInfo("");
 
     try {
       console.log("🔐 [Login] Tentando fazer login...");
-      console.log("📧 [Login] Email:", email);
-      console.log("🔗 [Login] URL atual:", window.location.href);
       
-      const { error, user: loggedInUser } = await login(email, password);
+      const { error } = await login(email, password);
       
       if (error) {
-        console.error("❌ [Login] Erro no login:", error);
-        
-        // Informações de debug para o usuário
-        const debugMessage = `
-Detalhes do erro:
-- Mensagem: ${error.message}
-- Email utilizado: ${email}
-- Timestamp: ${new Date().toISOString()}
-- URL da aplicação: ${window.location.origin}
-        `.trim();
-        
-        setDebugInfo(debugMessage);
-        
-        // Mensagem de erro específica baseada no tipo de erro
-        let userErrorMessage = "Erro no login. Tente novamente.";
-        
-        if (error.message.includes("Credenciais inválidas")) {
-          userErrorMessage = "Email ou senha incorretos. Verifique os dados e tente novamente.";
-        } else if (error.message.includes("Email não confirmado")) {
-          userErrorMessage = "Confirme seu email antes de fazer login. Verifique sua caixa de entrada.";
-        } else if (error.message.includes("Muitas tentativas")) {
-          userErrorMessage = "Muitas tentativas de login. Aguarde alguns minutos.";
-        } else if (error.message.includes("configuração")) {
-          userErrorMessage = "Erro de configuração do sistema. Entre em contato com o suporte.";
-        } else if (error.message.includes("conexão")) {
-          userErrorMessage = "Erro de conexão. Verifique sua internet e tente novamente.";
-        }
-        
-        toast.error(userErrorMessage);
-        throw error;
+        console.error("❌ [Login] Erro:", error);
+        toast.error(error.message || "Erro no login");
+        return;
       }
       
-      if (loggedInUser?.tipo) {
-        console.log("✅ [Login] Login realizado com sucesso! Tipo:", loggedInUser.tipo);
-        toast.success("Login realizado com sucesso!");
-        
-        // Aguardar um pouco para o toast aparecer antes do redirecionamento
-        setTimeout(() => {
-          // Redirecionamento baseado no tipo de usuário
-          if (loggedInUser.tipo === "professor") {
-            console.log("👨‍🏫 [Login] Redirecionando professor para dashboard-professor");
-            navigate("/dashboard-professor", { replace: true });
-          } else if (loggedInUser.tipo === "aluno") {
-            console.log("👨‍🎓 [Login] Redirecionando aluno para dashboard");
-            navigate("/dashboard", { replace: true });
-          } else if (loggedInUser.tipo === "admin") {
-            console.log("👨‍💼 [Login] Redirecionando admin para dashboard");
-            navigate("/dashboard", { replace: true });
-          } else {
-            console.log("❓ [Login] Tipo de usuário não reconhecido:", loggedInUser.tipo);
-            toast.error("Tipo de usuário não reconhecido. Entre em contato com o suporte.");
-          }
-        }, 1000);
-      } else {
-        console.error("⚠️ [Login] Login bem-sucedido mas tipo de usuário não identificado");
-        toast.error("Perfil de usuário não encontrado no banco de dados. Entre em contato com o suporte.");
-      }
+      console.log("✅ [Login] Login iniciado com sucesso");
+      toast.success("Login realizado com sucesso!");
+      
+      // O redirecionamento será feito pelo useEffect quando o user for carregado
+      
     } catch (error: any) {
-      console.error("❌ [Login] Erro no login:", error);
-      // O erro já foi tratado acima, não precisa fazer nada aqui
+      console.error("❌ [Login] Erro:", error);
+      toast.error("Erro inesperado no login");
     } finally {
       setLoading(false);
     }
@@ -127,6 +87,7 @@ Detalhes do erro:
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -144,6 +105,7 @@ Detalhes do erro:
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
           </div>
@@ -151,7 +113,7 @@ Detalhes do erro:
           <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fitness-primary hover:bg-fitness-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fitness-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-fitness-primary hover:bg-fitness-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fitness-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={loading}
             >
               {loading ? (
@@ -164,22 +126,6 @@ Detalhes do erro:
               )}
             </button>
           </div>
-
-          {debugInfo && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 mr-2 flex-shrink-0" />
-                <div>
-                  <h3 className="text-sm font-medium text-red-800 mb-2">
-                    Informações de Debug
-                  </h3>
-                  <pre className="text-xs text-red-700 whitespace-pre-wrap font-mono">
-                    {debugInfo}
-                  </pre>
-                </div>
-              </div>
-            </div>
-          )}
 
           <div className="flex justify-center">
             <Link to="/" className="text-sm text-fitness-secondary hover:underline flex items-center">

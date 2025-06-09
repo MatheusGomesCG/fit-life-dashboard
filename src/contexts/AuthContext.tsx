@@ -12,46 +12,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🚀 [AuthContext] Iniciando processo de login...");
+      console.log("🚀 [AuthContext] Iniciando login...");
       
-      // Validação básica dos dados de entrada
       if (!email || !password) {
         throw new Error("Email e senha são obrigatórios");
       }
       
       if (!email.includes("@")) {
         throw new Error("Formato de e-mail inválido");
-      }
-
-      // Verificação da configuração do Supabase
-      console.log("🔗 [AuthContext] Verificando configuração do Supabase...");
-      const supabaseUrl = "https://attubruszbhhkjbbqcgp.supabase.co";
-      const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0dHVicnVzemJoaGtqYmJxY2dwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5MDU0NzUsImV4cCI6MjA2NDQ4MTQ3NX0.ERPeTiDlE6mk74APuh4Pd6TS2-ZUl42dh_qDsuQALVE";
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.error("❌ [AuthContext] Variáveis do Supabase não encontradas!");
-        throw new Error("Erro de configuração: Credenciais do Supabase não encontradas");
-      }
-
-      // Teste básico de conexão com Supabase
-      console.log("🔗 [AuthContext] Testando conexão com Supabase...");
-      try {
-        const { data: connectionTest, error: connectionError } = await supabase
-          .from('professor_profiles')
-          .select('count')
-          .limit(1);
-        
-        console.log("🔗 [AuthContext] Resultado do teste de conexão:", { connectionTest, connectionError });
-        
-        if (connectionError && connectionError.code !== 'PGRST301') {
-          console.error("❌ [AuthContext] Erro na conexão com Supabase:", connectionError);
-          throw new Error(`Erro de conexão com o banco de dados: ${connectionError.message}`);
-        }
-        
-        console.log("✅ [AuthContext] Conexão com Supabase OK");
-      } catch (testError) {
-        console.error("❌ [AuthContext] Falha no teste de conexão:", testError);
-        throw new Error("Falha na conexão com o banco de dados. Verifique sua conexão de internet.");
       }
 
       console.log("🔐 [AuthContext] Fazendo autenticação...");
@@ -61,49 +29,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error("❌ [AuthContext] Erro no login:", {
-          code: error.code,
-          message: error.message,
-          status: error.status
-        });
+        console.error("❌ [AuthContext] Erro no login:", error);
         
-        // Tratamento específico de erros comuns
         if (error.message.includes("Invalid login credentials")) {
           throw new Error("Credenciais inválidas. Verifique seu email e senha.");
         } else if (error.message.includes("Email not confirmed")) {
           throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
         } else if (error.message.includes("Too many requests")) {
-          throw new Error("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
-        } else if (error.message.includes("Invalid API key")) {
-          throw new Error("Erro de configuração: Chave de API inválida. Entre em contato com o suporte.");
+          throw new Error("Muitas tentativas de login. Aguarde alguns minutos.");
         } else {
           throw new Error(`Erro de autenticação: ${error.message}`);
         }
       }
 
       if (data.user) {
-        console.log("✅ [AuthContext] Login autenticado com sucesso, carregando perfil...");
+        console.log("✅ [AuthContext] Login autenticado, aguardando carregamento do perfil...");
         
-        // Carregar o perfil completo do usuário
-        const enhancedUser = await loadUserProfile(data.user);
-        console.log("🎯 [AuthContext] Usuário logado:", {
-          id: enhancedUser.id,
-          email: enhancedUser.email,
-          nome: enhancedUser.nome,
-          tipo: enhancedUser.tipo
-        });
-        
-        // Verificar se o usuário tem um tipo válido
-        if (!enhancedUser.tipo) {
-          console.error("❌ [AuthContext] Perfil não encontrado no banco de dados");
-          throw new Error("Perfil de usuário não encontrado no banco de dados. Verifique se você tem um perfil criado ou entre em contato com o suporte.");
-        }
-        
-        console.log("✅ [AuthContext] Login realizado com sucesso! Tipo:", enhancedUser.tipo);
-        return { error: null, user: enhancedUser };
+        // Aguardar o hook carregar o perfil automaticamente
+        // O useAuthSession vai detectar a mudança e carregar o perfil
+        return { error: null };
       }
 
-      throw new Error("Falha na autenticação. Tente novamente.");
+      throw new Error("Falha na autenticação");
     } catch (error: any) {
       console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
@@ -122,7 +69,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sempre fornecer um valor válido para o contexto, mesmo durante o loading
   const value: AuthContextType = {
     user: user || null,
     session: session || null,
