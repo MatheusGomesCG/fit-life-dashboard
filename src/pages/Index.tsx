@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,15 +8,33 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 const Index: React.FC = () => {
   const { isAuthenticated, loading, user } = useAuth();
 
-  if (loading) {
+  // Adicionar timeout para fallback em caso de loading infinito
+  const [showFallback, setShowFallback] = React.useState(false);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn("⚠️ [Index] Loading demorou mais que 15 segundos, mostrando fallback");
+        setShowFallback(true);
+      }
+    }, 15000);
+
+    return () => clearTimeout(timer);
+  }, [loading]);
+
+  // Se loading está true por muito tempo, mostrar fallback
+  if (loading && !showFallback) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="text-center">
+          <LoadingSpinner size="large" />
+          <p className="mt-4 text-gray-600">Carregando GymCloud...</p>
+        </div>
       </div>
     );
   }
 
-  // Landing page content (now accessible to both authenticated and non-authenticated users)
+  // Landing page content (acessível tanto para usuários autenticados quanto não autenticados)
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Hero Section */}

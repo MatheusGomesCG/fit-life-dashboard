@@ -77,29 +77,45 @@ export const useAuthSession = () => {
     const initialize = async () => {
       try {
         console.log("🚀 [useAuthSession] Inicializando sessão de autenticação...");
-        const { data } = await supabase.auth.getSession();
+        
+        // Adicionar timeout para evitar loading infinito
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Session timeout')), 10000)
+        );
+        
+        const { data } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
         if (!mounted) return;
 
-        const currentSession = data.session;
+        const currentSession = data?.session;
         console.log("📋 [useAuthSession] Sessão atual:", currentSession ? "Encontrada" : "Não encontrada");
         setSession(currentSession);
 
         if (currentSession?.user) {
           console.log("👤 [useAuthSession] Usuário encontrado na sessão, carregando perfil...");
-          await loadUserProfile(currentSession.user);
+          try {
+            await loadUserProfile(currentSession.user);
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
+            setUser(null);
+          }
         } else {
           console.log("❌ [useAuthSession] Nenhum usuário na sessão");
           setUser(null);
         }
 
-        setLoading(false);
       } catch (error) {
         console.error("❌ [useAuthSession] Erro na inicialização:", error);
         if (mounted) {
-          setLoading(false);
           setUser(null);
           setSession(null);
+        }
+      } finally {
+        // Garantir que loading seja sempre definido como false
+        if (mounted) {
+          console.log("✅ [useAuthSession] Finalizando loading da inicialização");
+          setLoading(false);
         }
       }
     };
@@ -125,8 +141,9 @@ export const useAuthSession = () => {
           setUser(null);
         }
 
-        // Definir loading como false após processar a mudança de estado
+        // Garantir que loading seja sempre definido como false após mudanças de estado
         if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          console.log("✅ [useAuthSession] Finalizando loading após evento:", event);
           setLoading(false);
         }
       }
