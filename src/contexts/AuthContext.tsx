@@ -122,9 +122,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Sempre fornecer um valor válido para o contexto, mesmo durante o loading
   const value: AuthContextType = {
-    user,
-    session,
+    user: user || null,
+    session: session || null,
     loading,
     isAuthenticated: !!user && !!user.tipo,
     login,
@@ -136,7 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
