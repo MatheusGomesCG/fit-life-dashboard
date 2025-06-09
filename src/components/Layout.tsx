@@ -10,16 +10,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const authContext = useAuth();
+  const { isAuthenticated, user, logout, loading } = useAuth();
   const location = useLocation();
-
-  // Safe destructuring with fallbacks
-  const {
-    isAuthenticated = false,
-    user = null,
-    logout = () => {},
-    loading = true
-  } = authContext || {};
 
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
