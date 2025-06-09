@@ -81,13 +81,13 @@ export const useAuthSession = () => {
         
         if (!mounted) return;
 
-        const session = data.session;
-        console.log("📋 [useAuthSession] Sessão atual:", session ? "Encontrada" : "Não encontrada");
-        setSession(session);
+        const currentSession = data.session;
+        console.log("📋 [useAuthSession] Sessão atual:", currentSession ? "Encontrada" : "Não encontrada");
+        setSession(currentSession);
 
-        if (session?.user) {
+        if (currentSession?.user) {
           console.log("👤 [useAuthSession] Usuário encontrado na sessão, carregando perfil...");
-          await loadUserProfile(session.user);
+          await loadUserProfile(currentSession.user);
         } else {
           console.log("❌ [useAuthSession] Nenhum usuário na sessão");
           setUser(null);
@@ -125,7 +125,10 @@ export const useAuthSession = () => {
           setUser(null);
         }
 
-        setLoading(false);
+        // Definir loading como false após processar a mudança de estado
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          setLoading(false);
+        }
       }
     );
 

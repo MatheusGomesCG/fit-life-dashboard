@@ -12,9 +12,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("🚀 Iniciando processo de login...");
-      if (!email || !password) throw new Error("Email e senha são obrigatórios");
-      if (!email.includes("@")) throw new Error("Formato de e-mail inválido");
+      console.log("🚀 [AuthContext] Iniciando processo de login...");
+      
+      if (!email || !password) {
+        throw new Error("Email e senha são obrigatórios");
+      }
+      
+      if (!email.includes("@")) {
+        throw new Error("Formato de e-mail inválido");
+      }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
@@ -22,18 +28,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error("❌ Erro no login:", error);
-        throw error;
+        console.error("❌ [AuthContext] Erro no login:", error);
+        
+        // Tratar diferentes tipos de erro
+        if (error.message.includes("Invalid login credentials")) {
+          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
+        } else if (error.message.includes("Email not confirmed")) {
+          throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
+        } else {
+          throw new Error(error.message);
+        }
       }
 
       if (data.user) {
-        console.log("✅ Login realizado com sucesso, carregando perfil...");
+        console.log("✅ [AuthContext] Login realizado, carregando perfil...");
         
         // Aguardar um momento para o sistema processar a autenticação
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         const enhancedUser = await loadUserProfile(data.user);
-        console.log("🎯 Usuário logado:", {
+        console.log("🎯 [AuthContext] Usuário logado:", {
           id: enhancedUser.id,
           email: enhancedUser.email,
           nome: enhancedUser.nome,
@@ -44,20 +58,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       return { error: null };
-    } catch (error) {
-      console.error("❌ Erro no login:", error);
+    } catch (error: any) {
+      console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
     }
   };
 
   const logout = async () => {
     try {
-      console.log("🚪 Fazendo logout...");
+      console.log("🚪 [AuthContext] Fazendo logout...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      console.log("✅ Logout realizado com sucesso");
+      console.log("✅ [AuthContext] Logout realizado com sucesso");
     } catch (error) {
-      console.error("❌ Erro ao fazer logout:", error);
+      console.error("❌ [AuthContext] Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };

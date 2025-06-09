@@ -12,7 +12,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const {
     isAuthenticated,
     user,
-    logout
+    logout,
+    loading
   } = useAuth();
   const location = useLocation();
 
@@ -79,15 +80,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho */}
+      {/* Cabeçalho - mostrar sempre */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Activity className="h-8 w-8 text-fitness-primary" />
-            <h1 className="text-xl font-bold text-fitness-dark">GymCloud</h1>
+            <Link to="/" className="text-xl font-bold text-fitness-dark hover:text-fitness-primary">
+              GymCloud
+            </Link>
           </div>
           
-          {isAuthenticated && user && user.tipo && (
+          {/* Mostrar info do usuário apenas se autenticado e não carregando */}
+          {!loading && isAuthenticated && user && user.tipo && (
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
@@ -104,13 +108,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </button>
             </div>
           )}
+
+          {/* Mostrar botões de login para usuários não autenticados em rotas públicas */}
+          {!loading && !isAuthenticated && isPublicRoute && location.pathname === "/" && (
+            <div className="flex items-center gap-2">
+              <Link 
+                to="/login?tipo=professor" 
+                className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
+              >
+                Professores
+              </Link>
+              <Link 
+                to="/login?tipo=aluno" 
+                className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
+              >
+                Alunos
+              </Link>
+            </div>
+          )}
         </div>
       </header>
 
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
-        {/* Barra lateral - Esconder na página inicial e de login */}
-        {!shouldHideSidebar && isAuthenticated && user?.tipo && (
+        {/* Barra lateral - Mostrar apenas para usuários autenticados e não em rotas públicas */}
+        {!loading && !shouldHideSidebar && isAuthenticated && user?.tipo && (
           <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map(item => {
@@ -137,8 +159,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </aside>
         )}
 
-        {/* Conteúdo principal - Expandir para tela inteira em rotas públicas */}
-        <main className="flex-1 p-6">
+        {/* Conteúdo principal */}
+        <main className={`flex-1 ${shouldHideSidebar ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>
