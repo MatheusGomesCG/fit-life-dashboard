@@ -14,15 +14,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log("🚀 [AuthContext] Iniciando login...");
       
-      if (!email || !password) {
-        throw new Error("Email e senha são obrigatórios");
-      }
-      
-      if (!email.includes("@")) {
-        throw new Error("Formato de e-mail inválido");
-      }
-
-      console.log("🔐 [AuthContext] Fazendo autenticação...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
@@ -30,16 +21,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error("❌ [AuthContext] Erro no login:", error);
-        
-        if (error.message.includes("Invalid login credentials")) {
-          throw new Error("Credenciais inválidas. Verifique seu email e senha.");
-        } else if (error.message.includes("Email not confirmed")) {
-          throw new Error("Email não confirmado. Verifique sua caixa de entrada.");
-        } else if (error.message.includes("Too many requests")) {
-          throw new Error("Muitas tentativas de login. Aguarde alguns minutos.");
-        } else {
-          throw new Error(`Erro de autenticação: ${error.message}`);
-        }
+        return { error };
       }
 
       if (data.user) {
@@ -70,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user: user || null,
     session: session || null,
     loading,
-    isAuthenticated: !!user && !!user.tipo,
+    isAuthenticated: !!user,
     login,
     logout
   };
@@ -78,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   console.log("🔍 [AuthContext] Estado atual:", {
     hasUser: !!user,
     userType: user?.tipo,
-    isAuthenticated: !!user && !!user.tipo,
+    isAuthenticated: !!user,
     loading
   });
 

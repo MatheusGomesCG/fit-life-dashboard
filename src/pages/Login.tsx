@@ -10,7 +10,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, user, isAuthenticated } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -19,22 +19,11 @@ const Login: React.FC = () => {
 
   // Redirecionar se já estiver logado
   React.useEffect(() => {
-    console.log("🔍 [Login] Verificando redirecionamento:", {
-      isAuthenticated,
-      userTipo: user?.tipo,
-      hasUser: !!user
-    });
-
-    if (isAuthenticated && user?.tipo) {
-      console.log("✅ [Login] Redirecionando usuário autenticado:", user.tipo);
-      
-      if (user.tipo === "professor") {
-        navigate("/dashboard-professor", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+    if (isAuthenticated) {
+      console.log("✅ [Login] Redirecionando usuário autenticado");
+      navigate("/dashboard-professor", { replace: true });
     }
-  }, [isAuthenticated, user?.tipo, navigate]);
+  }, [isAuthenticated, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -43,18 +32,13 @@ const Login: React.FC = () => {
     try {
       console.log("🔐 [Login] Tentando fazer login...");
       
-      const { error, user: loggedUser } = await login(email, password);
+      const { error } = await login(email, password);
       
       if (error) {
         console.error("❌ [Login] Erro:", error);
         
-        // Mensagens de erro mais amigáveis
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos. Verifique seus dados e tente novamente.");
-        } else if (error.message.includes("Email not confirmed")) {
-          toast.error("Email não confirmado. Verifique sua caixa de entrada.");
-        } else if (error.message.includes("Too many requests")) {
-          toast.error("Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.");
         } else {
           toast.error("Erro no login. Tente novamente.");
         }
@@ -64,19 +48,8 @@ const Login: React.FC = () => {
       console.log("✅ [Login] Login realizado com sucesso");
       toast.success("Login realizado com sucesso!");
       
-      // Se temos o usuário retornado e ele tem tipo, redirecionar imediatamente
-      if (loggedUser?.email) {
-        console.log("🎯 [Login] Redirecionamento direto baseado no tipo da página");
-        
-        // Redirecionar baseado no tipo da página de login
-        if (userType === "professor") {
-          console.log("➡️ [Login] Redirecionando para dashboard professor");
-          navigate("/dashboard-professor", { replace: true });
-        } else {
-          console.log("➡️ [Login] Redirecionando para dashboard aluno");
-          navigate("/dashboard", { replace: true });
-        }
-      }
+      // Redirecionar para o dashboard
+      navigate("/dashboard-professor", { replace: true });
       
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);
