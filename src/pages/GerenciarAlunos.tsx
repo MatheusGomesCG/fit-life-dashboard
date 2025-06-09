@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   listarAlunos,
   excluirAluno,
@@ -32,27 +33,56 @@ import { Edit, Trash, UserPlus, Search, FileText, Camera } from "lucide-react";
 
 const GerenciarAlunos: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [filtro, setFiltro] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [alunoToDelete, setAlunoToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    carregarAlunos();
-  }, []);
-
   const carregarAlunos = async () => {
     try {
+      console.log("🚀 [GerenciarAlunos] Iniciando carregamento de alunos", {
+        isAuthenticated,
+        userType: user?.tipo,
+        authLoading
+      });
+      
       setIsLoading(true);
       const data = await listarAlunos();
       setAlunos(data);
+      console.log("✅ [GerenciarAlunos] Alunos carregados:", data.length);
     } catch (error) {
-      console.error("Erro ao carregar alunos:", error);
+      console.error("❌ [GerenciarAlunos] Erro ao carregar alunos:", error);
       toast.error("Erro ao carregar lista de alunos.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    console.log("🔄 [GerenciarAlunos] useEffect executado", {
+      authLoading,
+      isAuthenticated,
+      userType: user?.tipo
+    });
+
+    // Só carrega os alunos se:
+    // 1. A autenticação não está carregando
+    // 2. O usuário está autenticado
+    // 3. O usuário é um professor
+    if (!authLoading && isAuthenticated && user?.tipo === "professor") {
+      console.log("✅ [GerenciarAlunos] Condições atendidas, carregando alunos");
+      carregarAlunos();
+    } else if (!authLoading && (!isAuthenticated || user?.tipo !== "professor")) {
+      console.log("❌ [GerenciarAlunos] Usuário não é professor ou não autenticado");
+      setIsLoading(false);
+      // Se não é professor, redirecionar
+      if (user?.tipo !== "professor") {
+        toast.error("Acesso negado. Apenas professores podem gerenciar alunos.");
+        navigate("/");
+      }
+    }
+  }, [authLoading, isAuthenticated, user?.tipo, navigate]);
 
   const handleEdit = (id: string) => {
     navigate(`/editar-aluno/${id}`);
@@ -84,6 +114,24 @@ const GerenciarAlunos: React.FC = () => {
   const navegarParaFicha = (alunoId: string) => {
     navigate(`/ficha-treino/${alunoId}`);
   };
+
+  // Mostrar loading se ainda está autenticando ou carregando dados
+  if (authLoading || (isAuthenticated && user?.tipo === "professor" && isLoading)) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
+
+  // Se não é professor, mostrar mensagem de acesso negado
+  if (!isAuthenticated || user?.tipo !== "professor") {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p>Acesso restrito a professores.</p>
+      </div>
+    );
+  }
 
   const alunosFiltrados = alunos.filter((aluno) =>
     aluno.nome.toLowerCase().includes(filtro.toLowerCase())
@@ -119,13 +167,9 @@ const GerenciarAlunos: React.FC = () => {
           />
         </div>
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <LoadingSpinner size="large" />
-          </div>
-        ) : alunosFiltrados.length === 0 ? (
+        {alunosFiltrados.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            Nenhum aluno encontrado.
+            {alunos.length === 0 ? "Nenhum aluno cadastrado ainda." : "Nenhum aluno encontrado."}
           </div>
         ) : (
           <div className="overflow-x-auto">

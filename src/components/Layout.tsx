@@ -121,14 +121,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Menu de Navegação do Professor - com debug adicional */}
+      {/* Menu de Navegação do Professor */}
       {shouldShowProfessorNavigation && (
-        <>
-          {console.log("✅ [Layout] Rendering ProfessorNavigation") || null}
-          <ProfessorNavigation />
-        </>
+        <ProfessorNavigation />
       )}
-      {!shouldShowProfessorNavigation && console.log("❌ [Layout] NOT rendering ProfessorNavigation")}
 
       {/* Conteúdo principal */}
       <main className="w-full">
