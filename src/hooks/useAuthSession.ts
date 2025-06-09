@@ -60,10 +60,9 @@ export const useAuthSession = () => {
         };
       }
 
-      // Se não encontrou nenhum perfil, criar um perfil básico
+      // Se não encontrou nenhum perfil, criar um perfil básico baseado na URL
       console.log("⚠️ [loadUserProfile] Nenhum perfil encontrado, criando perfil básico");
       
-      // Se estamos na página de professor, assumir que é professor
       const currentPath = window.location.pathname + window.location.search;
       const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
       
@@ -96,6 +95,7 @@ export const useAuthSession = () => {
 
   useEffect(() => {
     let mounted = true;
+    let profileLoaded = false;
 
     const initialize = async () => {
       try {
@@ -119,8 +119,9 @@ export const useAuthSession = () => {
         
         setSession(session);
 
-        if (session?.user) {
+        if (session?.user && !profileLoaded) {
           console.log("👤 [useAuthSession] Carregando perfil inicial...");
+          profileLoaded = true;
           try {
             const enhancedUser = await loadUserProfile(session.user);
             if (mounted) {
@@ -161,49 +162,59 @@ export const useAuthSession = () => {
       }
     };
 
-    // Timeout de segurança - reduzido para 3 segundos
+    // Timeout de segurança - reduzido para 2 segundos
     const timeout = setTimeout(() => {
       if (mounted && loading) {
         console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
         setLoading(false);
       }
-    }, 3000);
+    }, 2000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("🔄 [useAuthSession] Evento de auth:", event);
         
         if (!mounted) return;
         
+        // Ignorar eventos de refresh de token para evitar loop
+        if (event === 'TOKEN_REFRESHED') {
+          console.log("🔄 [useAuthSession] Token refreshed - ignorando para evitar loop");
+          return;
+        }
+        
         setSession(session);
 
-        if (session?.user) {
-          console.log("👤 [useAuthSession] Carregando perfil após mudança...");
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log("👤 [useAuthSession] Carregando perfil após login...");
           
-          // IMPORTANTE: Não usar setTimeout aqui para evitar loop infinito
-          try {
-            const enhancedUser = await loadUserProfile(session.user);
-            if (mounted) {
-              setUser(enhancedUser);
-              setLoading(false);
-              console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+          // Usar um setTimeout para quebrar o ciclo e evitar deadlock
+          setTimeout(async () => {
+            if (!mounted) return;
+            
+            try {
+              const enhancedUser = await loadUserProfile(session.user);
+              if (mounted) {
+                setUser(enhancedUser);
+                setLoading(false);
+                console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+              }
+            } catch (profileError) {
+              console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+              if (mounted) {
+                const currentPath = window.location.pathname + window.location.search;
+                const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
+                const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+                
+                setUser({
+                  ...session.user,
+                  nome: session.user.email?.split("@")[0] || "Usuário",
+                  tipo: defaultUserType as "professor" | "aluno"
+                });
+                setLoading(false);
+              }
             }
-          } catch (profileError) {
-            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
-            if (mounted) {
-              const currentPath = window.location.pathname + window.location.search;
-              const isFromProfessorLogin = currentPath.includes('tipo=professor') || currentPath.includes('dashboard-professor');
-              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
-              
-              setUser({
-                ...session.user,
-                nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: defaultUserType as "professor" | "aluno"
-              });
-              setLoading(false);
-            }
-          }
-        } else {
+          }, 100);
+        } else if (!session) {
           console.log("❌ [useAuthSession] Limpando usuário");
           if (mounted) {
             setUser(null);
@@ -217,6 +228,7 @@ export const useAuthSession = () => {
 
     return () => {
       mounted = false;
+      profileLoaded = false;
       clearTimeout(timeout);
       subscription.unsubscribe();
     };

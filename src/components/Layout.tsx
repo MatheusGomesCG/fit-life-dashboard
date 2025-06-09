@@ -48,7 +48,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
-  // Lógica mais robusta para determinar se deve mostrar o menu
+  // Lógica para determinar se deve mostrar o menu do professor
   const shouldShowProfessorNavigation = !loading && 
     isAuthenticated && 
     user && 
