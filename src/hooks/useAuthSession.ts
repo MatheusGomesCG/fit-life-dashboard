@@ -14,11 +14,15 @@ export const useAuthSession = () => {
       console.log("🔍 [loadUserProfile] Carregando perfil para:", authUser.id);
       
       // Primeiro, tentar professor
-      const { data: professorData } = await supabase
+      const { data: professorData, error: professorError } = await supabase
         .from('professor_profiles')
         .select('nome')
         .eq('user_id', authUser.id)
         .maybeSingle();
+
+      if (professorError) {
+        console.warn("⚠️ [loadUserProfile] Erro ao buscar professor:", professorError);
+      }
 
       if (professorData) {
         console.log("✅ [loadUserProfile] Professor encontrado:", professorData.nome);
@@ -30,11 +34,15 @@ export const useAuthSession = () => {
       }
 
       // Se não for professor, tentar aluno
-      const { data: alunoData } = await supabase
+      const { data: alunoData, error: alunoError } = await supabase
         .from('aluno_profiles')
         .select('nome')
         .eq('user_id', authUser.id)
         .maybeSingle();
+
+      if (alunoError) {
+        console.warn("⚠️ [loadUserProfile] Erro ao buscar aluno:", alunoError);
+      }
 
       if (alunoData) {
         console.log("✅ [loadUserProfile] Aluno encontrado:", alunoData.nome);
@@ -70,8 +78,18 @@ export const useAuthSession = () => {
       try {
         console.log("🚀 [useAuthSession] Inicializando...");
         
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
+        if (error) {
+          console.error("❌ [useAuthSession] Erro ao obter sessão:", error);
+          if (mounted) {
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+          }
+          return;
+        }
+
         if (!mounted) return;
 
         console.log("📝 [useAuthSession] Sessão inicial:", session ? "encontrada" : "não encontrada");
@@ -80,9 +98,20 @@ export const useAuthSession = () => {
 
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil inicial...");
-          const enhancedUser = await loadUserProfile(session.user);
-          if (mounted) {
-            setUser(enhancedUser);
+          try {
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
+            if (mounted) {
+              setUser({
+                ...session.user,
+                nome: session.user.email?.split("@")[0] || "Usuário",
+                tipo: undefined
+              });
+            }
           }
         } else {
           if (mounted) {
@@ -103,6 +132,14 @@ export const useAuthSession = () => {
       }
     };
 
+    // Timeout de segurança para garantir que o loading nunca fique infinito
+    const timeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
+        setLoading(false);
+      }
+    }, 10000); // 10 segundos
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log("🔄 [useAuthSession] Evento de auth:", event);
@@ -113,9 +150,20 @@ export const useAuthSession = () => {
 
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança...");
-          const enhancedUser = await loadUserProfile(session.user);
-          if (mounted) {
-            setUser(enhancedUser);
+          try {
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+            if (mounted) {
+              setUser({
+                ...session.user,
+                nome: session.user.email?.split("@")[0] || "Usuário",
+                tipo: undefined
+              });
+            }
           }
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
@@ -130,6 +178,7 @@ export const useAuthSession = () => {
 
     return () => {
       mounted = false;
+      clearTimeout(timeout);
       subscription.unsubscribe();
     };
   }, []);

@@ -17,13 +17,16 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   };
 
   return (
-    <div className={`flex justify-center items-center ${className}`}>
-      <div
-        className={`${sizeClasses[size]} rounded-full border-t-fitness-primary border-r-transparent border-b-fitness-primary border-l-transparent animate-spin`}
-        role="status"
-        aria-label="Carregando..."
-      >
-        <span className="sr-only">Carregando...</span>
+    <div className={`flex justify-center items-center min-h-[200px] ${className}`}>
+      <div className="text-center">
+        <div
+          className={`${sizeClasses[size]} mx-auto rounded-full border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent animate-spin`}
+          role="status"
+          aria-label="Carregando..."
+        >
+          <span className="sr-only">Carregando...</span>
+        </div>
+        <p className="mt-4 text-gray-600 text-sm">Carregando GymCloud...</p>
       </div>
     </div>
   );
