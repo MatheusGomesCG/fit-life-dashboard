@@ -24,17 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error };
       }
 
-      if (data.user && data.session) {
-        console.log("✅ [AuthContext] Login realizado com sucesso:", {
-          userId: data.user.id,
-          email: data.user.email
-        });
-        
-        // A validação do professor será feita pelo useAuthSession
-        return { error: null, user: data.user };
-      }
-
-      throw new Error("Falha na autenticação - dados incompletos");
+      console.log("✅ [AuthContext] Login realizado com sucesso");
+      return { error: null, user: data.user };
     } catch (error: any) {
       console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
@@ -47,17 +38,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       console.log("✅ [AuthContext] Logout realizado com sucesso");
+      toast.success("Logout realizado com sucesso!");
     } catch (error) {
       console.error("❌ [AuthContext] Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };
 
+  const isAuthenticated = !!user && !!session && user.tipo === "professor";
+
   const value: AuthContextType = {
     user: user || null,
     session: session || null,
     loading,
-    isAuthenticated: !!user && !!session && user.tipo === "professor",
+    isAuthenticated,
     login,
     logout
   };
@@ -67,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     hasSession: !!session,
     userEmail: user?.email,
     userType: user?.tipo,
-    isAuthenticated: !!user && !!session && user.tipo === "professor",
+    isAuthenticated,
     loading
   });
 

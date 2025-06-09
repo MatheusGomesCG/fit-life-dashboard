@@ -13,7 +13,6 @@ export const useAuthSession = () => {
     try {
       console.log("🔍 [useAuthSession] Validando perfil de professor para:", authUser.id);
       
-      // Verificar se existe perfil de professor
       const { data: professorProfile, error } = await supabase
         .from('professor_profiles')
         .select('*')
@@ -34,7 +33,10 @@ export const useAuthSession = () => {
         ...authUser,
         nome: professorProfile.nome,
         tipo: "professor" as const,
-        profile: professorProfile
+        profile: {
+          ...professorProfile,
+          status: professorProfile.status as "ativo" | "inativo" | "suspenso"
+        }
       };
     } catch (error) {
       console.error("❌ [useAuthSession] Erro ao validar professor:", error);
@@ -45,63 +47,86 @@ export const useAuthSession = () => {
   useEffect(() => {
     let mounted = true;
 
-    const handleAuthChange = async (event: string, currentSession: Session | null) => {
-      console.log("🔄 [useAuthSession] Auth event:", event, {
-        hasSession: !!currentSession,
-        userId: currentSession?.user?.id
-      });
-      
-      if (!mounted) return;
-
-      if (currentSession?.user) {
-        console.log("🔍 [useAuthSession] Validando usuário...");
-        const validatedUser = await validateProfessorProfile(currentSession.user);
+    const initializeAuth = async () => {
+      try {
+        console.log("🔍 [useAuthSession] Inicializando autenticação...");
         
-        if (validatedUser) {
-          setUser(validatedUser);
-          setSession(currentSession);
-          console.log("✅ [useAuthSession] Usuário autenticado como professor:", {
-            userId: validatedUser.id,
-            email: validatedUser.email,
-            nome: validatedUser.nome
-          });
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (initialSession?.user) {
+          const validatedUser = await validateProfessorProfile(initialSession.user);
+          
+          if (mounted) {
+            if (validatedUser) {
+              setUser(validatedUser);
+              setSession(initialSession);
+              console.log("✅ [useAuthSession] Usuário autenticado:", validatedUser.nome);
+            } else {
+              console.log("❌ [useAuthSession] Professor não válido, fazendo logout");
+              await supabase.auth.signOut();
+              setUser(null);
+              setSession(null);
+            }
+          }
         } else {
-          console.log("❌ [useAuthSession] Usuário não é professor válido, fazendo logout");
-          // Usuário não é professor válido, fazer logout
-          await supabase.auth.signOut();
+          if (mounted) {
+            setUser(null);
+            setSession(null);
+            console.log("👤 [useAuthSession] Nenhuma sessão encontrada");
+          }
+        }
+      } catch (error) {
+        console.error("❌ [useAuthSession] Erro na inicialização:", error);
+        if (mounted) {
           setUser(null);
           setSession(null);
         }
-      } else {
-        setUser(null);
-        setSession(null);
-        console.log("👤 [useAuthSession] Usuário deslogado");
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      
-      setLoading(false);
     };
 
-    // Verificar sessão atual primeiro
-    console.log("🔍 [useAuthSession] Verificando sessão existente...");
-    supabase.auth.getSession().then(({ data: { session: initialSession }, error }) => {
-      if (error) {
-        console.error("❌ [useAuthSession] Erro ao buscar sessão:", error);
+    // Configurar listener de mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      console.log("🔄 [useAuthSession] Auth event:", event);
+      
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT' || !currentSession) {
+        setUser(null);
+        setSession(null);
         setLoading(false);
+        console.log("👤 [useAuthSession] Usuário deslogado");
         return;
       }
-      
-      console.log("📋 [useAuthSession] Sessão inicial:", {
-        hasSession: !!initialSession,
-        userId: initialSession?.user?.id
-      });
-      
-      if (mounted) {
-        handleAuthChange('INITIAL_SESSION', initialSession);
+
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (currentSession?.user) {
+          const validatedUser = await validateProfessorProfile(currentSession.user);
+          
+          if (mounted) {
+            if (validatedUser) {
+              setUser(validatedUser);
+              setSession(currentSession);
+              console.log("✅ [useAuthSession] Usuário validado:", validatedUser.nome);
+            } else {
+              console.log("❌ [useAuthSession] Professor não válido");
+              await supabase.auth.signOut();
+            }
+          }
+        }
+        if (mounted) {
+          setLoading(false);
+        }
       }
     });
 
-    // Configurar listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthChange);
+    // Inicializar
+    initializeAuth();
 
     return () => {
       mounted = false;

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -10,19 +10,21 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirecionar se já estiver logado
-  React.useEffect(() => {
-    if (isAuthenticated) {
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
       console.log("✅ [Login] Redirecionando usuário autenticado");
       navigate("/dashboard-professor", { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, authLoading, navigate]);
   
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    
+    if (loading || authLoading) return;
+    
     setLoading(true);
 
     try {
@@ -35,8 +37,6 @@ const Login: React.FC = () => {
         
         if (error.message.includes("Invalid login credentials")) {
           toast.error("Email ou senha incorretos. Verifique seus dados e tente novamente.");
-        } else if (error.message.includes("não é um professor válido")) {
-          toast.error("Esta conta não tem permissão de professor. Entre em contato com o administrador.");
         } else {
           toast.error("Erro no login. Tente novamente.");
         }
@@ -46,9 +46,6 @@ const Login: React.FC = () => {
       console.log("✅ [Login] Login realizado com sucesso");
       toast.success("Login realizado com sucesso!");
       
-      // Redirecionar para o dashboard
-      navigate("/dashboard-professor", { replace: true });
-      
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);
       toast.error("Erro inesperado no login");
@@ -56,6 +53,15 @@ const Login: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Mostrar loading se ainda está verificando autenticação
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <LoadingSpinner size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
