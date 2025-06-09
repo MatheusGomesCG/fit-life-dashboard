@@ -43,10 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        console.log("✅ [AuthContext] Login autenticado, aguardando carregamento do perfil...");
-        
-        // Aguardar o hook carregar o perfil automaticamente
-        // O useAuthSession vai detectar a mudança e carregar o perfil
+        console.log("✅ [AuthContext] Login realizado com sucesso");
         return { error: null };
       }
 

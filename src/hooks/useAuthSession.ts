@@ -70,6 +70,7 @@ export const useAuthSession = () => {
       try {
         console.log("🚀 [useAuthSession] Inicializando...");
         
+        // Primeiro verificar se há sessão
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -85,13 +86,26 @@ export const useAuthSession = () => {
         if (!mounted) return;
 
         const currentSession = data?.session;
+        console.log("📝 [useAuthSession] Sessão atual:", currentSession ? "encontrada" : "não encontrada");
+        
         setSession(currentSession);
 
         if (currentSession?.user) {
           console.log("👤 [useAuthSession] Usuário encontrado, carregando perfil...");
-          const enhancedUser = await loadUserProfile(currentSession.user);
-          if (mounted) {
-            setUser(enhancedUser);
+          try {
+            const enhancedUser = await loadUserProfile(currentSession.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil:", profileError);
+            if (mounted) {
+              setUser({
+                ...currentSession.user,
+                nome: currentSession.user.email?.split("@")[0] || "Usuário",
+                tipo: undefined
+              });
+            }
           }
         } else {
           console.log("❌ [useAuthSession] Nenhum usuário na sessão");
@@ -113,19 +127,31 @@ export const useAuthSession = () => {
       }
     };
 
+    // Configurar listener de mudanças de auth
     const { data: listener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log("🔄 [useAuthSession] Evento:", event);
+        console.log("🔄 [useAuthSession] Evento de auth:", event);
         
         if (!mounted) return;
         
         setSession(session);
 
         if (session?.user) {
-          console.log("👤 [useAuthSession] Carregando perfil...");
-          const enhancedUser = await loadUserProfile(session.user);
-          if (mounted) {
-            setUser(enhancedUser);
+          console.log("👤 [useAuthSession] Carregando perfil após mudança...");
+          try {
+            const enhancedUser = await loadUserProfile(session.user);
+            if (mounted) {
+              setUser(enhancedUser);
+            }
+          } catch (profileError) {
+            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+            if (mounted) {
+              setUser({
+                ...session.user,
+                nome: session.user.email?.split("@")[0] || "Usuário",
+                tipo: undefined
+              });
+            }
           }
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
@@ -136,6 +162,7 @@ export const useAuthSession = () => {
       }
     );
 
+    // Inicializar
     initialize();
 
     return () => {
