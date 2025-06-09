@@ -17,9 +17,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
-  // Verificar se é a página inicial ou login
-  const shouldHideNavigation = location.pathname === "/" || location.pathname === "/login";
-
   // Show loading spinner while auth is loading
   if (loading) {
     return (
@@ -40,6 +37,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </div>
     );
   }
+
+  // Determinar se deve mostrar o menu de navegação do professor
+  const shouldShowProfessorNavigation = isAuthenticated && 
+    user?.tipo === "professor" && 
+    location.pathname !== "/" && 
+    location.pathname !== "/login";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -92,12 +95,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Menu de Navegação do Professor - apenas para professores autenticados */}
-      {!shouldHideNavigation && isAuthenticated && user?.tipo === "professor" && (
+      {/* Menu de Navegação do Professor - sempre mostrar quando for professor autenticado */}
+      {shouldShowProfessorNavigation && (
         <ProfessorNavigation />
       )}
 
-      {/* Conteúdo principal sem barra lateral */}
+      {/* Conteúdo principal */}
       <main className="w-full">
         {children}
       </main>
