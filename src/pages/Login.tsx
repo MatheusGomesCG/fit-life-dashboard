@@ -22,37 +22,41 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log("🔐 Tentando fazer login...");
+      console.log("🔐 [Login] Tentando fazer login...");
       const { error, user: loggedInUser } = await login(email, password);
       
       if (error) {
-        console.error("❌ Erro no login:", error);
+        console.error("❌ [Login] Erro no login:", error);
         throw error;
       }
       
       if (loggedInUser?.tipo) {
+        console.log("✅ [Login] Login realizado com sucesso! Tipo:", loggedInUser.tipo);
         toast.success("Login realizado com sucesso!");
         
-        // Redirecionamento baseado no tipo de usuário
-        if (loggedInUser.tipo === "professor") {
-          console.log("👨‍🏫 Redirecionando professor para dashboard-professor");
-          navigate("/dashboard-professor", { replace: true });
-        } else if (loggedInUser.tipo === "aluno") {
-          console.log("👨‍🎓 Redirecionando aluno para dashboard");
-          navigate("/dashboard", { replace: true });
-        } else if (loggedInUser.tipo === "admin") {
-          console.log("👨‍💼 Redirecionando admin para dashboard");
-          navigate("/dashboard", { replace: true });
-        } else {
-          console.log("❓ Tipo de usuário não reconhecido:", loggedInUser.tipo);
-          toast.error("Tipo de usuário não reconhecido. Entre em contato com o suporte.");
-        }
+        // Aguardar um pouco para o toast aparecer antes do redirecionamento
+        setTimeout(() => {
+          // Redirecionamento baseado no tipo de usuário
+          if (loggedInUser.tipo === "professor") {
+            console.log("👨‍🏫 [Login] Redirecionando professor para dashboard-professor");
+            navigate("/dashboard-professor", { replace: true });
+          } else if (loggedInUser.tipo === "aluno") {
+            console.log("👨‍🎓 [Login] Redirecionando aluno para dashboard");
+            navigate("/dashboard", { replace: true });
+          } else if (loggedInUser.tipo === "admin") {
+            console.log("👨‍💼 [Login] Redirecionando admin para dashboard");
+            navigate("/dashboard", { replace: true });
+          } else {
+            console.log("❓ [Login] Tipo de usuário não reconhecido:", loggedInUser.tipo);
+            toast.error("Tipo de usuário não reconhecido. Entre em contato com o suporte.");
+          }
+        }, 1000);
       } else {
-        console.warn("⚠️ Login bem-sucedido mas tipo de usuário não identificado");
-        toast.error("Perfil de usuário não encontrado. Entre em contato com o suporte.");
+        console.error("⚠️ [Login] Login bem-sucedido mas tipo de usuário não identificado");
+        toast.error("Perfil de usuário não encontrado no banco de dados. Entre em contato com o suporte.");
       }
     } catch (error: any) {
-      console.error("❌ Erro no login:", error);
+      console.error("❌ [Login] Erro no login:", error);
       const errorMessage = error?.message || "Credenciais inválidas. Por favor, tente novamente.";
       toast.error(errorMessage);
     } finally {

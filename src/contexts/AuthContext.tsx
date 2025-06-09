@@ -40,7 +40,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        console.log("✅ [AuthContext] Login realizado, carregando perfil...");
+        console.log("✅ [AuthContext] Login autenticado com sucesso, carregando perfil...");
         
         // Carregar o perfil completo do usuário
         const enhancedUser = await loadUserProfile(data.user);
@@ -53,13 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         // Verificar se o usuário tem um tipo válido
         if (!enhancedUser.tipo) {
-          throw new Error("Perfil de usuário não encontrado. Entre em contato com o suporte.");
+          console.error("❌ [AuthContext] Perfil não encontrado no banco de dados");
+          throw new Error("Perfil de usuário não encontrado no banco de dados. Verifique se você tem um perfil criado ou entre em contato com o suporte.");
         }
         
+        console.log("✅ [AuthContext] Login realizado com sucesso! Tipo:", enhancedUser.tipo);
         return { error: null, user: enhancedUser };
       }
 
-      return { error: null };
+      throw new Error("Falha na autenticação. Tente novamente.");
     } catch (error: any) {
       console.error("❌ [AuthContext] Erro no login:", error);
       return { error };
