@@ -14,11 +14,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user, logout, loading } = useAuth();
   const location = useLocation();
 
+  // Debug logs para identificar o problema
+  console.log("🔍 [Layout] Debug info:", {
+    pathname: location.pathname,
+    isAuthenticated,
+    userType: user?.tipo,
+    loading,
+    userExists: !!user
+  });
+
   // Verificar se é uma rota pública (login, cadastro de professor ou home)
   const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
 
   // Show loading spinner while auth is loading
   if (loading) {
+    console.log("⏳ [Layout] Showing loading spinner");
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
@@ -38,11 +48,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     );
   }
 
-  // Determinar se deve mostrar o menu de navegação do professor
-  const shouldShowProfessorNavigation = isAuthenticated && 
-    user?.tipo === "professor" && 
+  // Lógica mais robusta para determinar se deve mostrar o menu
+  const shouldShowProfessorNavigation = !loading && 
+    isAuthenticated && 
+    user && 
+    user.tipo === "professor" && 
     location.pathname !== "/" && 
-    location.pathname !== "/login";
+    location.pathname !== "/login" &&
+    location.pathname !== "/cadastrar-professor";
+
+  console.log("📊 [Layout] Navigation decision:", {
+    shouldShowProfessorNavigation,
+    conditions: {
+      notLoading: !loading,
+      isAuthenticated,
+      hasUser: !!user,
+      isProfessor: user?.tipo === "professor",
+      notHomePage: location.pathname !== "/",
+      notLoginPage: location.pathname !== "/login",
+      notSignupPage: location.pathname !== "/cadastrar-professor"
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -95,9 +121,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </header>
 
-      {/* Menu de Navegação do Professor - sempre mostrar quando for professor autenticado */}
-      {shouldShowProfessorNavigation && (
-        <ProfessorNavigation />
+      {/* Menu de Navegação do Professor - com debug adicional */}
+      {shouldShowProfessorNavigation ? (
+        <>
+          {console.log("✅ [Layout] Rendering ProfessorNavigation")}
+          <ProfessorNavigation />
+        </>
+      ) : (
+        console.log("❌ [Layout] NOT rendering ProfessorNavigation")
       )}
 
       {/* Conteúdo principal */}
