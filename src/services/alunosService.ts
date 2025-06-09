@@ -118,14 +118,36 @@ export const calcularPercentualGordura = (
 // Listar todos os alunos
 export const listarAlunos = async (): Promise<Aluno[]> => {
   try {
+    console.log("🔍 [listarAlunos] Iniciando busca de alunos");
+    
+    // Get current user to filter by professor
+    const { data: userData } = await supabase.auth.getUser();
+    console.log("🔍 [listarAlunos] Usuário atual:", userData.user?.id);
+    
+    if (!userData.user) {
+      console.log("❌ [listarAlunos] Usuário não autenticado");
+      throw new Error("Usuário não autenticado");
+    }
+
     const { data, error } = await supabase
       .from('aluno_profiles')
       .select('*')
+      .eq('professor_id', userData.user.id)
       .order('nome', { ascending: true });
 
-    if (error) throw error;
+    console.log("🔍 [listarAlunos] Resultado da query:", { 
+      data, 
+      error, 
+      professor_id: userData.user.id,
+      count: data?.length || 0 
+    });
 
-    return data.map(aluno => ({
+    if (error) {
+      console.error("❌ [listarAlunos] Erro na query:", error);
+      throw error;
+    }
+
+    const alunos = data.map(aluno => ({
       id: aluno.user_id,
       nome: aluno.nome,
       email: aluno.email,
@@ -139,8 +161,11 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
       imc: calcularIMC(aluno.peso, aluno.altura),
       percentualGordura: 22
     }));
+
+    console.log("✅ [listarAlunos] Alunos processados:", alunos);
+    return alunos;
   } catch (error) {
-    console.error("Erro ao listar alunos:", error);
+    console.error("❌ [listarAlunos] Erro ao listar alunos:", error);
     throw error;
   }
 };
