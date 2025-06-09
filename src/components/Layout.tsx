@@ -1,10 +1,14 @@
 
 import React, { useEffect } from "react";
-import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, User, Home, Activity, Users, DollarSign, FileText, TrendingUp, MessageSquare, Calendar } from "lucide-react";
 
-const Layout: React.FC = () => {
+interface LayoutProps {
+  children: React.ReactNode;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children }) => {
   const {
     isAuthenticated,
     user,
@@ -140,7 +144,8 @@ const Layout: React.FC = () => {
     label: "Chat"
   }];
 
-  return <div className="min-h-screen bg-gray-50">
+  return (
+    <div className="min-h-screen bg-gray-50">
       {/* Cabeçalho */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -149,42 +154,63 @@ const Layout: React.FC = () => {
             <h1 className="text-xl font-bold text-fitness-dark">GymCloud</h1>
           </div>
           
-          {isAuthenticated && user && user.tipo && <div className="flex items-center gap-4">
+          {isAuthenticated && user && user.tipo && (
+            <div className="flex items-center gap-4">
               <div className="text-sm text-gray-600">
                 Olá, <span className="font-medium">{user.nome}</span>
                 <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                   {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
                 </span>
               </div>
-              <button onClick={logout} className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors">
+              <button 
+                onClick={logout} 
+                className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors"
+              >
                 <LogOut size={16} />
                 <span>Sair</span>
               </button>
-            </div>}
+            </div>
+          )}
         </div>
       </header>
 
       {/* Conteúdo principal com barra lateral */}
       <div className="flex container mx-auto">
         {/* Barra lateral - Esconder na página inicial e de login */}
-        {!shouldHideSidebar && isAuthenticated && user?.tipo && <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
+        {!shouldHideSidebar && isAuthenticated && user?.tipo && (
+          <aside className="w-64 bg-white border-r border-gray-200 h-[calc(100vh-64px)] sticky top-16 p-4">
             <nav className="space-y-1">
               {menuItems.map(item => {
-            const isActive = location.pathname === item.to || item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to) || item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino"));
-            return <Link key={item.to} to={item.to} className={`flex items-center gap-2 p-3 rounded-md ${isActive ? "bg-fitness-primary text-white" : "hover:bg-gray-100"}`}>
+                const isActive = location.pathname === item.to || 
+                  (item.to !== "/dashboard" && item.to !== "/dashboard-professor" && location.pathname.startsWith(item.to)) ||
+                  (item.to === "/gerenciar-fichas" && (location.pathname.startsWith("/ficha-treino") || location.pathname.startsWith("/cadastrar-treino")));
+                
+                return (
+                  <Link 
+                    key={item.to} 
+                    to={item.to} 
+                    className={`flex items-center gap-2 p-3 rounded-md ${
+                      isActive 
+                        ? "bg-fitness-primary text-white" 
+                        : "hover:bg-gray-100"
+                    }`}
+                  >
                     <item.icon size={18} />
                     <span>{item.label}</span>
-                  </Link>;
-          })}
+                  </Link>
+                );
+              })}
             </nav>
-          </aside>}
+          </aside>
+        )}
 
         {/* Conteúdo principal - Expandir para tela inteira em rotas públicas */}
         <main className="flex-1 p-6">
-          <Outlet />
+          {children}
         </main>
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default Layout;

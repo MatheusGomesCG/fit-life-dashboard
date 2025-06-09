@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -32,8 +33,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<Layout />}>
+        <Layout>
+          <Routes>
             <Route index element={<Index />} />
             <Route path="login" element={<Login />} />
             <Route path="dashboard" element={<Dashboard />} />
@@ -57,9 +58,9 @@ function App() {
             <Route path="chat" element={<Chat />} />
             <Route path="chat-professor" element={<ChatProfessor />} />
             <Route path="fotos-aluno/:id" element={<GerenciarFotosAluno />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
         <Toaster position="top-right" />
       </AuthProvider>
     </BrowserRouter>
