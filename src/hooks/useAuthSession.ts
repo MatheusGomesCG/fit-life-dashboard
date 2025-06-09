@@ -13,15 +13,17 @@ export const useAuthSession = () => {
 
   const loadUserProfile = async (authUser: User): Promise<AuthUser> => {
     try {
-      console.log("Carregando perfil para usuário:", authUser.id);
+      console.log("🔍 Carregando perfil para usuário:", authUser.id);
       const role = await getUserRole(authUser.id);
-      console.log("Tipo de usuário retornado:", role);
+      console.log("✅ Tipo de usuário identificado:", role);
       
       const nome = await getUserName(authUser.id, role);
       let profile: ProfessorProfile | undefined;
 
       if (role === "professor") {
+        console.log("👨‍🏫 Carregando perfil do professor...");
         profile = await buscarPerfilProfessor(authUser.id);
+        console.log("👨‍🏫 Perfil do professor carregado:", profile?.nome);
       }
 
       const enhancedUser: AuthUser = {
@@ -31,11 +33,17 @@ export const useAuthSession = () => {
         profile
       };
 
-      console.log("Usuário carregado com sucesso:", enhancedUser);
+      console.log("🎯 Usuário final montado:", {
+        id: enhancedUser.id,
+        email: enhancedUser.email,
+        nome: enhancedUser.nome,
+        tipo: enhancedUser.tipo
+      });
+      
       setUser(enhancedUser);
       return enhancedUser;
     } catch (error) {
-      console.error("Erro ao carregar perfil do usuário:", error);
+      console.error("❌ Erro ao carregar perfil do usuário:", error);
       const fallbackUser: AuthUser = {
         ...authUser,
         nome: authUser.email?.split("@")[0] || "Usuário",
@@ -50,26 +58,40 @@ export const useAuthSession = () => {
     let mounted = true;
 
     const initialize = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
+      try {
+        console.log("🚀 Inicializando sessão de autenticação...");
+        const { data } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
 
-      const session = data.session;
-      setSession(session);
-
-      if (session?.user) {
-        await loadUserProfile(session.user);
-      }
-
-      setLoading(false);
-    };
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+        const session = data.session;
+        console.log("📋 Sessão atual:", session ? "Encontrada" : "Não encontrada");
         setSession(session);
 
         if (session?.user) {
+          console.log("👤 Usuário encontrado na sessão, carregando perfil...");
           await loadUserProfile(session.user);
         } else {
+          console.log("❌ Nenhum usuário na sessão");
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error("❌ Erro na inicialização:", error);
+        setLoading(false);
+      }
+    };
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log("🔄 Mudança de estado de auth:", event, session ? "com sessão" : "sem sessão");
+        setSession(session);
+
+        if (session?.user) {
+          console.log("👤 Carregando perfil após mudança de estado...");
+          await loadUserProfile(session.user);
+        } else {
+          console.log("❌ Limpando usuário após mudança de estado");
           setUser(null);
         }
 

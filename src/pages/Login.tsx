@@ -18,21 +18,22 @@ const Login: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const userType = searchParams.get("tipo") || "aluno";
   
-  // Log to debug the userType
-  useEffect(() => {
-    console.log("Current userType:", userType);
-  }, [userType]);
-
   // Redirect authenticated users to appropriate dashboard
   useEffect(() => {
-    if (isAuthenticated && user) {
-      console.log("User authenticated during login page, redirecting...", user.tipo);
+    if (isAuthenticated && user?.tipo) {
+      console.log("🔄 Usuário já autenticado, redirecionando...", {
+        tipo: user.tipo,
+        nome: user.nome
+      });
+      
       if (user.tipo === "professor") {
+        console.log("👨‍🏫 Redirecionando professor para dashboard");
         navigate("/dashboard-professor", { replace: true });
       } else if (user.tipo === "aluno") {
+        console.log("👨‍🎓 Redirecionando aluno para dashboard");
         navigate("/dashboard", { replace: true });
       } else {
-        console.log("Unknown user type, staying on login");
+        console.log("❓ Tipo de usuário desconhecido:", user.tipo);
       }
     }
   }, [isAuthenticated, user, navigate]);
@@ -42,8 +43,7 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      console.log("Starting login process...");
-      // Call login function with only email and password
+      console.log("🔐 Tentando fazer login...");
       const { error, user: loggedInUser } = await login(email, password);
       
       if (error) {
@@ -54,25 +54,25 @@ const Login: React.FC = () => {
       
       // Manual redirect based on user type
       if (loggedInUser?.tipo === "professor") {
-        console.log("Redirecting professor to dashboard-professor");
+        console.log("👨‍🏫 Redirecionando professor para dashboard-professor");
         navigate("/dashboard-professor", { replace: true });
       } else if (loggedInUser?.tipo === "aluno") {
-        console.log("Redirecting student to dashboard");
+        console.log("👨‍🎓 Redirecionando aluno para dashboard");
         navigate("/dashboard", { replace: true });
       } else {
-        console.log("Unknown user type after login:", loggedInUser?.tipo);
-        toast.error("Tipo de usuário não reconhecido");
+        console.log("❌ Tipo de usuário não reconhecido:", loggedInUser?.tipo);
+        toast.error("Tipo de usuário não reconhecido. Entre em contato com o suporte.");
       }
-    } catch (error) {
-      console.error("Erro no login:", error);
-      toast.error("Credenciais inválidas. Por favor, tente novamente.");
+    } catch (error: any) {
+      console.error("❌ Erro no login:", error);
+      toast.error(error.message || "Credenciais inválidas. Por favor, tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
   // Don't render login form if user is already authenticated
-  if (isAuthenticated && user) {
+  if (isAuthenticated && user?.tipo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingSpinner size="large" />

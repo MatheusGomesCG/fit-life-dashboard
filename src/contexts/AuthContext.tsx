@@ -12,7 +12,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      console.log("Iniciando processo de login..."); // Added debug log
+      console.log("🚀 Iniciando processo de login...");
       if (!email || !password) throw new Error("Email e senha são obrigatórios");
       if (!email.includes("@")) throw new Error("Formato de e-mail inválido");
 
@@ -21,26 +21,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Erro no login:", error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log("✅ Login realizado com sucesso, carregando perfil...");
         const enhancedUser = await loadUserProfile(data.user);
+        console.log("🎯 Usuário logado:", {
+          id: enhancedUser.id,
+          email: enhancedUser.email,
+          nome: enhancedUser.nome,
+          tipo: enhancedUser.tipo
+        });
         return { error: null, user: enhancedUser };
       }
 
       return { error: null };
     } catch (error) {
-      console.error("Erro no login:", error);
+      console.error("❌ Erro no login:", error);
       return { error };
     }
   };
 
   const logout = async () => {
     try {
+      console.log("🚪 Fazendo logout...");
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      console.log("✅ Logout realizado com sucesso");
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      console.error("❌ Erro ao fazer logout:", error);
       toast.error("Erro ao fazer logout");
     }
   };
