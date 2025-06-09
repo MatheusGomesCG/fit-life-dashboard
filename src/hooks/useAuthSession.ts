@@ -161,16 +161,16 @@ export const useAuthSession = () => {
       }
     };
 
-    // Timeout de segurança mais agressivo
+    // Timeout de segurança
     const timeout = setTimeout(() => {
       if (mounted && loading) {
         console.warn("⚠️ [useAuthSession] Timeout atingido, finalizando loading");
         setLoading(false);
       }
-    }, 3000); // Diminuí para 3 segundos
+    }, 5000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log("🔄 [useAuthSession] Evento de auth:", event);
         
         if (!mounted) return;
@@ -180,28 +180,31 @@ export const useAuthSession = () => {
         if (session?.user) {
           console.log("👤 [useAuthSession] Carregando perfil após mudança...");
           
-          try {
-            const enhancedUser = await loadUserProfile(session.user);
-            if (mounted) {
-              setUser(enhancedUser);
-              setLoading(false);
-              console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+          // Use setTimeout to defer the async operation
+          setTimeout(async () => {
+            try {
+              const enhancedUser = await loadUserProfile(session.user);
+              if (mounted) {
+                setUser(enhancedUser);
+                setLoading(false);
+                console.log("✅ [useAuthSession] Perfil carregado após mudança:", enhancedUser.tipo);
+              }
+            } catch (profileError) {
+              console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
+              if (mounted) {
+                const currentPath = window.location.pathname + window.location.search;
+                const isFromProfessorLogin = currentPath.includes('tipo=professor');
+                const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
+                
+                setUser({
+                  ...session.user,
+                  nome: session.user.email?.split("@")[0] || "Usuário",
+                  tipo: defaultUserType as "professor" | "aluno"
+                });
+                setLoading(false);
+              }
             }
-          } catch (profileError) {
-            console.error("❌ [useAuthSession] Erro ao carregar perfil após mudança:", profileError);
-            if (mounted) {
-              const currentPath = window.location.pathname + window.location.search;
-              const isFromProfessorLogin = currentPath.includes('tipo=professor');
-              const defaultUserType = isFromProfessorLogin ? "professor" : "aluno";
-              
-              setUser({
-                ...session.user,
-                nome: session.user.email?.split("@")[0] || "Usuário",
-                tipo: defaultUserType as "professor" | "aluno"
-              });
-              setLoading(false);
-            }
-          }
+          }, 0);
         } else {
           console.log("❌ [useAuthSession] Limpando usuário");
           if (mounted) {
