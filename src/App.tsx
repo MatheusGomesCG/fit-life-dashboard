@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
@@ -8,6 +7,10 @@ import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import DashboardProfessor from "@/pages/DashboardProfessor";
+import DashboardAdmin from "@/pages/DashboardAdmin";
+import AdminProfessores from "@/pages/AdminProfessores";
+import AdminCadastrarProfessor from "@/pages/AdminCadastrarProfessor";
+import AdminPlanosProfessores from "@/pages/AdminPlanosProfessores";
 import GerenciarAlunos from "@/pages/GerenciarAlunos";
 import CadastrarAluno from "@/pages/CadastrarAluno";
 import EditarAluno from "@/pages/EditarAluno";
@@ -50,6 +53,38 @@ function App() {
               element={
                 <Layout>
                   <DashboardProfessor />
+                </Layout>
+              }
+            />
+            <Route
+              path="/dashboard-admin"
+              element={
+                <Layout>
+                  <DashboardAdmin />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/professores"
+              element={
+                <Layout>
+                  <AdminProfessores />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/cadastrar-professor"
+              element={
+                <Layout>
+                  <AdminCadastrarProfessor />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/planos-professores"
+              element={
+                <Layout>
+                  <AdminPlanosProfessores />
                 </Layout>
               }
             />

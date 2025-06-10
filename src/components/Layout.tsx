@@ -6,6 +6,7 @@ import { LogOut, Activity } from "lucide-react";
 import LoadingSpinner from "./LoadingSpinner";
 import ProfessorNavigation from "./professor/ProfessorNavigation";
 import AlunoNavigation from "./aluno/AlunoNavigation";
+import AdminNavigation from "./admin/AdminNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -74,15 +75,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     location.pathname !== "/login" &&
     location.pathname !== "/cadastrar-professor";
 
+  // Lógica para determinar se deve mostrar o menu do admin
+  const shouldShowAdminNavigation = !loading && 
+    isAuthenticated && 
+    user && 
+    user.tipo === "admin" && 
+    location.pathname !== "/" && 
+    location.pathname !== "/login" &&
+    location.pathname !== "/cadastrar-professor";
+
   console.log("📊 [Layout] Navigation decision:", {
     shouldShowProfessorNavigation,
     shouldShowAlunoNavigation,
+    shouldShowAdminNavigation,
     conditions: {
       notLoading: !loading,
       isAuthenticated,
       hasUser: !!user,
       isProfessor: user?.tipo === "professor",
       isAluno: user?.tipo === "aluno",
+      isAdmin: user?.tipo === "admin",
       notHomePage: location.pathname !== "/",
       notLoginPage: location.pathname !== "/login",
       notSignupPage: location.pathname !== "/cadastrar-professor"
@@ -148,6 +160,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {/* Menu de Navegação do Aluno */}
       {shouldShowAlunoNavigation && (
         <AlunoNavigation />
+      )}
+
+      {/* Menu de Navegação do Admin */}
+      {shouldShowAdminNavigation && (
+        <AdminNavigation />
       )}
 
       {/* Conteúdo principal */}

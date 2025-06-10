@@ -30,6 +30,8 @@ const Login: React.FC = () => {
       
       if (user.tipo === "professor") {
         navigate("/dashboard-professor", { replace: true });
+      } else if (user.tipo === "admin") {
+        navigate("/dashboard-admin", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
@@ -97,7 +99,7 @@ const Login: React.FC = () => {
             GymCloud
           </h1>
           <p className="mt-2 text-sm text-gray-600">
-            {userType === "professor" ? "Acesso para Professores" : "Acesso para Alunos"}
+            {userType === "professor" ? "Acesso para Professores e Administradores" : "Acesso para Alunos"}
           </p>
         </div>
 
