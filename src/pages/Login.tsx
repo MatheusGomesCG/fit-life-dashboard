@@ -28,10 +28,10 @@ const Login: React.FC = () => {
     if (isAuthenticated && user?.tipo) {
       console.log("✅ [Login] Redirecionando usuário autenticado:", user.tipo);
       
-      if (user.tipo === "professor") {
-        navigate("/dashboard-professor", { replace: true });
-      } else if (user.tipo === "admin") {
+      if (user.tipo === "admin") {
         navigate("/dashboard-admin", { replace: true });
+      } else if (user.tipo === "professor") {
+        navigate("/dashboard-professor", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
@@ -66,19 +66,11 @@ const Login: React.FC = () => {
       console.log("✅ [Login] Login realizado com sucesso");
       toast.success("Login realizado com sucesso!");
       
-      // Se temos o usuário retornado e ele tem tipo, redirecionar imediatamente
-      if (loggedUser?.email) {
-        console.log("🎯 [Login] Redirecionamento direto baseado no tipo da página");
-        
-        // Redirecionar baseado no tipo da página de login
-        if (userType === "professor") {
-          console.log("➡️ [Login] Redirecionando para dashboard professor");
-          navigate("/dashboard-professor", { replace: true });
-        } else {
-          console.log("➡️ [Login] Redirecionando para dashboard aluno");
-          navigate("/dashboard", { replace: true });
-        }
-      }
+      // Aguardar um pouco para garantir que o contexto seja atualizado
+      setTimeout(() => {
+        // O redirecionamento será feito pelo useEffect quando o user for carregado
+        console.log("🎯 [Login] Aguardando atualização do contexto de auth");
+      }, 100);
       
     } catch (error: any) {
       console.error("❌ [Login] Erro:", error);

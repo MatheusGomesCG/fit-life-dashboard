@@ -14,7 +14,30 @@ export const useAuthSession = () => {
       console.log("🔍 [loadUserProfile] Carregando perfil para:", authUser.id);
       console.log("📧 [loadUserProfile] Email do usuário:", authUser.email);
       
-      // Primeiro, tentar professor
+      // Primeiro, verificar se é admin
+      console.log("👑 [loadUserProfile] Verificando admin...");
+      const { data: adminData, error: adminError } = await supabase
+        .from('admin_users')
+        .select('nome')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+
+      console.log("📊 [loadUserProfile] Resultado admin:", { adminData, adminError });
+
+      if (adminError && adminError.code !== 'PGRST116') {
+        console.error("❌ [loadUserProfile] Erro real ao buscar admin:", adminError);
+      }
+
+      if (adminData) {
+        console.log("✅ [loadUserProfile] Admin encontrado:", adminData.nome);
+        return {
+          ...authUser,
+          nome: adminData.nome,
+          tipo: "admin"
+        };
+      }
+
+      // Se não for admin, tentar professor
       console.log("👨‍🏫 [loadUserProfile] Buscando professor...");
       const { data: professorData, error: professorError } = await supabase
         .from('professor_profiles')
