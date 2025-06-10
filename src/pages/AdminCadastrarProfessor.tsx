@@ -50,26 +50,75 @@ const AdminCadastrarProfessor: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log("🚀 [AdminCadastrarProfessor] Iniciando cadastro do professor:", {
+      email: formData.email,
+      nome: formData.nome
+    });
+
     if (!formData.nome || !formData.email || !formData.senha) {
       toast.error("Nome, email e senha são obrigatórios");
+      return;
+    }
+
+    if (formData.senha.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // 1. Criar usuário no Supabase Auth
+      // 1. Primeiro verificar se o email já existe
+      console.log("🔍 [AdminCadastrarProfessor] Verificando se email já existe...");
+      
+      const { data: existingUser, error: checkError } = await supabase
+        .from('professor_profiles')
+        .select('id')
+        .ilike('email', formData.email)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error("❌ [AdminCadastrarProfessor] Erro ao verificar email existente:", checkError);
+        toast.error("Erro ao verificar email existente");
+        return;
+      }
+
+      if (existingUser) {
+        console.log("⚠️ [AdminCadastrarProfessor] Email já existe no sistema");
+        toast.error("Este email já está cadastrado como professor");
+        return;
+      }
+
+      // 2. Criar usuário no Supabase Auth
+      console.log("👤 [AdminCadastrarProfessor] Criando usuário no Auth...");
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.senha,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`
+          emailRedirectTo: `${window.location.origin}/login?tipo=professor`,
+          data: {
+            nome: formData.nome,
+            tipo: "professor"
+          }
         }
       });
 
+      console.log("📊 [AdminCadastrarProfessor] Resultado Auth:", {
+        user: authData.user?.id,
+        session: !!authData.session,
+        error: authError
+      });
+
       if (authError) {
+        console.error("❌ [AdminCadastrarProfessor] Erro no Auth:", authError);
+        
         if (authError.message.includes("User already registered")) {
           toast.error("Este email já está cadastrado no sistema");
+        } else if (authError.message.includes("Password should be at least")) {
+          toast.error("A senha deve ter pelo menos 6 caracteres");
+        } else if (authError.message.includes("Invalid email")) {
+          toast.error("Email inválido");
         } else {
           toast.error("Erro ao criar conta: " + authError.message);
         }
@@ -77,31 +126,64 @@ const AdminCadastrarProfessor: React.FC = () => {
       }
 
       if (!authData.user) {
-        toast.error("Erro ao criar usuário");
+        console.error("❌ [AdminCadastrarProfessor] Usuário não foi criado");
+        toast.error("Erro ao criar usuário - dados do usuário não encontrados");
         return;
       }
 
-      // 2. Criar perfil do professor
-      const { error: profileError } = await supabase
+      console.log("✅ [AdminCadastrarProfessor] Usuário criado com sucesso:", authData.user.id);
+
+      // 3. Aguardar um pouco para garantir que o usuário foi criado no banco
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // 4. Criar perfil do professor
+      console.log("👨‍🏫 [AdminCadastrarProfessor] Criando perfil do professor...");
+      
+      const professorData = {
+        user_id: authData.user.id,
+        nome: formData.nome.trim(),
+        telefone: formData.telefone.trim() || null,
+        documento: formData.documento.trim() || null,
+        endereco: formData.endereco.trim() || null,
+        especialidade: formData.especialidade.trim() || null,
+        biografia: formData.biografia.trim() || null,
+        status: 'ativo' as const
+      };
+
+      console.log("📝 [AdminCadastrarProfessor] Dados do perfil:", professorData);
+
+      const { data: profileData, error: profileError } = await supabase
         .from('professor_profiles')
-        .insert({
-          user_id: authData.user.id,
-          nome: formData.nome,
-          telefone: formData.telefone || null,
-          documento: formData.documento || null,
-          endereco: formData.endereco || null,
-          especialidade: formData.especialidade || null,
-          biografia: formData.biografia || null,
-          status: 'ativo'
-        });
+        .insert(professorData)
+        .select()
+        .single();
+
+      console.log("📊 [AdminCadastrarProfessor] Resultado do perfil:", {
+        data: profileData,
+        error: profileError
+      });
 
       if (profileError) {
-        console.error("Erro ao criar perfil:", profileError);
-        toast.error("Erro ao criar perfil do professor");
+        console.error("❌ [AdminCadastrarProfessor] Erro ao criar perfil:", profileError);
+        
+        // Tentar excluir o usuário criado no Auth se o perfil falhou
+        try {
+          console.log("🗑️ [AdminCadastrarProfessor] Tentando limpar usuário do Auth...");
+          await supabase.auth.admin.deleteUser(authData.user.id);
+        } catch (cleanupError) {
+          console.error("❌ [AdminCadastrarProfessor] Erro ao limpar usuário:", cleanupError);
+        }
+        
+        if (profileError.code === '23505') {
+          toast.error("Este email já está cadastrado");
+        } else {
+          toast.error("Erro ao criar perfil do professor: " + profileError.message);
+        }
         return;
       }
 
-      toast.success("Professor cadastrado com sucesso!");
+      console.log("✅ [AdminCadastrarProfessor] Professor criado com sucesso!");
+      toast.success(`Professor ${formData.nome} cadastrado com sucesso!`);
       
       // Limpar formulário
       setFormData({
@@ -115,12 +197,14 @@ const AdminCadastrarProfessor: React.FC = () => {
         biografia: ""
       });
 
-      // Redirecionar para lista de professores
-      navigate("/admin/professores");
+      // Aguardar um pouco antes de redirecionar
+      setTimeout(() => {
+        navigate("/admin/professores");
+      }, 1500);
 
     } catch (error) {
-      console.error("Erro inesperado:", error);
-      toast.error("Erro inesperado ao cadastrar professor");
+      console.error("❌ [AdminCadastrarProfessor] Erro inesperado:", error);
+      toast.error("Erro inesperado ao cadastrar professor. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -133,6 +217,7 @@ const AdminCadastrarProfessor: React.FC = () => {
           variant="ghost" 
           onClick={() => navigate("/admin/professores")}
           className="mb-4"
+          disabled={isLoading}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar para lista de professores
@@ -168,7 +253,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     id="nome"
                     name="nome"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.nome}
                     onChange={handleInputChange}
                     placeholder="Digite o nome completo"
@@ -184,7 +270,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     id="email"
                     name="email"
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="professor@email.com"
@@ -195,7 +282,7 @@ const AdminCadastrarProfessor: React.FC = () => {
               {/* Senha */}
               <div>
                 <label htmlFor="senha" className="block text-sm font-medium text-gray-700 mb-2">
-                  Senha *
+                  Senha * (mínimo 6 caracteres)
                 </label>
                 <div className="flex gap-2">
                   <div className="relative flex-1">
@@ -204,14 +291,17 @@ const AdminCadastrarProfessor: React.FC = () => {
                       id="senha"
                       name="senha"
                       required
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      disabled={isLoading}
+                      minLength={6}
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                       value={formData.senha}
                       onChange={handleInputChange}
                       placeholder="Digite a senha"
                     />
                     <button
                       type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      disabled={isLoading}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 disabled:opacity-50"
                       onClick={() => setMostrarSenha(!mostrarSenha)}
                     >
                       {mostrarSenha ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -220,6 +310,7 @@ const AdminCadastrarProfessor: React.FC = () => {
                   <Button 
                     type="button" 
                     variant="outline" 
+                    disabled={isLoading}
                     onClick={gerarSenhaAleatoria}
                   >
                     Gerar
@@ -237,7 +328,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     type="text"
                     id="telefone"
                     name="telefone"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.telefone}
                     onChange={handleInputChange}
                     placeholder="(11) 99999-9999"
@@ -252,7 +344,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     type="text"
                     id="especialidade"
                     name="especialidade"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.especialidade}
                     onChange={handleInputChange}
                     placeholder="Ex: Musculação, Crossfit, etc."
@@ -269,7 +362,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     type="text"
                     id="documento"
                     name="documento"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.documento}
                     onChange={handleInputChange}
                     placeholder="000.000.000-00"
@@ -284,7 +378,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                     type="text"
                     id="endereco"
                     name="endereco"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
                     value={formData.endereco}
                     onChange={handleInputChange}
                     placeholder="Rua, número, bairro, cidade"
@@ -300,7 +395,8 @@ const AdminCadastrarProfessor: React.FC = () => {
                   id="biografia"
                   name="biografia"
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none disabled:opacity-50"
                   value={formData.biografia}
                   onChange={handleInputChange}
                   placeholder="Breve descrição sobre o professor..."
@@ -311,6 +407,7 @@ const AdminCadastrarProfessor: React.FC = () => {
                 <Button 
                   type="button" 
                   variant="outline" 
+                  disabled={isLoading}
                   onClick={() => navigate("/admin/professores")}
                   className="flex-1"
                 >
