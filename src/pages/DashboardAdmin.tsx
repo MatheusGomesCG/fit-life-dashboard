@@ -37,13 +37,23 @@ const DashboardAdmin: React.FC = () => {
   const carregarEstatisticas = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 [DashboardAdmin] Iniciando carregamento de estatísticas...");
 
       // Buscar total de professores
       const { data: professores, error: professoresError } = await supabase
         .from('professor_profiles')
-        .select('status');
+        .select('id, status');
 
-      if (professoresError) throw professoresError;
+      console.log("📊 [DashboardAdmin] Professores encontrados:", { 
+        professores, 
+        error: professoresError,
+        total: professores?.length || 0 
+      });
+
+      if (professoresError) {
+        console.error("❌ [DashboardAdmin] Erro ao buscar professores:", professoresError);
+        throw professoresError;
+      }
 
       // Buscar professores com planos ativos
       const { data: planos, error: planosError } = await supabase
@@ -51,22 +61,42 @@ const DashboardAdmin: React.FC = () => {
         .select('professor_id')
         .eq('status', 'ativo');
 
-      if (planosError) throw planosError;
+      console.log("📊 [DashboardAdmin] Planos encontrados:", { 
+        planos, 
+        error: planosError,
+        total: planos?.length || 0 
+      });
+
+      if (planosError) {
+        console.error("❌ [DashboardAdmin] Erro ao buscar planos:", planosError);
+        // Não falhar se não conseguir buscar planos, apenas definir como 0
+      }
 
       const total = professores?.length || 0;
       const ativos = professores?.filter(p => p.status === 'ativo').length || 0;
       const inativos = professores?.filter(p => p.status === 'inativo').length || 0;
+      const suspensos = professores?.filter(p => p.status === 'suspenso').length || 0;
       const comPlano = planos?.length || 0;
 
-      setStats({
+      const newStats = {
         total,
         ativos,
-        inativos,
+        inativos: inativos + suspensos, // Combinando inativos e suspensos
         comPlano
-      });
+      };
+
+      console.log("✅ [DashboardAdmin] Estatísticas calculadas:", newStats);
+      setStats(newStats);
 
     } catch (error) {
-      console.error("Erro ao carregar estatísticas:", error);
+      console.error("❌ [DashboardAdmin] Erro ao carregar estatísticas:", error);
+      // Definir valores padrão em caso de erro
+      setStats({
+        total: 0,
+        ativos: 0,
+        inativos: 0,
+        comPlano: 0
+      });
     } finally {
       setIsLoading(false);
     }
@@ -87,9 +117,9 @@ const DashboardAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Professores</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-gray-900">
                 {isLoading ? <LoadingSpinner size="small" /> : stats.total}
-              </p>
+              </div>
             </div>
             <div className="p-3 bg-blue-50 rounded-full">
               <Users className="h-6 w-6 text-blue-500" />
@@ -101,9 +131,9 @@ const DashboardAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Professores Ativos</p>
-              <p className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-bold text-green-600">
                 {isLoading ? <LoadingSpinner size="small" /> : stats.ativos}
-              </p>
+              </div>
             </div>
             <div className="p-3 bg-green-50 rounded-full">
               <Activity className="h-6 w-6 text-green-500" />
@@ -115,9 +145,9 @@ const DashboardAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Professores Inativos</p>
-              <p className="text-2xl font-bold text-amber-600">
+              <div className="text-2xl font-bold text-amber-600">
                 {isLoading ? <LoadingSpinner size="small" /> : stats.inativos}
-              </p>
+              </div>
             </div>
             <div className="p-3 bg-amber-50 rounded-full">
               <Users className="h-6 w-6 text-amber-500" />
@@ -129,9 +159,9 @@ const DashboardAdmin: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Com Planos Ativos</p>
-              <p className="text-2xl font-bold text-purple-600">
+              <div className="text-2xl font-bold text-purple-600">
                 {isLoading ? <LoadingSpinner size="small" /> : stats.comPlano}
-              </p>
+              </div>
             </div>
             <div className="p-3 bg-purple-50 rounded-full">
               <CreditCard className="h-6 w-6 text-purple-500" />
