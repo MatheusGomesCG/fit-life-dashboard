@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -76,9 +75,10 @@ const AdminProfessores: React.FC = () => {
 
           return {
             ...professor,
+            status: professor.status as "ativo" | "inativo" | "suspenso",
             totalAlunos: alunos?.length || 0,
             planoAtivo: !!plano
-          };
+          } as Professor;
         })
       );
 
