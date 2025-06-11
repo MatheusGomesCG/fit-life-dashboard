@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { gerarSenhaAleatoria } from "@/utils/passwordGenerator";
 
 export interface Aluno {
   id: string;
@@ -173,25 +174,45 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
 // Criar um novo aluno (also exported as cadastrarAluno)
 export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura">): Promise<Aluno> => {
   try {
+    console.log("🔄 [criarAluno] Iniciando criação de aluno:", aluno.email);
+    
+    // Get current professor user
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      throw new Error("Professor não autenticado");
+    }
+
+    console.log("👨‍🏫 [criarAluno] Professor atual:", currentUser.user.id);
+
+    // Generate random password for the student
+    const senhaTemporaria = gerarSenhaAleatoria();
+    console.log("🔑 [criarAluno] Senha gerada para aluno");
+
+    // Create auth user for the student
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: aluno.email,
-      password: 'temporaria123',
+      password: senhaTemporaria,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           nome: aluno.nome,
-          idade: aluno.idade,
-          peso: aluno.peso,
-          altura: aluno.altura,
-          objetivo: aluno.objetivo,
-          experiencia: aluno.experiencia,
-          telefone: aluno.telefone,
-          restricoes_medicas: aluno.restricoes_medicas
+          tipo: 'aluno'
         }
       }
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error("❌ [criarAluno] Erro na criação do usuário auth:", authError);
+      throw authError;
+    }
 
+    if (!authData.user) {
+      throw new Error("Falha ao criar usuário de autenticação");
+    }
+
+    console.log("✅ [criarAluno] Usuário auth criado:", authData.user.id);
+
+    // Create student profile with the CURRENT professor's ID
     const { data, error } = await supabase
       .from('aluno_profiles')
       .insert({
@@ -205,13 +226,18 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
         experiencia: aluno.experiencia,
         telefone: aluno.telefone,
         restricoes_medicas: aluno.restricoes_medicas,
-        professor_id: authData.user.id,
+        professor_id: currentUser.user.id, // Use the CURRENT professor's ID, not the student's ID
         senha_temporaria: true
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("❌ [criarAluno] Erro ao criar perfil do aluno:", error);
+      throw error;
+    }
+
+    console.log("✅ [criarAluno] Perfil do aluno criado:", data);
 
     return {
       id: authData.user.id,
@@ -228,7 +254,7 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
       percentualGordura: 22
     };
   } catch (error) {
-    console.error("Erro ao criar aluno:", error);
+    console.error("❌ [criarAluno] Erro ao criar aluno:", error);
     throw error;
   }
 };
@@ -271,7 +297,6 @@ export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
   }
 };
 
-// Atualizar um aluno existente
 export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id" | "imc" | "percentualGordura">>): Promise<Aluno | null> => {
   try {
     const { data, error } = await supabase
@@ -313,7 +338,6 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
   }
 };
 
-// Excluir um aluno
 export const excluirAluno = async (id: string): Promise<void> => {
   try {
     const { error } = await supabase
@@ -328,9 +352,7 @@ export const excluirAluno = async (id: string): Promise<void> => {
   }
 };
 
-// Photo management functions
 export const adicionarFotoAluno = async (alunoId: string, foto: Omit<FotoAluno, "id" | "aluno_id">): Promise<FotoAluno> => {
-  // Mock implementation for now
   const novaFoto: FotoAluno = {
     id: Date.now().toString(),
     aluno_id: alunoId,
@@ -345,11 +367,9 @@ export const adicionarFotoAluno = async (alunoId: string, foto: Omit<FotoAluno, 
 };
 
 export const removerFotoAluno = async (fotoId: string): Promise<void> => {
-  // Mock implementation for now
   console.log("Foto removida:", fotoId);
 };
 
-// Buscar ficha de treino do aluno
 export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
   try {
     const { data, error } = await supabase
@@ -365,10 +385,8 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
       throw error;
     }
 
-    // Buscar dados do aluno para complementar a resposta
     const aluno = await buscarAlunoPorId(alunoId);
 
-    // Handle the Json type properly
     let exercicios: CargaExercicio[] = [];
     if (data.exercicios && Array.isArray(data.exercicios)) {
       exercicios = data.exercicios.map((ex: any) => ({
@@ -394,7 +412,6 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
   }
 };
 
-// Criar ou atualizar ficha de treino
 export const criarOuAtualizarFichaTreino = async (
   alunoId: string, 
   exercicios: CargaExercicio[]
@@ -405,7 +422,6 @@ export const criarOuAtualizarFichaTreino = async (
       throw new Error("Usuário não autenticado");
     }
 
-    // Verificar se já existe uma ficha de treino para o aluno
     const { data: fichaExistente } = await supabase
       .from('fichas_treino')
       .select('id')
@@ -416,22 +432,18 @@ export const criarOuAtualizarFichaTreino = async (
     let fichaId: string;
 
     if (fichaExistente) {
-      // Atualizar ficha existente
       fichaId = fichaExistente.id;
       
-      // Remover exercícios antigos
       await supabase
         .from('exercicios_treino')
         .delete()
         .eq('ficha_treino_id', fichaId);
 
-      // Atualizar timestamp da ficha
       await supabase
         .from('fichas_treino')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', fichaId);
     } else {
-      // Criar nova ficha
       const { data: novaFicha, error: errorFicha } = await supabase
         .from('fichas_treino')
         .insert({
@@ -445,7 +457,6 @@ export const criarOuAtualizarFichaTreino = async (
       fichaId = novaFicha.id;
     }
 
-    // Inserir novos exercícios
     const exerciciosParaInserir = exercicios.map(exercicio => ({
       ficha_treino_id: fichaId,
       nome_exercicio: exercicio.nomeExercicio,
