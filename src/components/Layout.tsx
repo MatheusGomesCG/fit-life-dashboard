@@ -1,174 +1,47 @@
 
 import React from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Activity } from "lucide-react";
-import LoadingSpinner from "./LoadingSpinner";
-import ProfessorNavigation from "./professor/ProfessorNavigation";
-import AlunoNavigation from "./aluno/AlunoNavigation";
-import AdminNavigation from "./admin/AdminNavigation";
+import { useLocation } from "react-router-dom";
+import ProfessorNavigation from "@/components/professor/ProfessorNavigation";
+import AdminNavigation from "@/components/admin/AdminNavigation";
+import AlunoNavigation from "@/components/aluno/AlunoNavigation";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { isAuthenticated, user, logout, loading } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
 
-  // Debug logs para identificar o problema
-  console.log("🔍 [Layout] Debug info:", {
-    pathname: location.pathname,
-    isAuthenticated,
+  console.log("🔄 [Layout] Renderizando layout", {
     userType: user?.tipo,
-    loading,
-    userExists: !!user
+    currentPath: location.pathname
   });
 
-  // Verificar se é uma rota pública (login, cadastro de professor ou home)
-  const isPublicRoute = ["/login", "/cadastrar-professor", "/"].includes(location.pathname);
-
-  // Show loading spinner while auth is loading
-  if (loading) {
-    console.log("⏳ [Layout] Showing loading spinner");
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Activity className="h-8 w-8 text-fitness-primary" />
-              <Link to="/" className="text-xl font-bold text-fitness-dark hover:text-fitness-primary">
-                GymCloud
-              </Link>
-            </div>
-          </div>
-        </header>
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner size="large" />
-        </div>
-      </div>
-    );
+  // Se estiver no dashboard do professor, não renderize o layout padrão
+  // pois o dashboard tem seu próprio layout integrado
+  if (location.pathname === "/dashboard-professor") {
+    return <>{children}</>;
   }
 
-  // Função para fazer logout e redirecionar para home
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
-
-  // Lógica para determinar se deve mostrar o menu do professor
-  const shouldShowProfessorNavigation = !loading && 
-    isAuthenticated && 
-    user && 
-    user.tipo === "professor" && 
-    location.pathname !== "/" && 
-    location.pathname !== "/login" &&
-    location.pathname !== "/cadastrar-professor";
-
-  // Lógica para determinar se deve mostrar o menu do aluno
-  const shouldShowAlunoNavigation = !loading && 
-    isAuthenticated && 
-    user && 
-    user.tipo === "aluno" && 
-    location.pathname !== "/" && 
-    location.pathname !== "/login" &&
-    location.pathname !== "/cadastrar-professor";
-
-  // Lógica para determinar se deve mostrar o menu do admin
-  const shouldShowAdminNavigation = !loading && 
-    isAuthenticated && 
-    user && 
-    user.tipo === "admin" && 
-    location.pathname !== "/" && 
-    location.pathname !== "/login" &&
-    location.pathname !== "/cadastrar-professor";
-
-  console.log("📊 [Layout] Navigation decision:", {
-    shouldShowProfessorNavigation,
-    shouldShowAlunoNavigation,
-    shouldShowAdminNavigation,
-    conditions: {
-      notLoading: !loading,
-      isAuthenticated,
-      hasUser: !!user,
-      isProfessor: user?.tipo === "professor",
-      isAluno: user?.tipo === "aluno",
-      isAdmin: user?.tipo === "admin",
-      notHomePage: location.pathname !== "/",
-      notLoginPage: location.pathname !== "/login",
-      notSignupPage: location.pathname !== "/cadastrar-professor"
+  const renderNavigation = () => {
+    switch (user?.tipo) {
+      case "professor":
+        return <ProfessorNavigation />;
+      case "admin":
+        return <AdminNavigation />;
+      case "aluno":
+        return <AlunoNavigation />;
+      default:
+        return null;
     }
-  });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Cabeçalho - mostrar sempre */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Activity className="h-8 w-8 text-fitness-primary" />
-            <Link to="/" className="text-xl font-bold text-fitness-dark hover:text-fitness-primary">
-              GymCloud
-            </Link>
-          </div>
-          
-          {/* Mostrar info do usuário apenas se autenticado e não carregando */}
-          {isAuthenticated && user && user.tipo && (
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-600">
-                Olá, <span className="font-medium">{user.nome}</span>
-                <span className="ml-2 text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
-                  {user.tipo === "professor" ? "Professor" : user.tipo === "admin" ? "Admin" : "Aluno"}
-                </span>
-              </div>
-              <button 
-                onClick={handleLogout} 
-                className="flex items-center gap-1 text-sm text-gray-500 hover:text-fitness-primary transition-colors"
-              >
-                <LogOut size={16} />
-                <span>Sair</span>
-              </button>
-            </div>
-          )}
-
-          {/* Mostrar botões de login para usuários não autenticados em rotas públicas */}
-          {!isAuthenticated && isPublicRoute && location.pathname === "/" && (
-            <div className="flex items-center gap-2">
-              <Link 
-                to="/login?tipo=professor" 
-                className="text-sm bg-fitness-primary text-white px-4 py-2 rounded-md hover:bg-fitness-primary/90 transition-colors"
-              >
-                Professores
-              </Link>
-              <Link 
-                to="/login?tipo=aluno" 
-                className="text-sm border border-fitness-primary text-fitness-primary px-4 py-2 rounded-md hover:bg-fitness-primary hover:text-white transition-colors"
-              >
-                Alunos
-              </Link>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Menu de Navegação do Professor */}
-      {shouldShowProfessorNavigation && (
-        <ProfessorNavigation />
-      )}
-
-      {/* Menu de Navegação do Aluno */}
-      {shouldShowAlunoNavigation && (
-        <AlunoNavigation />
-      )}
-
-      {/* Menu de Navegação do Admin */}
-      {shouldShowAdminNavigation && (
-        <AdminNavigation />
-      )}
-
-      {/* Conteúdo principal */}
-      <main className="w-full">
+      {renderNavigation()}
+      <main className="container mx-auto px-4 py-6">
         {children}
       </main>
     </div>
