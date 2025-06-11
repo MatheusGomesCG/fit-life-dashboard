@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Bar,
   BarChart,
@@ -15,40 +15,65 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { buscarDadosAlunosMensais, AlunoMensal } from "@/services/dashboardService";
 
 interface AlunosMensaisProps {
-  alunosAtivos: number;
   anoSelecionado: number;
 }
 
-const AlunosMensais: React.FC<AlunosMensaisProps> = ({ alunosAtivos, anoSelecionado }) => {
-  // Mock data for demonstration - in a real app, this would come from your backend
-  const data = [
-    { month: 'Jan', alunos: Math.floor(alunosAtivos * 0.8) },
-    { month: 'Fev', alunos: Math.floor(alunosAtivos * 0.85) },
-    { month: 'Mar', alunos: Math.floor(alunosAtivos * 0.9) },
-    { month: 'Abr', alunos: alunosAtivos },
-    { month: 'Mai', alunos: 0 },
-    { month: 'Jun', alunos: 0 },
-    { month: 'Jul', alunos: 0 },
-    { month: 'Ago', alunos: 0 },
-    { month: 'Set', alunos: 0 },
-    { month: 'Out', alunos: 0 },
-    { month: 'Nov', alunos: 0 },
-    { month: 'Dez', alunos: 0 },
-  ];
+const AlunosMensais: React.FC<AlunosMensaisProps> = ({ anoSelecionado }) => {
+  const { user } = useAuth();
+  const [dadosAlunos, setDadosAlunos] = useState<AlunoMensal[]>([]);
+  const [totalAtual, setTotalAtual] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setIsLoading(true);
+        const dados = await buscarDadosAlunosMensais(user.id, anoSelecionado);
+        setDadosAlunos(dados.alunosMensais);
+        setTotalAtual(dados.totalAtual);
+      } catch (error) {
+        console.error("Erro ao carregar dados de alunos:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    carregarDados();
+  }, [user?.id, anoSelecionado]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Alunos por Mês ({anoSelecionado})</CardTitle>
+          <CardDescription>Carregando dados...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] bg-gray-100 animate-pulse rounded"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Alunos por Mês ({anoSelecionado})</CardTitle>
-        <CardDescription>Visualização do número de alunos ativos por mês</CardDescription>
+        <CardDescription>
+          Evolução do número de alunos ativos - Total atual: {totalAtual}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
-              <XAxis dataKey="month" />
+            <BarChart data={dadosAlunos}>
+              <XAxis dataKey="mes" />
               <YAxis />
               <Tooltip
                 content={({ active, payload }) => {

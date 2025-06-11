@@ -1,11 +1,22 @@
 
-import React, { useMemo } from "react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from "recharts";
-import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { buscarPagamentosPorAno } from "@/services/dashboardService";
 import { Pagamento } from "@/services/pagamentosService";
-import { ptBR } from "date-fns/locale";
-import { format } from "date-fns";
-import { ChartContainer } from "@/components/ui/chart";
 
 interface PagamentosAnuaisProps {
   pagamentos: Pagamento[];
@@ -14,210 +25,157 @@ interface PagamentosAnuaisProps {
   setAnoSelecionado: (ano: number) => void;
 }
 
-// Meses em português
-const nomeMeses = [
-  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-];
+interface DadosMes {
+  month: string;
+  recebido: number;
+  pendente: number;
+}
 
 const PagamentosAnuais: React.FC<PagamentosAnuaisProps> = ({ 
-  pagamentos, 
-  isLoading, 
   anoSelecionado, 
   setAnoSelecionado 
 }) => {
-  // Gerar dados para o gráfico
-  const dadosGrafico = useMemo(() => {
-    const dados = nomeMeses.map((mes, index) => {
-      const mesNumero = index + 1;
-      
-      // Filtrar pagamentos do mês e ano correspondente
-      const pagamentosMes = pagamentos.filter(p => p.mes === mesNumero && p.ano === anoSelecionado);
-      
-      // Calcular valores recebidos e pendentes
-      const valorRecebido = pagamentosMes
-        .filter(p => p.status === "pago")
-        .reduce((total, p) => total + p.valor, 0);
-      
-      const valorPendente = pagamentosMes
-        .filter(p => p.status === "pendente" || p.status === "atrasado")
-        .reduce((total, p) => total + p.valor, 0);
-      
-      return {
-        nome: mes,
-        recebido: valorRecebido,
-        pendente: valorPendente,
-        total: valorRecebido + valorPendente,
-      };
-    });
-    
-    return dados;
-  }, [pagamentos, anoSelecionado]);
-  
-  // Calcular o total anual
-  const totalRecebidoAnual = useMemo(() => 
-    dadosGrafico.reduce((total, mes) => total + mes.recebido, 0)
-  , [dadosGrafico]);
-  
-  const totalPendenteAnual = useMemo(() => 
-    dadosGrafico.reduce((total, mes) => total + mes.pendente, 0)
-  , [dadosGrafico]);
-  
-  // Navegação entre anos
-  const anoAnterior = () => setAnoSelecionado(anoSelecionado - 1);
-  const proximoAno = () => setAnoSelecionado(anoSelecionado + 1);
-  
-  // Se os dados estão carregando, mostrar um esqueleto
+  const [dadosPagamentos, setDadosPagamentos] = useState<DadosMes[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const carregarDados = async () => {
+      try {
+        setIsLoading(true);
+        const pagamentos = await buscarPagamentosPorAno(anoSelecionado);
+        
+        // Processar dados por mês
+        const meses = [
+          'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
+          'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
+        ];
+        
+        const dadosProcessados: DadosMes[] = meses.map((month, index) => {
+          const mesAtual = index + 1;
+          const pagamentosMes = pagamentos.filter(p => p.mes === mesAtual);
+          
+          const recebido = pagamentosMes
+            .filter(p => p.status === 'pago')
+            .reduce((total, p) => total + p.valor, 0);
+            
+          const pendente = pagamentosMes
+            .filter(p => p.status === 'pendente' || p.status === 'atrasado')
+            .reduce((total, p) => total + p.valor, 0);
+          
+          return {
+            month,
+            recebido,
+            pendente
+          };
+        });
+        
+        setDadosPagamentos(dadosProcessados);
+      } catch (error) {
+        console.error("Erro ao carregar dados de pagamentos:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    carregarDados();
+  }, [anoSelecionado]);
+
+  const totalRecebido = dadosPagamentos.reduce((total, mes) => total + mes.recebido, 0);
+  const totalPendente = dadosPagamentos.reduce((total, mes) => total + mes.pendente, 0);
+
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="h-12 bg-gray-200 animate-pulse rounded"></div>
-        <div className="h-96 bg-gray-200 animate-pulse rounded"></div>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Pagamentos Anuais ({anoSelecionado})</CardTitle>
+          <CardDescription>Carregando dados...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[400px] bg-gray-100 animate-pulse rounded"></div>
+        </CardContent>
+      </Card>
     );
   }
 
-  // Customização do tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-4 border border-gray-200 rounded-md shadow-md">
-          <p className="font-semibold text-gray-800">{label}</p>
-          <p className="text-green-600">
-            Recebido: R$ {payload[0].value.toFixed(2)}
-          </p>
-          <p className="text-amber-600">
-            Pendente: R$ {payload[1].value.toFixed(2)}
-          </p>
-          <p className="text-gray-600 font-medium mt-1">
-            Total: R$ {(payload[0].value + payload[1].value).toFixed(2)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Resumo Anual de Pagamentos</h2>
-          <div className="flex items-center space-x-4">
-            <button 
-              onClick={anoAnterior}
-              className="p-1 text-gray-600 hover:text-gray-900"
-              aria-label="Ano anterior"
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex justify-between items-center">
+          <span>Pagamentos Anuais ({anoSelecionado})</span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setAnoSelecionado(anoSelecionado - 1)}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
             >
-              <ChevronLeft className="h-5 w-5" />
+              {anoSelecionado - 1}
             </button>
-            <div className="flex items-center text-gray-800 font-medium">
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              <span>{anoSelecionado}</span>
-            </div>
-            <button 
-              onClick={proximoAno}
-              className="p-1 text-gray-600 hover:text-gray-900"
-              aria-label="Próximo ano"
-              disabled={anoSelecionado >= new Date().getFullYear() + 1}
+            <button
+              onClick={() => setAnoSelecionado(anoSelecionado + 1)}
+              className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded"
             >
-              <ChevronRight className="h-5 w-5" />
+              {anoSelecionado + 1}
             </button>
           </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <p className="text-green-800 font-medium">Total Recebido</p>
-            <p className="text-2xl font-bold text-green-700">
-              R$ {totalRecebidoAnual.toFixed(2)}
-            </p>
-          </div>
-          
-          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
-            <p className="text-amber-800 font-medium">Total Pendente</p>
-            <p className="text-2xl font-bold text-amber-700">
-              R$ {totalPendenteAnual.toFixed(2)}
-            </p>
-          </div>
-        </div>
-
-        <div className="h-96">
-          <ChartContainer 
-            config={{
-              recebido: {
-                theme: {
-                  light: "#22c55e",
-                  dark: "#22c55e"
-                },
-                label: "Recebido"
-              },
-              pendente: {
-                theme: {
-                  light: "#f59e0b",
-                  dark: "#f59e0b"
-                },
-                label: "Pendente"
-              }
-            }}
-          >
-            <BarChart 
-              data={dadosGrafico}
-              margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="nome" 
-                angle={-45} 
-                textAnchor="end" 
-                height={80}
-                tick={{ fontSize: 12 }}
+        </CardTitle>
+        <CardDescription>
+          Total recebido: R$ {totalRecebido.toFixed(2)} | 
+          Total pendente: R$ {totalPendente.toFixed(2)}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={dadosPagamentos}>
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="rounded-lg border bg-background p-3 shadow-sm">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                              Recebido
+                            </span>
+                            <span className="font-bold text-green-600">
+                              R$ {payload[0]?.value?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-[0.70rem] uppercase text-muted-foreground">
+                              Pendente
+                            </span>
+                            <span className="font-bold text-orange-600">
+                              R$ {payload[1]?.value?.toFixed(2) || '0.00'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return null
+                }}
               />
-              <YAxis 
-                tick={{ fontSize: 12 }}
-                tickFormatter={(value) => `R$ ${value}`}
+              <Area
+                dataKey="recebido"
+                type="monotone"
+                fill="currentColor"
+                className="fill-green-200 stroke-green-500"
+                strokeWidth={2}
               />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="recebido" name="Recebido" fill="var(--color-recebido)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="pendente" name="Pendente" fill="var(--color-pendente)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ChartContainer>
+              <Area
+                dataKey="pendente"
+                type="monotone"
+                fill="currentColor"
+                className="fill-orange-200 stroke-orange-500"
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      </div>
-      
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <h2 className="text-xl font-bold mb-4">Detalhamento Mensal de {anoSelecionado}</h2>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="py-3 px-4 font-medium text-gray-600">Mês</th>
-                <th className="py-3 px-4 font-medium text-gray-600">Recebido</th>
-                <th className="py-3 px-4 font-medium text-gray-600">Pendente</th>
-                <th className="py-3 px-4 font-medium text-gray-600">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {dadosGrafico.map((mes, index) => (
-                <tr key={index} className="hover:bg-gray-50">
-                  <td className="py-3 px-4 font-medium">{mes.nome}</td>
-                  <td className="py-3 px-4 text-green-600">R$ {mes.recebido.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-amber-600">R$ {mes.pendente.toFixed(2)}</td>
-                  <td className="py-3 px-4 font-medium">R$ {mes.total.toFixed(2)}</td>
-                </tr>
-              ))}
-              <tr className="bg-gray-50 font-semibold">
-                <td className="py-3 px-4">Total</td>
-                <td className="py-3 px-4 text-green-700">R$ {totalRecebidoAnual.toFixed(2)}</td>
-                <td className="py-3 px-4 text-amber-700">R$ {totalPendenteAnual.toFixed(2)}</td>
-                <td className="py-3 px-4">R$ {(totalRecebidoAnual + totalPendenteAnual).toFixed(2)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

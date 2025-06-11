@@ -41,8 +41,6 @@ const DashboardProfessor: React.FC = () => {
   const [totalAlunos, setTotalAlunos] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [anoSelecionado, setAnoSelecionado] = useState<number>(new Date().getFullYear());
-  
-  const [totalAlunosMensais] = useState(15);
 
   useEffect(() => {
     const carregarDados = async () => {
@@ -76,8 +74,6 @@ const DashboardProfessor: React.FC = () => {
   const totalRecebido = calcularTotalRecebido(pagamentos);
   const totalPendente = calcularTotalPendente(pagamentos);
 
-  const hoje = new Date();
-
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -110,9 +106,9 @@ const DashboardProfessor: React.FC = () => {
             </TabsList>
             
             <TabsContent value="resumo">
-              <div className="flex flex-wrap -mx-3">
-                {/* Coluna Esquerda - Cards */}
-                <div className="w-full md:w-1/3 px-3">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Coluna 1 - Cards de Estatísticas */}
+                <div className="lg:col-span-1">
                   <DashboardCards 
                     totalAlunos={totalAlunos}
                     totalRecebido={totalRecebido}
@@ -122,9 +118,9 @@ const DashboardProfessor: React.FC = () => {
                   />
                 </div>
                 
-                {/* Coluna Central - Atividades */}
-                <div className="w-full md:w-1/3 px-3">
-                  <div className="bg-white rounded-lg shadow-sm p-5 mb-6">
+                {/* Coluna 2 - Atividades Recentes */}
+                <div className="lg:col-span-1">
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-700">Atividades Recentes</h3>
                       <Link to="/gerenciar-agendamentos" className="text-xs text-orange-500 hover:text-orange-600 cursor-pointer">
@@ -182,7 +178,7 @@ const DashboardProfessor: React.FC = () => {
                   
                   {/* Plano do Professor */}
                   {plano && (
-                    <div className="bg-white rounded-lg shadow-sm p-5">
+                    <div className="bg-white rounded-lg shadow-sm p-6">
                       <div className="flex justify-between items-center mb-4">
                         <h3 className="text-lg font-semibold text-gray-700">Plano Atual</h3>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -224,10 +220,10 @@ const DashboardProfessor: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Coluna Direita - Calendário e Notificações */}
-                <div className="w-full md:w-1/3 px-3">
+                {/* Coluna 3 - Próximos Agendamentos e Status */}
+                <div className="lg:col-span-1">
                   {/* Próximos Agendamentos */}
-                  <div className="bg-white rounded-lg shadow-sm p-5 mb-6">
+                  <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Próximos Agendamentos</h3>
                     
                     {isLoading ? (
@@ -272,7 +268,7 @@ const DashboardProfessor: React.FC = () => {
                   </div>
                   
                   {/* Sistema Status */}
-                  <div className="bg-white rounded-lg shadow-sm p-5">
+                  <div className="bg-white rounded-lg shadow-sm p-6">
                     <div className="flex justify-between items-center mb-4">
                       <h3 className="text-lg font-semibold text-gray-700">Status do Sistema</h3>
                     </div>
@@ -311,7 +307,6 @@ const DashboardProfessor: React.FC = () => {
 
             <TabsContent value="alunos-mensais">
               <AlunosMensais 
-                alunosAtivos={totalAlunosMensais}
                 anoSelecionado={anoSelecionado}
               />
             </TabsContent>
