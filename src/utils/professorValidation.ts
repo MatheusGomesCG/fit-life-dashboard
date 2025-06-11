@@ -16,17 +16,50 @@ export interface ValidationResult {
 }
 
 export const validateProfessorForm = (formData: ProfessorFormData): ValidationResult => {
-  if (!formData.nome || !formData.email || !formData.senha) {
+  // Validar campos obrigatórios
+  if (!formData.nome?.trim()) {
     return {
       isValid: false,
-      message: "Nome, email e senha são obrigatórios"
+      message: "Nome é obrigatório"
     };
   }
 
+  if (!formData.email?.trim()) {
+    return {
+      isValid: false,
+      message: "Email é obrigatório"
+    };
+  }
+
+  if (!formData.senha?.trim()) {
+    return {
+      isValid: false,
+      message: "Senha é obrigatória"
+    };
+  }
+
+  // Validar formato do email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(formData.email.trim())) {
+    return {
+      isValid: false,
+      message: "Formato de email inválido"
+    };
+  }
+
+  // Validar tamanho da senha
   if (formData.senha.length < 6) {
     return {
       isValid: false,
       message: "A senha deve ter pelo menos 6 caracteres"
+    };
+  }
+
+  // Validar tamanho do nome
+  if (formData.nome.trim().length < 2) {
+    return {
+      isValid: false,
+      message: "Nome deve ter pelo menos 2 caracteres"
     };
   }
 
