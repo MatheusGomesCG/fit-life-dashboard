@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
@@ -121,7 +122,7 @@ function App() {
               }
             />
             <Route
-              path="/cadastrar-treino"
+              path="/cadastrar-treino/:id"
               element={
                 <Layout>
                   <CadastrarTreino />
@@ -225,7 +226,7 @@ function App() {
               }
             />
             <Route
-              path="/gerenciar-fotos-aluno/:id"
+              path="/fotos-aluno/:id"
               element={
                 <Layout>
                   <GerenciarFotosAluno />

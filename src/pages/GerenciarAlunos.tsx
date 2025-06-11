@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -115,6 +116,10 @@ const GerenciarAlunos: React.FC = () => {
     navigate(`/ficha-treino/${alunoId}`);
   };
 
+  const navegarParaFotos = (alunoId: string) => {
+    navigate(`/fotos-aluno/${alunoId}`);
+  };
+
   // Mostrar loading se ainda está autenticando ou carregando dados
   if (authLoading || (isAuthenticated && user?.tipo === "professor" && isLoading)) {
     return (
@@ -207,7 +212,7 @@ const GerenciarAlunos: React.FC = () => {
                           <FileText className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => navigate(`/fotos-aluno/${aluno.id}`)}
+                          onClick={() => navegarParaFotos(aluno.id!)}
                           className="p-1 text-yellow-600 hover:text-yellow-800"
                           title="Gerenciar fotos"
                         >
