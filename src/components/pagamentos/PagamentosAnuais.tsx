@@ -131,6 +131,9 @@ const PagamentosAnuais: React.FC<PagamentosAnuaisProps> = ({
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
+                    const recebidoValue = typeof payload[0]?.value === 'number' ? payload[0].value : 0;
+                    const pendenteValue = typeof payload[1]?.value === 'number' ? payload[1].value : 0;
+                    
                     return (
                       <div className="rounded-lg border bg-background p-3 shadow-sm">
                         <div className="grid grid-cols-2 gap-2">
@@ -139,7 +142,7 @@ const PagamentosAnuais: React.FC<PagamentosAnuaisProps> = ({
                               Recebido
                             </span>
                             <span className="font-bold text-green-600">
-                              R$ {payload[0]?.value?.toFixed(2) || '0.00'}
+                              R$ {recebidoValue.toFixed(2)}
                             </span>
                           </div>
                           <div className="flex flex-col">
@@ -147,7 +150,7 @@ const PagamentosAnuais: React.FC<PagamentosAnuaisProps> = ({
                               Pendente
                             </span>
                             <span className="font-bold text-orange-600">
-                              R$ {payload[1]?.value?.toFixed(2) || '0.00'}
+                              R$ {pendenteValue.toFixed(2)}
                             </span>
                           </div>
                         </div>
