@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ const ConfiguracoesProfessor: React.FC = () => {
     if (user) {
       setNome(user.nome || user.profile?.nome || "");
       setTelefone(user.profile?.telefone || "");
-      setFotoPerfil(user.profile?.foto_perfil || null);
+      setFotoPerfil(user.profile?.foto_url || null);
     }
   }, [user]);
 
@@ -156,7 +155,7 @@ const ConfiguracoesProfessor: React.FC = () => {
         const { error } = await supabase
           .from('professor_profiles')
           .update({
-            foto_perfil: base64,
+            foto_url: base64,
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user.id);
