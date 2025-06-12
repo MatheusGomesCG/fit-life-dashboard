@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -38,7 +37,8 @@ const GerenciarAlunos: React.FC = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [filtro, setFiltro] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [alunoToDelete, setAlunoToDelete] = useState<string | null>(null);
+  const [alunoToDelete, setAlunoToDelete] = useState<{ id: string; nome: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const carregarAlunos = async () => {
     try {
@@ -89,20 +89,28 @@ const GerenciarAlunos: React.FC = () => {
     navigate(`/editar-aluno/${id}`);
   };
 
-  const handleDelete = (id: string) => {
-    setAlunoToDelete(id);
+  const handleDelete = (id: string, nome: string) => {
+    setAlunoToDelete({ id, nome });
   };
 
   const confirmDelete = async () => {
     if (alunoToDelete) {
+      setIsDeleting(true);
       try {
-        await excluirAluno(alunoToDelete);
-        toast.success("Aluno excluído com sucesso!");
-        carregarAlunos();
+        console.log("🗑️ [GerenciarAlunos] Iniciando exclusão do aluno:", alunoToDelete);
+        
+        await excluirAluno(alunoToDelete.id);
+        
+        toast.success(`Aluno "${alunoToDelete.nome}" foi excluído permanentemente!`);
+        
+        // Recarregar a lista de alunos para refletir a exclusão
+        await carregarAlunos();
+        
       } catch (error) {
-        console.error("Erro ao excluir aluno:", error);
-        toast.error("Erro ao excluir aluno.");
+        console.error("❌ [GerenciarAlunos] Erro ao excluir aluno:", error);
+        toast.error("Erro ao excluir aluno. Tente novamente.");
       } finally {
+        setIsDeleting(false);
         setAlunoToDelete(null);
       }
     }
@@ -219,7 +227,7 @@ const GerenciarAlunos: React.FC = () => {
                           <Camera className="h-5 w-5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(aluno.id!)}
+                          onClick={() => handleDelete(aluno.id!, aluno.nome)}
                           className="p-1 text-red-600 hover:text-red-800"
                           title="Excluir aluno"
                         >
@@ -241,15 +249,37 @@ const GerenciarAlunos: React.FC = () => {
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação irá excluir o aluno permanentemente. Tem certeza que
-              deseja continuar?
+            <AlertDialogTitle className="text-red-600">⚠️ Exclusão Permanente</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p className="font-medium">
+                Você está prestes a excluir permanentemente o aluno "{alunoToDelete?.nome}".
+              </p>
+              <p className="text-sm text-gray-600">
+                Esta ação irá remover:
+              </p>
+              <ul className="text-sm text-gray-600 list-disc list-inside space-y-1">
+                <li>Todas as fichas de treino</li>
+                <li>Histórico de agendamentos</li>
+                <li>Registros de pagamentos</li>
+                <li>Conversas e mensagens</li>
+                <li>Conta de acesso do aluno</li>
+              </ul>
+              <p className="font-medium text-red-600 mt-3">
+                ⚠️ Esta ação é irreversível e não pode ser desfeita!
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+            <AlertDialogCancel onClick={cancelDelete} disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete} 
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir Permanentemente"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

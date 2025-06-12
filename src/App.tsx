@@ -31,6 +31,7 @@ import ChatProfessor from "@/pages/ChatProfessor";
 import Chat from "@/pages/Chat";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
 import MinhasMedidas from "@/pages/MinhasMedidas";
+import ConfiguracoesProfessor from "@/pages/ConfiguracoesProfessor";
 import NotFound from "@/pages/NotFound";
 
 function App() {
@@ -238,6 +239,14 @@ function App() {
               element={
                 <Layout>
                   <MinhasMedidas />
+                </Layout>
+              }
+            />
+            <Route
+              path="/configuracoes"
+              element={
+                <Layout>
+                  <ConfiguracoesProfessor />
                 </Layout>
               }
             />
