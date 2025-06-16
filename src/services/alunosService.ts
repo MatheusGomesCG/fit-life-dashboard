@@ -199,7 +199,7 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
 };
 
 // Criar um novo aluno (also exported as cadastrarAluno)
-export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura">): Promise<Aluno> => {
+export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura" | "fotos">): Promise<Aluno> => {
   try {
     console.log("🔄 [criarAluno] Iniciando criação de aluno:", aluno.email);
     
@@ -255,15 +255,15 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
         restricoes_medicas: aluno.restricoes_medicas,
         professor_id: currentUser.user.id,
         senha_temporaria: true,
-        data_nascimento: aluno.dataNascimento,
+        data_nascimento: aluno.dataNascimento?.toISOString().split('T')[0] || null,
         genero: aluno.genero,
         endereco: aluno.endereco,
         observacoes: aluno.observacoes,
         valor_mensalidade: aluno.valorMensalidade,
-        data_vencimento: aluno.dataVencimento,
+        data_vencimento: aluno.dataVencimento?.toISOString().split('T')[0] || null,
         dobras_cutaneas: aluno.dobrasCutaneas,
         imc: calcularIMC(aluno.peso, aluno.altura),
-        percentual_gordura: aluno.percentualGordura
+        percentual_gordura: 22 // default value
       })
       .select()
       .single();
@@ -287,7 +287,7 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
       telefone: aluno.telefone,
       restricoes_medicas: aluno.restricoes_medicas,
       imc: calcularIMC(aluno.peso, aluno.altura),
-      percentualGordura: aluno.percentualGordura || 22,
+      percentualGordura: 22,
       dataNascimento: aluno.dataNascimento,
       genero: aluno.genero,
       endereco: aluno.endereco,
@@ -347,7 +347,7 @@ export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
   }
 };
 
-export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id" | "imc" | "percentualGordura">>): Promise<Aluno | null> => {
+export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id" | "imc" | "fotos">>): Promise<Aluno | null> => {
   try {
     const { data, error } = await supabase
       .from('aluno_profiles')
@@ -361,12 +361,12 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
         experiencia: aluno.experiencia,
         telefone: aluno.telefone,
         restricoes_medicas: aluno.restricoes_medicas,
-        data_nascimento: aluno.dataNascimento,
+        data_nascimento: aluno.dataNascimento?.toISOString().split('T')[0] || null,
         genero: aluno.genero,
         endereco: aluno.endereco,
         observacoes: aluno.observacoes,
         valor_mensalidade: aluno.valorMensalidade,
-        data_vencimento: aluno.dataVencimento,
+        data_vencimento: aluno.dataVencimento?.toISOString().split('T')[0] || null,
         dobras_cutaneas: aluno.dobrasCutaneas,
         imc: aluno.peso && aluno.altura ? calcularIMC(aluno.peso, aluno.altura) : undefined,
         percentual_gordura: aluno.percentualGordura
