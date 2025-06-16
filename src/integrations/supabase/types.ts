@@ -93,12 +93,20 @@ export type Database = {
         Row: {
           altura: number | null
           created_at: string
+          data_nascimento: string | null
+          data_vencimento: string | null
+          dobras_cutaneas: Json | null
           email: string
+          endereco: string | null
           experiencia: string | null
+          genero: string | null
           id: string
           idade: number | null
+          imc: number | null
           nome: string
           objetivo: string | null
+          observacoes: string | null
+          percentual_gordura: number | null
           peso: number | null
           professor_id: string
           restricoes_medicas: string | null
@@ -106,16 +114,25 @@ export type Database = {
           telefone: string | null
           updated_at: string
           user_id: string
+          valor_mensalidade: number | null
         }
         Insert: {
           altura?: number | null
           created_at?: string
+          data_nascimento?: string | null
+          data_vencimento?: string | null
+          dobras_cutaneas?: Json | null
           email: string
+          endereco?: string | null
           experiencia?: string | null
+          genero?: string | null
           id?: string
           idade?: number | null
+          imc?: number | null
           nome: string
           objetivo?: string | null
+          observacoes?: string | null
+          percentual_gordura?: number | null
           peso?: number | null
           professor_id: string
           restricoes_medicas?: string | null
@@ -123,16 +140,25 @@ export type Database = {
           telefone?: string | null
           updated_at?: string
           user_id: string
+          valor_mensalidade?: number | null
         }
         Update: {
           altura?: number | null
           created_at?: string
+          data_nascimento?: string | null
+          data_vencimento?: string | null
+          dobras_cutaneas?: Json | null
           email?: string
+          endereco?: string | null
           experiencia?: string | null
+          genero?: string | null
           id?: string
           idade?: number | null
+          imc?: number | null
           nome?: string
           objetivo?: string | null
+          observacoes?: string | null
+          percentual_gordura?: number | null
           peso?: number | null
           professor_id?: string
           restricoes_medicas?: string | null
@@ -140,6 +166,7 @@ export type Database = {
           telefone?: string | null
           updated_at?: string
           user_id?: string
+          valor_mensalidade?: number | null
         }
         Relationships: []
       }
@@ -255,6 +282,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fichas_treino_aluno_id_fkey"
+            columns: ["aluno_id"]
+            isOneToOne: false
+            referencedRelation: "aluno_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      historico_medidas: {
+        Row: {
+          altura: number | null
+          aluno_id: string
+          created_at: string
+          data_medicao: string
+          dobras_cutaneas: Json | null
+          id: string
+          imc: number | null
+          observacoes: string | null
+          percentual_gordura: number | null
+          peso: number | null
+          updated_at: string
+        }
+        Insert: {
+          altura?: number | null
+          aluno_id: string
+          created_at?: string
+          data_medicao?: string
+          dobras_cutaneas?: Json | null
+          id?: string
+          imc?: number | null
+          observacoes?: string | null
+          percentual_gordura?: number | null
+          peso?: number | null
+          updated_at?: string
+        }
+        Update: {
+          altura?: number | null
+          aluno_id?: string
+          created_at?: string
+          data_medicao?: string
+          dobras_cutaneas?: Json | null
+          id?: string
+          imc?: number | null
+          observacoes?: string | null
+          percentual_gordura?: number | null
+          peso?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_medidas_aluno_id_fkey"
             columns: ["aluno_id"]
             isOneToOne: false
             referencedRelation: "aluno_profiles"

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { gerarSenhaAleatoria } from "@/utils/passwordGenerator";
 
@@ -15,7 +14,7 @@ export interface Aluno {
   restricoes_medicas: string;
   imc?: number;
   percentualGordura?: number;
-  // Additional fields for the complete aluno interface
+  // Additional fields now stored in the database
   dataNascimento?: Date | null;
   genero?: "masculino" | "feminino" | "outro";
   endereco?: string;
@@ -39,10 +38,31 @@ export interface FotoAluno {
   aluno_id: string;
   url: string;
   data_upload: string;
-  data?: string; // Added missing property
-  descricao?: string; // Added missing property
+  data?: string;
+  descricao?: string;
   tipo: "frente" | "lado" | "costas";
   observacoes?: string;
+}
+
+export interface HistoricoMedida {
+  id: string;
+  aluno_id: string;
+  peso?: number;
+  altura?: number;
+  imc?: number;
+  percentual_gordura?: number;
+  dobras_cutaneas?: {
+    triceps: number;
+    subescapular: number;
+    axilarMedia: number;
+    peitoral: number;
+    suprailiaca: number;
+    abdominal: number;
+    coxa: number;
+  };
+  observacoes?: string;
+  data_medicao: string;
+  created_at: string;
 }
 
 export interface CargaExercicio {
@@ -159,8 +179,15 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
       experiencia: aluno.experiencia,
       telefone: aluno.telefone,
       restricoes_medicas: aluno.restricoes_medicas,
-      imc: calcularIMC(aluno.peso, aluno.altura),
-      percentualGordura: 22
+      imc: aluno.imc || calcularIMC(aluno.peso, aluno.altura),
+      percentualGordura: aluno.percentual_gordura || 22,
+      dataNascimento: aluno.data_nascimento ? new Date(aluno.data_nascimento) : null,
+      genero: aluno.genero as "masculino" | "feminino" | "outro",
+      endereco: aluno.endereco,
+      observacoes: aluno.observacoes,
+      valorMensalidade: aluno.valor_mensalidade,
+      dataVencimento: aluno.data_vencimento ? new Date(aluno.data_vencimento) : null,
+      dobrasCutaneas: aluno.dobras_cutaneas as any
     }));
 
     console.log("✅ [listarAlunos] Alunos processados:", alunos);
@@ -226,8 +253,17 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
         experiencia: aluno.experiencia,
         telefone: aluno.telefone,
         restricoes_medicas: aluno.restricoes_medicas,
-        professor_id: currentUser.user.id, // Use the CURRENT professor's ID, not the student's ID
-        senha_temporaria: true
+        professor_id: currentUser.user.id,
+        senha_temporaria: true,
+        data_nascimento: aluno.dataNascimento,
+        genero: aluno.genero,
+        endereco: aluno.endereco,
+        observacoes: aluno.observacoes,
+        valor_mensalidade: aluno.valorMensalidade,
+        data_vencimento: aluno.dataVencimento,
+        dobras_cutaneas: aluno.dobrasCutaneas,
+        imc: calcularIMC(aluno.peso, aluno.altura),
+        percentual_gordura: aluno.percentualGordura
       })
       .select()
       .single();
@@ -251,7 +287,14 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
       telefone: aluno.telefone,
       restricoes_medicas: aluno.restricoes_medicas,
       imc: calcularIMC(aluno.peso, aluno.altura),
-      percentualGordura: 22
+      percentualGordura: aluno.percentualGordura || 22,
+      dataNascimento: aluno.dataNascimento,
+      genero: aluno.genero,
+      endereco: aluno.endereco,
+      observacoes: aluno.observacoes,
+      valorMensalidade: aluno.valorMensalidade,
+      dataVencimento: aluno.dataVencimento,
+      dobrasCutaneas: aluno.dobrasCutaneas
     };
   } catch (error) {
     console.error("❌ [criarAluno] Erro ao criar aluno:", error);
@@ -287,9 +330,16 @@ export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
       experiencia: data.experiencia,
       telefone: data.telefone,
       restricoes_medicas: data.restricoes_medicas,
-      imc: calcularIMC(data.peso, data.altura),
-      percentualGordura: 22,
-      fotos: [] // Mock empty photos array
+      imc: data.imc || calcularIMC(data.peso, data.altura),
+      percentualGordura: data.percentual_gordura || 22,
+      fotos: [], // Mock empty photos array
+      dataNascimento: data.data_nascimento ? new Date(data.data_nascimento) : null,
+      genero: data.genero as "masculino" | "feminino" | "outro",
+      endereco: data.endereco,
+      observacoes: data.observacoes,
+      valorMensalidade: data.valor_mensalidade,
+      dataVencimento: data.data_vencimento ? new Date(data.data_vencimento) : null,
+      dobrasCutaneas: data.dobras_cutaneas as any
     };
   } catch (error) {
     console.error("Erro ao buscar aluno por ID:", error);
@@ -310,7 +360,16 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
         objetivo: aluno.objetivo,
         experiencia: aluno.experiencia,
         telefone: aluno.telefone,
-        restricoes_medicas: aluno.restricoes_medicas
+        restricoes_medicas: aluno.restricoes_medicas,
+        data_nascimento: aluno.dataNascimento,
+        genero: aluno.genero,
+        endereco: aluno.endereco,
+        observacoes: aluno.observacoes,
+        valor_mensalidade: aluno.valorMensalidade,
+        data_vencimento: aluno.dataVencimento,
+        dobras_cutaneas: aluno.dobrasCutaneas,
+        imc: aluno.peso && aluno.altura ? calcularIMC(aluno.peso, aluno.altura) : undefined,
+        percentual_gordura: aluno.percentualGordura
       })
       .eq('user_id', id)
       .select()
@@ -328,9 +387,16 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
       objetivo: data.objetivo,
       experiencia: data.experiencia,
       telefone: data.telefone,
-      restricoes_medicas: aluno.restricoes_medicas,
-      imc: calcularIMC(data.peso, data.altura),
-      percentualGordura: 22
+      restricoes_medicas: data.restricoes_medicas,
+      imc: data.imc || calcularIMC(data.peso, data.altura),
+      percentualGordura: data.percentual_gordura || 22,
+      dataNascimento: data.data_nascimento ? new Date(data.data_nascimento) : null,
+      genero: data.genero as "masculino" | "feminino" | "outro",
+      endereco: data.endereco,
+      observacoes: data.observacoes,
+      valorMensalidade: data.valor_mensalidade,
+      dataVencimento: data.data_vencimento ? new Date(data.data_vencimento) : null,
+      dobrasCutaneas: data.dobras_cutaneas as any
     };
   } catch (error) {
     console.error("Erro ao atualizar aluno:", error);
@@ -473,6 +539,74 @@ export const removerFotoAluno = async (fotoId: string): Promise<void> => {
   console.log("Foto removida:", fotoId);
 };
 
+// Buscar histórico de medidas de um aluno
+export const buscarHistoricoMedidas = async (alunoId: string): Promise<HistoricoMedida[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('historico_medidas')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_medicao', { ascending: false });
+
+    if (error) throw error;
+
+    return data.map(medida => ({
+      id: medida.id,
+      aluno_id: medida.aluno_id,
+      peso: medida.peso,
+      altura: medida.altura,
+      imc: medida.imc,
+      percentual_gordura: medida.percentual_gordura,
+      dobras_cutaneas: medida.dobras_cutaneas as any,
+      observacoes: medida.observacoes,
+      data_medicao: medida.data_medicao,
+      created_at: medida.created_at
+    }));
+  } catch (error) {
+    console.error("Erro ao buscar histórico de medidas:", error);
+    throw error;
+  }
+};
+
+// Adicionar nova medida ao histórico
+export const adicionarMedidaHistorico = async (medida: Omit<HistoricoMedida, "id" | "created_at">): Promise<HistoricoMedida> => {
+  try {
+    const { data, error } = await supabase
+      .from('historico_medidas')
+      .insert({
+        aluno_id: medida.aluno_id,
+        peso: medida.peso,
+        altura: medida.altura,
+        imc: medida.imc,
+        percentual_gordura: medida.percentual_gordura,
+        dobras_cutaneas: medida.dobras_cutaneas,
+        observacoes: medida.observacoes,
+        data_medicao: medida.data_medicao
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      id: data.id,
+      aluno_id: data.aluno_id,
+      peso: data.peso,
+      altura: data.altura,
+      imc: data.imc,
+      percentual_gordura: data.percentual_gordura,
+      dobras_cutaneas: data.dobras_cutaneas as any,
+      observacoes: data.observacoes,
+      data_medicao: data.data_medicao,
+      created_at: data.created_at
+    };
+  } catch (error) {
+    console.error("Erro ao adicionar medida ao histórico:", error);
+    throw error;
+  }
+};
+
+// Buscar ficha de treino de um aluno
 export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {
   try {
     const { data, error } = await supabase
@@ -515,6 +649,7 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
   }
 };
 
+// Criar ou atualizar ficha de treino
 export const criarOuAtualizarFichaTreino = async (
   alunoId: string, 
   exercicios: CargaExercicio[]
