@@ -90,6 +90,11 @@ const HistoricoMedidasAluno: React.FC = () => {
 
   const idadeCalculada = aluno.dataNascimento ? calcularIdade(aluno.dataNascimento) : aluno.idade;
 
+  // Filter gender to only pass supported values to HistoricoMedidas
+  const generoParaHistorico = aluno.genero && (aluno.genero === "masculino" || aluno.genero === "feminino") 
+    ? aluno.genero 
+    : undefined;
+
   return (
     <div className="space-y-6">
       {/* Header com botão de voltar */}
@@ -273,7 +278,7 @@ const HistoricoMedidasAluno: React.FC = () => {
         <CardContent className="p-6">
           <HistoricoMedidas 
             alunoId={alunoId} 
-            genero={aluno.genero}
+            genero={generoParaHistorico}
             idade={idadeCalculada || undefined}
           />
         </CardContent>
