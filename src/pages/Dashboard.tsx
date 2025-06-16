@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -11,15 +10,17 @@ import {
   MessageSquare,
   ChevronRight,
   CheckCircle,
-  Clock
+  Clock,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { buscarPagamentosPorAluno, Pagamento } from "@/services/pagamentosService";
 import { format } from "date-fns";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [pagamentos, setPagamentos] = useState<Pagamento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,17 +43,36 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
+
   const proximoPagamento = pagamentos
     .filter(p => p.status === "pendente")
     .sort((a, b) => new Date(a.data_vencimento).getTime() - new Date(b.data_vencimento).getTime())[0];
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard do Aluno</h1>
-        <p className="text-gray-600 mt-1">
-          Bem-vindo ao sistema de avaliação física, {user?.nome || "Aluno"}
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard do Aluno</h1>
+          <p className="text-gray-600 mt-1">
+            Bem-vindo ao sistema de avaliação física, {user?.nome || "Aluno"}
+          </p>
+        </div>
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -339,9 +339,76 @@ export const atualizarAluno = async (id: string, aluno: Partial<Omit<Aluno, "id"
 
 export const excluirAluno = async (id: string): Promise<void> => {
   try {
-    console.log("🗑️ [excluirAluno] Iniciando exclusão do aluno:", id);
+    console.log("🗑️ [excluirAluno] Iniciando exclusão completa do aluno:", id);
     
-    // First, delete the student profile
+    // 1. Delete all related data first (in order to avoid foreign key constraints)
+    
+    // Delete exercicios_treino related to the student's fichas_treino
+    const { error: exerciciosError } = await supabase
+      .from('exercicios_treino')
+      .delete()
+      .in('ficha_treino_id', 
+        supabase
+          .from('fichas_treino')
+          .select('id')
+          .eq('aluno_id', id)
+      );
+
+    if (exerciciosError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir exercícios de treino:", exerciciosError);
+    }
+
+    // Delete fichas_treino
+    const { error: fichaError } = await supabase
+      .from('fichas_treino')
+      .delete()
+      .eq('aluno_id', id);
+
+    if (fichaError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir fichas de treino:", fichaError);
+    }
+
+    // Delete agendamentos
+    const { error: agendamentosError } = await supabase
+      .from('agendamentos')
+      .delete()
+      .eq('aluno_id', id);
+
+    if (agendamentosError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir agendamentos:", agendamentosError);
+    }
+
+    // Delete pagamentos
+    const { error: pagamentosError } = await supabase
+      .from('pagamentos')
+      .delete()
+      .eq('aluno_id', id);
+
+    if (pagamentosError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir pagamentos:", pagamentosError);
+    }
+
+    // Delete mensagens where student is sender or recipient
+    const { error: mensagensError } = await supabase
+      .from('mensagens')
+      .delete()
+      .or(`remetente_id.eq.${id},destinatario_id.eq.${id}`);
+
+    if (mensagensError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir mensagens:", mensagensError);
+    }
+
+    // Delete conversas
+    const { error: conversasError } = await supabase
+      .from('conversas')
+      .delete()
+      .eq('aluno_id', id);
+
+    if (conversasError) {
+      console.warn("⚠️ [excluirAluno] Erro ao excluir conversas:", conversasError);
+    }
+
+    // 2. Delete the student profile
     const { error: profileError } = await supabase
       .from('aluno_profiles')
       .delete()
@@ -352,53 +419,23 @@ export const excluirAluno = async (id: string): Promise<void> => {
       throw profileError;
     }
 
-    console.log("✅ [excluirAluno] Perfil do aluno excluído com sucesso");
+    console.log("✅ [excluirAluno] Perfil do aluno e dados relacionados excluídos com sucesso");
 
-    // Delete related data (fichas de treino, exercícios, mensagens, etc.)
-    const { error: fichaError } = await supabase
-      .from('fichas_treino')
-      .delete()
-      .eq('aluno_id', id);
+    // 3. Call edge function to delete the auth user
+    try {
+      const { error: authDeleteError } = await supabase.functions.invoke('delete-user', {
+        body: { user_id: id }
+      });
 
-    if (fichaError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir fichas de treino:", fichaError);
-    }
-
-    const { error: agendamentosError } = await supabase
-      .from('agendamentos')
-      .delete()
-      .eq('aluno_id', id);
-
-    if (agendamentosError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir agendamentos:", agendamentosError);
-    }
-
-    const { error: pagamentosError } = await supabase
-      .from('pagamentos')
-      .delete()
-      .eq('aluno_id', id);
-
-    if (pagamentosError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir pagamentos:", pagamentosError);
-    }
-
-    // Delete conversations and messages
-    const { error: mensagensError } = await supabase
-      .from('mensagens')
-      .delete()
-      .or(`remetente_id.eq.${id},destinatario_id.eq.${id}`);
-
-    if (mensagensError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir mensagens:", mensagensError);
-    }
-
-    const { error: conversasError } = await supabase
-      .from('conversas')
-      .delete()
-      .eq('aluno_id', id);
-
-    if (conversasError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir conversas:", conversasError);
+      if (authDeleteError) {
+        console.warn("⚠️ [excluirAluno] Erro ao excluir usuário de autenticação:", authDeleteError);
+        // Don't throw here as the profile and related data are already deleted
+      } else {
+        console.log("✅ [excluirAluno] Usuário de autenticação excluído com sucesso");
+      }
+    } catch (error) {
+      console.warn("⚠️ [excluirAluno] Erro na chamada da função de exclusão de usuário:", error);
+      // Don't throw here as the profile and related data are already deleted
     }
 
     console.log("✅ [excluirAluno] Aluno excluído completamente do sistema");
