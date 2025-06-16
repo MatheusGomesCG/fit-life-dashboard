@@ -36,6 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/gerenciar-pagamentos",
     "/chat-professor",
     "/fotos-aluno",
+    "/historico-medidas",
     "/configuracoes-professor"
   ];
 

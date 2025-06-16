@@ -29,7 +29,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash, UserPlus, Search, FileText, Camera } from "lucide-react";
+import { Edit, Trash, UserPlus, Search, FileText, Camera, History } from "lucide-react";
 
 const GerenciarAlunos: React.FC = () => {
   const navigate = useNavigate();
@@ -128,6 +128,10 @@ const GerenciarAlunos: React.FC = () => {
     navigate(`/fotos-aluno/${alunoId}`);
   };
 
+  const navegarParaHistoricoMedidas = (alunoId: string) => {
+    navigate(`/historico-medidas/${alunoId}`);
+  };
+
   // Mostrar loading se ainda está autenticando ou carregando dados
   if (authLoading || (isAuthenticated && user?.tipo === "professor" && isLoading)) {
     return (
@@ -218,6 +222,13 @@ const GerenciarAlunos: React.FC = () => {
                           title="Ficha de treino"
                         >
                           <FileText className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
+                          className="p-1 text-purple-600 hover:text-purple-800"
+                          title="Histórico de medidas"
+                        >
+                          <History className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => navegarParaFotos(aluno.id!)}
