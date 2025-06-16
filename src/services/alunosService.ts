@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { gerarSenhaAleatoria } from "@/utils/passwordGenerator";
 
@@ -343,19 +344,28 @@ export const excluirAluno = async (id: string): Promise<void> => {
     
     // 1. Delete all related data first (in order to avoid foreign key constraints)
     
-    // Delete exercicios_treino related to the student's fichas_treino
-    const { error: exerciciosError } = await supabase
-      .from('exercicios_treino')
-      .delete()
-      .in('ficha_treino_id', 
-        supabase
-          .from('fichas_treino')
-          .select('id')
-          .eq('aluno_id', id)
-      );
+    // First, get all ficha_treino IDs for this student
+    const { data: fichasTreino, error: fichasError } = await supabase
+      .from('fichas_treino')
+      .select('id')
+      .eq('aluno_id', id);
 
-    if (exerciciosError) {
-      console.warn("⚠️ [excluirAluno] Erro ao excluir exercícios de treino:", exerciciosError);
+    if (fichasError) {
+      console.warn("⚠️ [excluirAluno] Erro ao buscar fichas de treino:", fichasError);
+    }
+
+    // Delete exercicios_treino related to the student's fichas_treino
+    if (fichasTreino && fichasTreino.length > 0) {
+      const fichaIds = fichasTreino.map(ficha => ficha.id);
+      
+      const { error: exerciciosError } = await supabase
+        .from('exercicios_treino')
+        .delete()
+        .in('ficha_treino_id', fichaIds);
+
+      if (exerciciosError) {
+        console.warn("⚠️ [excluirAluno] Erro ao excluir exercícios de treino:", exerciciosError);
+      }
     }
 
     // Delete fichas_treino
