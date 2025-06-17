@@ -35,7 +35,7 @@ const ModernSidebar: React.FC = () => {
     { path: "/gerenciar-ficha-treino", icon: FileText, label: "TREINOS" },
     { path: "/gerenciar-pagamentos", icon: DollarSign, label: "FINANCEIRO" },
     { path: "/gerenciar-agendamentos", icon: Calendar, label: "AGENDAMENTOS" },
-    { path: "/historico-medidas", icon: TrendingUp, label: "HISTÓRICO" },
+    { path: "/gerenciar-alunos", icon: TrendingUp, label: "HISTÓRICO" },
     { path: "/configuracoes-professor", icon: Settings, label: "CONFIGURAÇÕES" },
   ];
 
@@ -73,7 +73,7 @@ const ModernSidebar: React.FC = () => {
           const Icon = item.icon;
           return (
             <Link
-              key={item.path}
+              key={item.path + item.label}
               to={item.path}
               className={`px-4 py-3 flex items-center cursor-pointer transition-colors ${
                 isActive(item.path) 
