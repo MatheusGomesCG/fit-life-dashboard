@@ -24,6 +24,7 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [incluirDobras, setIncluirDobras] = useState(false);
   
   const [novaMedida, setNovaMedida] = useState({
     peso: "",
@@ -38,6 +39,20 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
       suprailiaca: "",
       abdominal: "",
       coxa: "",
+    },
+    medidasCorporais: {
+      pescoco: "",
+      torax: "",
+      bracoEsquerdo: "",
+      bracoDireito: "",
+      antebracoEsquerdo: "",
+      antebracoDireito: "",
+      cintura: "",
+      quadril: "",
+      coxaEsquerda: "",
+      coxaDireita: "",
+      panturrilhaEsquerda: "",
+      panturrilhaDireita: "",
     }
   });
 
@@ -83,6 +98,19 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
     }));
   };
 
+  const handleMedidaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    const fieldName = id.split("-")[1]; // Formato: "medida-pescoco"
+    
+    setNovaMedida(prev => ({
+      ...prev,
+      medidasCorporais: {
+        ...prev.medidasCorporais,
+        [fieldName]: value
+      }
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -91,11 +119,13 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
       return;
     }
 
-    // Verificar se todas as dobras estão preenchidas
-    const dobras = Object.values(novaMedida.dobrasCutaneas);
-    if (dobras.some(value => value === "")) {
-      toast.error("Por favor, preencha todas as dobras cutâneas");
-      return;
+    // Se incluir dobras, verificar se todas estão preenchidas
+    if (incluirDobras) {
+      const dobras = Object.values(novaMedida.dobrasCutaneas);
+      if (dobras.some(value => value === "")) {
+        toast.error("Por favor, preencha todas as dobras cutâneas ou desmarque a opção");
+        return;
+      }
     }
 
     try {
@@ -105,18 +135,31 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
       const altura = parseFloat(novaMedida.altura);
       const imc = calcularIMC(peso, altura);
       
-      const dobrasCutaneasNumeric = {
-        triceps: parseFloat(novaMedida.dobrasCutaneas.triceps),
-        subescapular: parseFloat(novaMedida.dobrasCutaneas.subescapular),
-        axilarMedia: parseFloat(novaMedida.dobrasCutaneas.axilarMedia),
-        peitoral: parseFloat(novaMedida.dobrasCutaneas.peitoral),
-        suprailiaca: parseFloat(novaMedida.dobrasCutaneas.suprailiaca),
-        abdominal: parseFloat(novaMedida.dobrasCutaneas.abdominal),
-        coxa: parseFloat(novaMedida.dobrasCutaneas.coxa),
-      };
+      let dobrasCutaneasNumeric = null;
+      let percentualGordura = 22; // valor padrão
 
-      const percentualGordura = genero && idade ? 
-        calcularPercentualGordura(dobrasCutaneasNumeric, genero, idade) : 22;
+      if (incluirDobras) {
+        dobrasCutaneasNumeric = {
+          triceps: parseFloat(novaMedida.dobrasCutaneas.triceps),
+          subescapular: parseFloat(novaMedida.dobrasCutaneas.subescapular),
+          axilarMedia: parseFloat(novaMedida.dobrasCutaneas.axilarMedia),
+          peitoral: parseFloat(novaMedida.dobrasCutaneas.peitoral),
+          suprailiaca: parseFloat(novaMedida.dobrasCutaneas.suprailiaca),
+          abdominal: parseFloat(novaMedida.dobrasCutaneas.abdominal),
+          coxa: parseFloat(novaMedida.dobrasCutaneas.coxa),
+        };
+
+        percentualGordura = genero && idade ? 
+          calcularPercentualGordura(dobrasCutaneasNumeric, genero, idade) : 22;
+      }
+
+      // Processar medidas corporais (apenas as preenchidas)
+      const medidasCorporaisNumeric: any = {};
+      Object.entries(novaMedida.medidasCorporais).forEach(([key, value]) => {
+        if (value && value.trim() !== "") {
+          medidasCorporaisNumeric[key] = parseFloat(value);
+        }
+      });
 
       await adicionarMedidaHistorico({
         aluno_id: alunoId,
@@ -125,6 +168,7 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
         imc,
         percentual_gordura: percentualGordura,
         dobras_cutaneas: dobrasCutaneasNumeric,
+        medidas_corporais: Object.keys(medidasCorporaisNumeric).length > 0 ? medidasCorporaisNumeric : null,
         observacoes: novaMedida.observacoes,
         data_medicao: novaMedida.dataMedicao.toISOString().split('T')[0]
       });
@@ -147,8 +191,23 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
           suprailiaca: "",
           abdominal: "",
           coxa: "",
+        },
+        medidasCorporais: {
+          pescoco: "",
+          torax: "",
+          bracoEsquerdo: "",
+          bracoDireito: "",
+          antebracoEsquerdo: "",
+          antebracoDireito: "",
+          cintura: "",
+          quadril: "",
+          coxaEsquerda: "",
+          coxaDireita: "",
+          panturrilhaEsquerda: "",
+          panturrilhaDireita: "",
         }
       });
+      setIncluirDobras(false);
     } catch (error) {
       console.error("Erro ao adicionar medida:", error);
       toast.error("Erro ao adicionar medida ao histórico");
@@ -235,87 +294,229 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
               </div>
             </div>
 
+            {/* Medidas Corporais */}
             <div>
-              <h5 className="text-sm font-medium mb-3">Dobras Cutâneas (mm)</h5>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <h5 className="text-sm font-medium mb-3">Medidas Corporais (cm)</h5>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <FormInput
-                  id="dobra-triceps"
-                  label="Tríceps"
+                  id="medida-pescoco"
+                  label="Pescoço"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.triceps}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.pescoco}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-subescapular"
-                  label="Subescapular"
+                  id="medida-torax"
+                  label="Tórax"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.subescapular}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.torax}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-axilarMedia"
-                  label="Axilar Média"
+                  id="medida-bracoEsquerdo"
+                  label="Braço Esquerdo"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.axilarMedia}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.bracoEsquerdo}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-peitoral"
-                  label="Peitoral"
+                  id="medida-bracoDireito"
+                  label="Braço Direito"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.peitoral}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.bracoDireito}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-suprailiaca"
-                  label="Suprailíaca"
+                  id="medida-antebracoEsquerdo"
+                  label="Antebraço Esquerdo"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.suprailiaca}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.antebracoEsquerdo}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-abdominal"
-                  label="Abdominal"
+                  id="medida-antebracoDireito"
+                  label="Antebraço Direito"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.abdominal}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.antebracoDireito}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
                 />
                 
                 <FormInput
-                  id="dobra-coxa"
-                  label="Coxa"
+                  id="medida-cintura"
+                  label="Cintura"
                   type="number"
-                  value={novaMedida.dobrasCutaneas.coxa}
-                  onChange={handleDobraChange}
+                  value={novaMedida.medidasCorporais.cintura}
+                  onChange={handleMedidaChange}
                   min={0}
                   step={0.1}
-                  required
+                />
+                
+                <FormInput
+                  id="medida-quadril"
+                  label="Quadril"
+                  type="number"
+                  value={novaMedida.medidasCorporais.quadril}
+                  onChange={handleMedidaChange}
+                  min={0}
+                  step={0.1}
+                />
+                
+                <FormInput
+                  id="medida-coxaEsquerda"
+                  label="Coxa Esquerda"
+                  type="number"
+                  value={novaMedida.medidasCorporais.coxaEsquerda}
+                  onChange={handleMedidaChange}
+                  min={0}
+                  step={0.1}
+                />
+                
+                <FormInput
+                  id="medida-coxaDireita"
+                  label="Coxa Direita"
+                  type="number"
+                  value={novaMedida.medidasCorporais.coxaDireita}
+                  onChange={handleMedidaChange}
+                  min={0}
+                  step={0.1}
+                />
+                
+                <FormInput
+                  id="medida-panturrilhaEsquerda"
+                  label="Panturrilha Esquerda"
+                  type="number"
+                  value={novaMedida.medidasCorporais.panturrilhaEsquerda}
+                  onChange={handleMedidaChange}
+                  min={0}
+                  step={0.1}
+                />
+                
+                <FormInput
+                  id="medida-panturrilhaDireita"
+                  label="Panturrilha Direita"
+                  type="number"
+                  value={novaMedida.medidasCorporais.panturrilhaDireita}
+                  onChange={handleMedidaChange}
+                  min={0}
+                  step={0.1}
                 />
               </div>
             </div>
+
+            {/* Opção para incluir dobras cutâneas */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="incluirDobras"
+                checked={incluirDobras}
+                onChange={(e) => setIncluirDobras(e.target.checked)}
+                className="rounded"
+              />
+              <label htmlFor="incluirDobras" className="text-sm font-medium text-gray-700">
+                Incluir medição de dobras cutâneas
+              </label>
+            </div>
+
+            {incluirDobras && (
+              <div>
+                <h5 className="text-sm font-medium mb-3">Dobras Cutâneas (mm)</h5>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <FormInput
+                    id="dobra-triceps"
+                    label="Tríceps"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.triceps}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-subescapular"
+                    label="Subescapular"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.subescapular}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-axilarMedia"
+                    label="Axilar Média"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.axilarMedia}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-peitoral"
+                    label="Peitoral"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.peitoral}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-suprailiaca"
+                    label="Suprailíaca"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.suprailiaca}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-abdominal"
+                    label="Abdominal"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.abdominal}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                  
+                  <FormInput
+                    id="dobra-coxa"
+                    label="Coxa"
+                    type="number"
+                    value={novaMedida.dobrasCutaneas.coxa}
+                    onChange={handleDobraChange}
+                    min={0}
+                    step={0.1}
+                    required={incluirDobras}
+                  />
+                </div>
+              </div>
+            )}
 
             <div>
               <label htmlFor="observacoes" className="fitness-label block mb-2">
@@ -367,6 +568,7 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
                 <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Altura (cm)</th>
                 <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">IMC</th>
                 <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">% Gordura</th>
+                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Medidas</th>
                 <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Observações</th>
               </tr>
             </thead>
@@ -405,6 +607,22 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
                           getTendencia(medida.percentual_gordura, medidaAnterior.percentual_gordura)
                         }
                       </div>
+                    </td>
+                    <td className="border border-gray-200 px-4 py-3 text-sm">
+                      {medida.medidas_corporais ? (
+                        <div className="text-xs">
+                          {Object.entries(medida.medidas_corporais).map(([key, value]) => (
+                            <div key={key} className="truncate">
+                              {key}: {value}cm
+                            </div>
+                          )).slice(0, 3)}
+                          {Object.keys(medida.medidas_corporais).length > 3 && (
+                            <div className="text-gray-500">+{Object.keys(medida.medidas_corporais).length - 3} mais</div>
+                          )}
+                        </div>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className="border border-gray-200 px-4 py-3 text-sm">
                       {medida.observacoes || "-"}

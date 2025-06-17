@@ -103,6 +103,7 @@ export type Database = {
           id: string
           idade: number | null
           imc: number | null
+          medidas_corporais: Json | null
           nome: string
           objetivo: string | null
           observacoes: string | null
@@ -129,6 +130,7 @@ export type Database = {
           id?: string
           idade?: number | null
           imc?: number | null
+          medidas_corporais?: Json | null
           nome: string
           objetivo?: string | null
           observacoes?: string | null
@@ -155,6 +157,7 @@ export type Database = {
           id?: string
           idade?: number | null
           imc?: number | null
+          medidas_corporais?: Json | null
           nome?: string
           objetivo?: string | null
           observacoes?: string | null
@@ -298,6 +301,7 @@ export type Database = {
           dobras_cutaneas: Json | null
           id: string
           imc: number | null
+          medidas_corporais: Json | null
           observacoes: string | null
           percentual_gordura: number | null
           peso: number | null
@@ -311,6 +315,7 @@ export type Database = {
           dobras_cutaneas?: Json | null
           id?: string
           imc?: number | null
+          medidas_corporais?: Json | null
           observacoes?: string | null
           percentual_gordura?: number | null
           peso?: number | null
@@ -324,6 +329,7 @@ export type Database = {
           dobras_cutaneas?: Json | null
           id?: string
           imc?: number | null
+          medidas_corporais?: Json | null
           observacoes?: string | null
           percentual_gordura?: number | null
           peso?: number | null

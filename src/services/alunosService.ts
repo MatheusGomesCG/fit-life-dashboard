@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { gerarSenhaAleatoria } from "@/utils/passwordGenerator";
 
@@ -30,6 +31,20 @@ export interface Aluno {
     abdominal: number;
     coxa: number;
   };
+  medidasCorporais?: {
+    pescoco?: number;
+    torax?: number;
+    bracoEsquerdo?: number;
+    bracoDireito?: number;
+    antebracoEsquerdo?: number;
+    antebracoDireito?: number;
+    cintura?: number;
+    quadril?: number;
+    coxaEsquerda?: number;
+    coxaDireita?: number;
+    panturrilhaEsquerda?: number;
+    panturrilhaDireita?: number;
+  };
   fotos?: FotoAluno[];
 }
 
@@ -59,6 +74,20 @@ export interface HistoricoMedida {
     suprailiaca: number;
     abdominal: number;
     coxa: number;
+  };
+  medidas_corporais?: {
+    pescoco?: number;
+    torax?: number;
+    bracoEsquerdo?: number;
+    bracoDireito?: number;
+    antebracoEsquerdo?: number;
+    antebracoDireito?: number;
+    cintura?: number;
+    quadril?: number;
+    coxaEsquerda?: number;
+    coxaDireita?: number;
+    panturrilhaEsquerda?: number;
+    panturrilhaDireita?: number;
   };
   observacoes?: string;
   data_medicao: string;
@@ -187,7 +216,8 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
       observacoes: aluno.observacoes,
       valorMensalidade: aluno.valor_mensalidade,
       dataVencimento: aluno.data_vencimento ? new Date(aluno.data_vencimento) : null,
-      dobrasCutaneas: aluno.dobras_cutaneas as any
+      dobrasCutaneas: aluno.dobras_cutaneas as any,
+      medidasCorporais: aluno.medidas_corporais as any
     }));
 
     console.log("✅ [listarAlunos] Alunos processados:", alunos);
@@ -339,7 +369,8 @@ export const buscarAlunoPorId = async (id: string): Promise<Aluno | null> => {
       observacoes: data.observacoes,
       valorMensalidade: data.valor_mensalidade,
       dataVencimento: data.data_vencimento ? new Date(data.data_vencimento) : null,
-      dobrasCutaneas: data.dobras_cutaneas as any
+      dobrasCutaneas: data.dobras_cutaneas as any,
+      medidasCorporais: data.medidas_corporais as any
     };
   } catch (error) {
     console.error("Erro ao buscar aluno por ID:", error);
@@ -558,6 +589,7 @@ export const buscarHistoricoMedidas = async (alunoId: string): Promise<Historico
       imc: medida.imc,
       percentual_gordura: medida.percentual_gordura,
       dobras_cutaneas: medida.dobras_cutaneas as any,
+      medidas_corporais: medida.medidas_corporais as any,
       observacoes: medida.observacoes,
       data_medicao: medida.data_medicao,
       created_at: medida.created_at
@@ -580,6 +612,7 @@ export const adicionarMedidaHistorico = async (medida: Omit<HistoricoMedida, "id
         imc: medida.imc,
         percentual_gordura: medida.percentual_gordura,
         dobras_cutaneas: medida.dobras_cutaneas,
+        medidas_corporais: medida.medidas_corporais,
         observacoes: medida.observacoes,
         data_medicao: medida.data_medicao
       })
@@ -596,6 +629,7 @@ export const adicionarMedidaHistorico = async (medida: Omit<HistoricoMedida, "id
       imc: data.imc,
       percentual_gordura: data.percentual_gordura,
       dobras_cutaneas: data.dobras_cutaneas as any,
+      medidas_corporais: data.medidas_corporais as any,
       observacoes: data.observacoes,
       data_medicao: data.data_medicao,
       created_at: data.created_at
