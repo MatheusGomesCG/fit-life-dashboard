@@ -24,7 +24,8 @@ import {
   CreditCard,
   CalendarPlus,
   Settings,
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
 
 const ProfessorNavigation: React.FC = () => {
@@ -68,6 +69,17 @@ const ProfessorNavigation: React.FC = () => {
           href: "/cadastrar-treino",
           description: "Crie uma nova ficha de treino personalizada",
           icon: BookOpen
+        }
+      ]
+    },
+    {
+      title: "Histórico",
+      items: [
+        {
+          title: "Histórico de Medidas",
+          href: "/historico-medidas",
+          description: "Acompanhe a evolução das medidas corporais dos alunos",
+          icon: TrendingUp
         }
       ]
     },
