@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -29,6 +28,7 @@ import ChatProfessor from "@/pages/ChatProfessor";
 import ConfiguracoesProfessor from "@/pages/ConfiguracoesProfessor";
 import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
 import HistoricoMedidasAluno from "@/pages/HistoricoMedidasAluno";
+import HistoricoGeral from "@/pages/HistoricoGeral";
 
 // Aluno Pages
 import Dashboard from "@/pages/Dashboard";
@@ -78,6 +78,7 @@ function App() {
               <Route path="/configuracoes-professor" element={<ConfiguracoesProfessor />} />
               <Route path="/fotos-aluno/:alunoId" element={<GerenciarFotosAluno />} />
               <Route path="/historico-medidas/:alunoId" element={<HistoricoMedidasAluno />} />
+              <Route path="/historico-geral" element={<HistoricoGeral />} />
 
               {/* Aluno Routes */}
               <Route path="/dashboard" element={<Dashboard />} />

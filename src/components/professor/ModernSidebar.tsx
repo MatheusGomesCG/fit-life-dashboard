@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -35,7 +34,7 @@ const ModernSidebar: React.FC = () => {
     { path: "/gerenciar-ficha-treino", icon: FileText, label: "TREINOS" },
     { path: "/gerenciar-pagamentos", icon: DollarSign, label: "FINANCEIRO" },
     { path: "/gerenciar-agendamentos", icon: Calendar, label: "AGENDAMENTOS" },
-    { path: "/gerenciar-alunos", icon: TrendingUp, label: "HISTÓRICO" },
+    { path: "/historico-geral", icon: TrendingUp, label: "HISTÓRICO" },
     { path: "/configuracoes-professor", icon: Settings, label: "CONFIGURAÇÕES" },
   ];
 
