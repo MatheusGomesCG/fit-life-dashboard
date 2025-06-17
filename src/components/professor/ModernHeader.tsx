@@ -33,7 +33,7 @@ const ModernHeader: React.FC = () => {
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
             <AvatarImage 
-              src={user?.profile?.foto_url || user?.foto_url} 
+              src={user?.profile?.foto_url} 
               alt={professorName}
             />
             <AvatarFallback className="bg-orange-500 text-white font-semibold">
