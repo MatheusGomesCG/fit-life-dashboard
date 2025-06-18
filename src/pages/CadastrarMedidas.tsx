@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/date-picker";
-import { ArrowLeft, Save, User } from "lucide-react";
+import { ArrowLeft, Save, User, Calculator } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
 interface Aluno {
@@ -36,6 +36,13 @@ interface GrupoEstrategias {
   };
 }
 
+interface ComposicaoCorporal {
+  imc?: number;
+  percentualGordura?: number;
+  massaMagra?: number;
+  massaGorda?: number;
+}
+
 const CadastrarMedidas: React.FC = () => {
   const navigate = useNavigate();
   const { alunoId } = useParams<{ alunoId: string }>();
@@ -46,6 +53,7 @@ const CadastrarMedidas: React.FC = () => {
   const [dataAvaliacao, setDataAvaliacao] = useState<Date>(new Date());
   const [observacoes, setObservacoes] = useState("");
   const [grupos, setGrupos] = useState<GrupoEstrategias>({});
+  const [composicaoCorporal, setComposicaoCorporal] = useState<ComposicaoCorporal>({});
 
   const estrategiasPorGrupo = {
     "Medidas Corporais": [
@@ -55,11 +63,16 @@ const CadastrarMedidas: React.FC = () => {
       { nome: "Perímetro do Tórax", unidade: "cm" },
       { nome: "Perímetro da Cintura", unidade: "cm" },
       { nome: "Perímetro do Quadril", unidade: "cm" },
-      { nome: "Perímetro do Braço Relaxado", unidade: "cm" },
-      { nome: "Perímetro do Braço Contraído", unidade: "cm" },
-      { nome: "Perímetro do Antebraço", unidade: "cm" },
-      { nome: "Perímetro da Coxa", unidade: "cm" },
-      { nome: "Perímetro da Panturrilha", unidade: "cm" }
+      { nome: "Perímetro do Braço Direito Relaxado", unidade: "cm" },
+      { nome: "Perímetro do Braço Esquerdo Relaxado", unidade: "cm" },
+      { nome: "Perímetro do Braço Direito Contraído", unidade: "cm" },
+      { nome: "Perímetro do Braço Esquerdo Contraído", unidade: "cm" },
+      { nome: "Perímetro do Antebraço Direito", unidade: "cm" },
+      { nome: "Perímetro do Antebraço Esquerdo", unidade: "cm" },
+      { nome: "Perímetro da Coxa Direita", unidade: "cm" },
+      { nome: "Perímetro da Coxa Esquerda", unidade: "cm" },
+      { nome: "Perímetro da Panturrilha Direita", unidade: "cm" },
+      { nome: "Perímetro da Panturrilha Esquerda", unidade: "cm" }
     ],
     "Dobras Cutâneas": [
       { nome: "Dobra Tricipital", unidade: "mm" },
@@ -156,6 +169,70 @@ const CadastrarMedidas: React.FC = () => {
     }
   };
 
+  const calcularComposicaoCorporal = () => {
+    const peso = grupos["Medidas Corporais"]?.dados["Peso"]?.valor;
+    const altura = grupos["Medidas Corporais"]?.dados["Altura"]?.valor;
+    
+    if (!peso || !altura || !aluno) return;
+
+    // Calcular IMC
+    const alturaMetros = altura / 100;
+    const imc = peso / (alturaMetros * alturaMetros);
+
+    // Calcular percentual de gordura usando dobras cutâneas (Jackson & Pollock)
+    const dobras = grupos["Dobras Cutâneas"]?.dados;
+    let percentualGordura = 0;
+    
+    if (dobras && Object.values(dobras).some(d => d.valor)) {
+      const triceps = dobras["Dobra Tricipital"]?.valor || 0;
+      const subescapular = dobras["Dobra Subescapular"]?.valor || 0;
+      const suprailiaca = dobras["Dobra Supra-ilíaca"]?.valor || 0;
+      
+      if (triceps && subescapular && suprailiaca) {
+        const somaDobras = triceps + subescapular + suprailiaca;
+        
+        if (aluno.genero === "masculino") {
+          const densidade = 1.10938 - (0.0008267 * somaDobras) + (0.0000016 * Math.pow(somaDobras, 2)) - (0.0002574 * aluno.idade);
+          percentualGordura = (495 / densidade) - 450;
+        } else {
+          const densidade = 1.0994921 - (0.0009929 * somaDobras) + (0.0000023 * Math.pow(somaDobras, 2)) - (0.0001392 * aluno.idade);
+          percentualGordura = (495 / densidade) - 450;
+        }
+      }
+    }
+
+    // Calcular massa magra e gorda
+    const massaGorda = (peso * percentualGordura) / 100;
+    const massaMagra = peso - massaGorda;
+
+    const novaComposicao = {
+      imc: Math.round(imc * 100) / 100,
+      percentualGordura: Math.round(percentualGordura * 100) / 100,
+      massaMagra: Math.round(massaMagra * 100) / 100,
+      massaGorda: Math.round(massaGorda * 100) / 100
+    };
+
+    setComposicaoCorporal(novaComposicao);
+
+    // Atualizar valores no grupo Composição Corporal
+    setGrupos(prev => ({
+      ...prev,
+      "Composição Corporal": {
+        ...prev["Composição Corporal"],
+        ativas: true,
+        dados: {
+          ...prev["Composição Corporal"].dados,
+          "IMC": { ...prev["Composição Corporal"].dados["IMC"], valor: novaComposicao.imc },
+          "Percentual de Gordura": { ...prev["Composição Corporal"].dados["Percentual de Gordura"], valor: novaComposicao.percentualGordura },
+          "Massa Magra": { ...prev["Composição Corporal"].dados["Massa Magra"], valor: novaComposicao.massaMagra },
+          "Massa Gorda": { ...prev["Composição Corporal"].dados["Massa Gorda"], valor: novaComposicao.massaGorda }
+        }
+      }
+    }));
+
+    toast.success("Composição corporal calculada automaticamente!");
+  };
+
   const toggleGrupo = (nomeGrupo: string) => {
     setGrupos(prev => ({
       ...prev,
@@ -181,6 +258,11 @@ const CadastrarMedidas: React.FC = () => {
         }
       }
     }));
+
+    // Auto calcular composição corporal quando peso ou altura mudarem
+    if ((estrategia === "Peso" || estrategia === "Altura") && valor) {
+      setTimeout(calcularComposicaoCorporal, 100);
+    }
   };
 
   const salvarAvaliacao = async () => {
@@ -314,6 +396,20 @@ const CadastrarMedidas: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Botão para calcular composição corporal */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <Button
+            onClick={calcularComposicaoCorporal}
+            className="w-full"
+            variant="outline"
+          >
+            <Calculator className="h-4 w-4 mr-2" />
+            Calcular Composição Corporal Automaticamente
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="space-y-6">
         {Object.entries(estrategiasPorGrupo).map(([nomeGrupo, estrategias]) => (
           <Card key={nomeGrupo}>
@@ -348,6 +444,8 @@ const CadastrarMedidas: React.FC = () => {
                         }
                         onChange={(e) => updateEstrategiaValor(nomeGrupo, estrategia.nome, e.target.value)}
                         placeholder={estrategia.unidade === "texto" ? "Descreva..." : "0"}
+                        readOnly={nomeGrupo === "Composição Corporal"}
+                        className={nomeGrupo === "Composição Corporal" ? "bg-gray-100" : ""}
                       />
                     </div>
                   ))}

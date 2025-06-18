@@ -27,16 +27,16 @@ const ModernSidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   const mainNavItems = [
     { path: "/dashboard-professor", icon: Activity, label: "DASHBOARD" },
     { path: "/gerenciar-alunos", icon: Users, label: "ALUNOS" },
     { path: "/gerenciar-ficha-treino", icon: FileText, label: "TREINOS" },
+    { path: "/historico-geral", icon: Ruler, label: "MEDIDAS" },
     { path: "/gerenciar-pagamentos", icon: DollarSign, label: "FINANCEIRO" },
     { path: "/gerenciar-agendamentos", icon: Calendar, label: "AGENDAMENTOS" },
-    { path: "/historico-geral", icon: TrendingUp, label: "HISTÓRICO" },
     { path: "/configuracoes-professor", icon: Settings, label: "CONFIGURAÇÕES" },
   ];
 

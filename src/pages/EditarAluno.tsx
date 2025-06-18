@@ -1,18 +1,17 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   buscarAlunoPorId,
   atualizarAluno,
-  calcularIMC,
-  calcularPercentualGordura,
   Aluno,
 } from "@/services/alunosService";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
 import { DatePicker } from "@/components/date-picker";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { Save, ArrowLeft, Calculator } from "lucide-react";
+import { Save, ArrowLeft } from "lucide-react";
 
 interface FormData {
   nome: string;
@@ -26,18 +25,7 @@ interface FormData {
   observacoes: string;
   valorMensalidade: string;
   dataVencimento: Date | null;
-  peso: string;
-  altura: string;
   experiencia: "" | "iniciante" | "intermediario" | "avancado";
-  dobrasCutaneas: {
-    triceps: string;
-    subescapular: string;
-    axilarMedia: string;
-    peitoral: string;
-    suprailiaca: string;
-    abdominal: string;
-    coxa: string;
-  };
 }
 
 interface FormErrors {
@@ -45,8 +33,6 @@ interface FormErrors {
   email?: string;
   telefone?: string;
   idade?: string;
-  peso?: string;
-  altura?: string;
   experiencia?: string;
   genero?: string;
   valorMensalidade?: string;
@@ -69,27 +55,11 @@ const EditarAluno: React.FC = () => {
     observacoes: "",
     valorMensalidade: "",
     dataVencimento: null,
-    peso: "",
-    altura: "",
     experiencia: "",
-    dobrasCutaneas: {
-      triceps: "",
-      subescapular: "",
-      axilarMedia: "",
-      peitoral: "",
-      suprailiaca: "",
-      abdominal: "",
-      coxa: "",
-    },
-  });
-  const [calculatedValues, setCalculatedValues] = useState({
-    imc: 0,
-    percentualGordura: 0,
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     const fetchAluno = async () => {
@@ -114,27 +84,9 @@ const EditarAluno: React.FC = () => {
           observacoes: aluno.observacoes || "",
           valorMensalidade: aluno.valorMensalidade?.toString() || "",
           dataVencimento: aluno.dataVencimento ? new Date(aluno.dataVencimento) : null,
-          peso: aluno.peso.toString(),
-          altura: aluno.altura.toString(),
           experiencia: (aluno.experiencia || "") as "" | "iniciante" | "intermediario" | "avancado",
-          dobrasCutaneas: {
-            triceps: aluno.dobrasCutaneas?.triceps?.toString() || "",
-            subescapular: aluno.dobrasCutaneas?.subescapular?.toString() || "",
-            axilarMedia: aluno.dobrasCutaneas?.axilarMedia?.toString() || "",
-            peitoral: aluno.dobrasCutaneas?.peitoral?.toString() || "",
-            suprailiaca: aluno.dobrasCutaneas?.suprailiaca?.toString() || "",
-            abdominal: aluno.dobrasCutaneas?.abdominal?.toString() || "",
-            coxa: aluno.dobrasCutaneas?.coxa?.toString() || "",
-          },
-        });
-
-        // Definir valores calculados
-        setCalculatedValues({
-          imc: aluno.imc || 0,
-          percentualGordura: aluno.percentualGordura || 0,
         });
         
-        setShowPreview(true);
       } catch (error) {
         console.error("Erro ao buscar dados do aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
@@ -163,19 +115,6 @@ const EditarAluno: React.FC = () => {
     }));
   };
 
-  const handleDobraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const fieldName = id.split("-")[1]; // Formato: "dobra-triceps"
-    
-    setForm((prev) => ({
-      ...prev,
-      dobrasCutaneas: {
-        ...prev.dobrasCutaneas,
-        [fieldName]: value,
-      },
-    }));
-  };
-
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     
@@ -187,18 +126,6 @@ const EditarAluno: React.FC = () => {
       newErrors.idade = "Idade é obrigatória";
     } else if (parseInt(form.idade) <= 0 || parseInt(form.idade) > 120) {
       newErrors.idade = "Idade deve estar entre 1 e 120 anos";
-    }
-    
-    if (!form.peso) {
-      newErrors.peso = "Peso é obrigatório";
-    } else if (parseFloat(form.peso) <= 0 || parseFloat(form.peso) > 300) {
-      newErrors.peso = "Peso deve estar entre 1 e 300 kg";
-    }
-    
-    if (!form.altura) {
-      newErrors.altura = "Altura é obrigatória";
-    } else if (parseInt(form.altura) <= 0 || parseInt(form.altura) > 250) {
-      newErrors.altura = "Altura deve estar entre 1 e 250 cm";
     }
     
     if (!form.experiencia) {
@@ -221,56 +148,11 @@ const EditarAluno: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const calculateMetrics = () => {
-    // Verificar se todas as dobras cutâneas estão preenchidas
-    const dobras = Object.values(form.dobrasCutaneas);
-    const allDobrasPreenchidas = dobras.every(value => value !== "");
-    
-    if (!form.peso || !form.altura || (allDobrasPreenchidas === false)) {
-      toast.error("Preencha pelo menos peso, altura e todas as dobras para calcular as métricas");
-      return;
-    }
-    
-    // Conversão das dobras para números
-    const dobrasCutaneasNumeric = {
-      triceps: parseFloat(form.dobrasCutaneas.triceps),
-      subescapular: parseFloat(form.dobrasCutaneas.subescapular),
-      axilarMedia: parseFloat(form.dobrasCutaneas.axilarMedia),
-      peitoral: parseFloat(form.dobrasCutaneas.peitoral),
-      suprailiaca: parseFloat(form.dobrasCutaneas.suprailiaca),
-      abdominal: parseFloat(form.dobrasCutaneas.abdominal),
-      coxa: parseFloat(form.dobrasCutaneas.coxa),
-    };
-    
-    const peso = parseFloat(form.peso);
-    const altura = parseFloat(form.altura);
-    const idade = parseInt(form.idade);
-    const genero = form.genero as "masculino" | "feminino";
-    
-    const imc = calcularIMC(peso, altura);
-    const percentualGordura = calcularPercentualGordura(dobrasCutaneasNumeric, genero, idade);
-    
-    setCalculatedValues({
-      imc,
-      percentualGordura,
-    });
-    
-    setShowPreview(true);
-    toast.success("Métricas calculadas com sucesso!");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm() || !id) {
       toast.error("Por favor, corrija os erros no formulário");
-      return;
-    }
-    
-    // Verificar se todas as dobras cutâneas estão preenchidas
-    const dobras = Object.values(form.dobrasCutaneas);
-    if (dobras.some(value => value === "")) {
-      toast.error("Por favor, preencha todas as dobras cutâneas");
       return;
     }
     
@@ -296,20 +178,7 @@ const EditarAluno: React.FC = () => {
         observacoes: form.observacoes,
         valorMensalidade: form.valorMensalidade ? parseFloat(form.valorMensalidade) : undefined,
         dataVencimento: form.dataVencimento,
-        peso: parseFloat(form.peso),
-        altura: parseInt(form.altura),
         experiencia: form.experiencia as "iniciante" | "intermediario" | "avancado",
-        dobrasCutaneas: {
-          triceps: parseFloat(form.dobrasCutaneas.triceps),
-          subescapular: parseFloat(form.dobrasCutaneas.subescapular),
-          axilarMedia: parseFloat(form.dobrasCutaneas.axilarMedia),
-          peitoral: parseFloat(form.dobrasCutaneas.peitoral),
-          suprailiaca: parseFloat(form.dobrasCutaneas.suprailiaca),
-          abdominal: parseFloat(form.dobrasCutaneas.abdominal),
-          coxa: parseFloat(form.dobrasCutaneas.coxa),
-        },
-        percentualGordura: calculatedValues.percentualGordura,
-        imc: calculatedValues.imc
       };
       
       await atualizarAluno(id, alunoData);
@@ -362,7 +231,7 @@ const EditarAluno: React.FC = () => {
       
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Coluna 1: Dados Pessoais */}
             <div className="space-y-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Dados Pessoais</h2>
@@ -499,163 +368,7 @@ const EditarAluno: React.FC = () => {
                 error={errors.experiencia}
               />
             </div>
-            
-            {/* Coluna 3: Medidas Antropométricas */}
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Medidas Antropométricas</h2>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormInput
-                  id="peso"
-                  label="Peso (kg)"
-                  type="number"
-                  value={form.peso}
-                  onChange={handleChange}
-                  min={1}
-                  max={300}
-                  step={0.1}
-                  required
-                  error={errors.peso}
-                />
-                
-                <FormInput
-                  id="altura"
-                  label="Altura (cm)"
-                  type="number"
-                  value={form.altura}
-                  onChange={handleChange}
-                  min={1}
-                  max={250}
-                  required
-                  error={errors.altura}
-                />
-              </div>
-              
-              <h3 className="text-md font-medium mt-4 mb-2">Dobras Cutâneas (mm)</h3>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <FormInput
-                  id="dobra-triceps"
-                  label="Tríceps"
-                  type="number"
-                  value={form.dobrasCutaneas.triceps}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-subescapular"
-                  label="Subescapular"
-                  type="number"
-                  value={form.dobrasCutaneas.subescapular}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-axilarMedia"
-                  label="Axilar Média"
-                  type="number"
-                  value={form.dobrasCutaneas.axilarMedia}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-peitoral"
-                  label="Peitoral"
-                  type="number"
-                  value={form.dobrasCutaneas.peitoral}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-suprailiaca"
-                  label="Suprailíaca"
-                  type="number"
-                  value={form.dobrasCutaneas.suprailiaca}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-abdominal"
-                  label="Abdominal"
-                  type="number"
-                  value={form.dobrasCutaneas.abdominal}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-                
-                <FormInput
-                  id="dobra-coxa"
-                  label="Coxa"
-                  type="number"
-                  value={form.dobrasCutaneas.coxa}
-                  onChange={handleDobraChange}
-                  min={0}
-                  step={0.1}
-                  required
-                />
-              </div>
-              
-              <button
-                type="button"
-                onClick={calculateMetrics}
-                className="mt-4 w-full py-2 bg-fitness-secondary text-white rounded-md hover:bg-fitness-secondary/90 transition-colors flex items-center justify-center gap-2"
-              >
-                <Calculator className="h-5 w-5" />
-                <span>Calcular Métricas</span>
-              </button>
-            </div>
           </div>
-          
-          {showPreview && (
-            <div className="border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Métricas Calculadas</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium text-gray-700 mb-2">Índice de Massa Corporal (IMC)</h3>
-                  <p className="text-2xl font-bold text-fitness-secondary">
-                    {calculatedValues.imc.toFixed(2)}
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    {calculatedValues.imc < 18.5
-                      ? "Abaixo do peso"
-                      : calculatedValues.imc < 25
-                      ? "Peso normal"
-                      : calculatedValues.imc < 30
-                      ? "Sobrepeso"
-                      : "Obesidade"}
-                  </p>
-                </div>
-                
-                <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="font-medium text-gray-700 mb-2">Percentual de Gordura</h3>
-                  <p className="text-2xl font-bold text-fitness-primary">
-                    {calculatedValues.percentualGordura.toFixed(2)}%
-                  </p>
-                  <p className="text-gray-500 text-sm mt-1">
-                    Baseado na fórmula de Jackson e Pollock
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
           
           <div className="border-t border-gray-200 pt-6 flex justify-end">
             <button
