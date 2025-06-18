@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -14,8 +13,6 @@ import FormSelect from "@/components/FormSelect";
 import { DatePicker } from "@/components/date-picker";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { Save, ArrowLeft, Calculator } from "lucide-react";
-import HistoricoPagamentosAluno from "@/components/pagamentos/HistoricoPagamentosAluno";
-import HistoricoMedidas from "@/components/HistoricoMedidas";
 
 interface FormData {
   nome: string;
@@ -660,11 +657,6 @@ const EditarAluno: React.FC = () => {
             </div>
           )}
           
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Histórico de Pagamentos</h2>
-            <HistoricoPagamentosAluno alunoId={id} />
-          </div>
-          
           <div className="border-t border-gray-200 pt-6 flex justify-end">
             <button
               type="submit"
@@ -682,20 +674,6 @@ const EditarAluno: React.FC = () => {
             </button>
           </div>
         </form>
-      </div>
-      
-      <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-6">Histórico de Medidas Corporais</h2>
-        <HistoricoMedidas 
-          alunoId={id} 
-          genero={form.genero as "masculino" | "feminino"}
-          idade={parseInt(form.idade)}
-        />
-      </div>
-      
-      <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Histórico de Pagamentos</h2>
-        <HistoricoPagamentosAluno alunoId={id} />
       </div>
     </div>
   );
