@@ -297,8 +297,8 @@ const CadastrarMedidas: React.FC = () => {
           <div>
             <Label htmlFor="data">Data da Avaliação</Label>
             <DatePicker
-              date={dataAvaliacao}
-              onDateChange={setDataAvaliacao}
+              selected={dataAvaliacao}
+              onSelect={(date) => date && setDataAvaliacao(date)}
             />
           </div>
           <div>

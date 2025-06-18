@@ -20,19 +20,21 @@ interface Aluno {
   idade: number;
 }
 
+interface DadoAvaliacao {
+  grupo_estrategia: string;
+  estrategia: string;
+  valor: number;
+  valor_texto: string;
+  unidade: string;
+}
+
 interface AvaliacaoCompleta {
   id: string;
   data_avaliacao: string;
   observacoes: string;
   aluno_nome: string;
   aluno_email: string;
-  dados: Array<{
-    grupo_estrategia: string;
-    estrategia: string;
-    valor: number;
-    valor_texto: string;
-    unidade: string;
-  }>;
+  dados: DadoAvaliacao[];
 }
 
 const HistoricoMedidasAluno: React.FC = () => {
@@ -71,7 +73,18 @@ const HistoricoMedidasAluno: React.FC = () => {
         .order("data_avaliacao", { ascending: false });
 
       if (avaliacoesError) throw avaliacoesError;
-      setAvaliacoes(avaliacoesData || []);
+      
+      // Converter os dados do Supabase para o tipo correto
+      const avaliacoesFormatadas: AvaliacaoCompleta[] = (avaliacoesData || []).map(avaliacao => ({
+        id: avaliacao.id,
+        data_avaliacao: avaliacao.data_avaliacao,
+        observacoes: avaliacao.observacoes,
+        aluno_nome: avaliacao.aluno_nome,
+        aluno_email: avaliacao.aluno_email,
+        dados: Array.isArray(avaliacao.dados) ? avaliacao.dados as DadoAvaliacao[] : []
+      }));
+      
+      setAvaliacoes(avaliacoesFormatadas);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados do aluno");
@@ -86,14 +99,14 @@ const HistoricoMedidasAluno: React.FC = () => {
     toast.info("Exportação para PDF em desenvolvimento");
   };
 
-  const agruparDadosPorGrupo = (dados: AvaliacaoCompleta['dados']) => {
+  const agruparDadosPorGrupo = (dados: DadoAvaliacao[]) => {
     return dados.reduce((acc, item) => {
       if (!acc[item.grupo_estrategia]) {
         acc[item.grupo_estrategia] = [];
       }
       acc[item.grupo_estrategia].push(item);
       return acc;
-    }, {} as Record<string, typeof dados>);
+    }, {} as Record<string, DadoAvaliacao[]>);
   };
 
   if (loading) return <LoadingSpinner />;
