@@ -81,7 +81,7 @@ const HistoricoMedidasAluno: React.FC = () => {
         observacoes: avaliacao.observacoes,
         aluno_nome: avaliacao.aluno_nome,
         aluno_email: avaliacao.aluno_email,
-        dados: Array.isArray(avaliacao.dados) ? avaliacao.dados as DadoAvaliacao[] : []
+        dados: Array.isArray(avaliacao.dados) ? (avaliacao.dados as unknown as DadoAvaliacao[]) : []
       }));
       
       setAvaliacoes(avaliacoesFormatadas);
