@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -17,7 +18,8 @@ import {
   HelpCircle,
   ChevronLeft,
   ChevronRight,
-  TrendingUp
+  TrendingUp,
+  Ruler
 } from "lucide-react";
 
 const ModernSidebar: React.FC = () => {

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
@@ -29,6 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/listar-alunos",
     "/cadastrar-treino",
     "/gerenciar-ficha-treino",
+    "/cadastrar-medidas",
     "/novo-agendamento",
     "/gerenciar-agendamentos",
     "/cadastrar-pagamento",

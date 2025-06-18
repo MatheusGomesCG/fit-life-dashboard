@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -19,6 +18,7 @@ import ListarAlunos from "@/pages/ListarAlunos";
 import CadastrarTreino from "@/pages/CadastrarTreino";
 import GerenciarFichaTreino from "@/pages/GerenciarFichaTreino";
 import FichaTreino from "@/pages/FichaTreino";
+import CadastrarMedidas from "@/pages/CadastrarMedidas";
 import NovoAgendamento from "@/pages/NovoAgendamento";
 import GerenciarAgendamentos from "@/pages/GerenciarAgendamentos";
 import Agendamento from "@/pages/Agendamento";
@@ -70,6 +70,7 @@ function App() {
               <Route path="/cadastrar-treino/:id" element={<CadastrarTreino />} />
               <Route path="/gerenciar-ficha-treino" element={<GerenciarFichaTreino />} />
               <Route path="/ficha-treino/:alunoId" element={<FichaTreino />} />
+              <Route path="/cadastrar-medidas/:alunoId" element={<CadastrarMedidas />} />
               <Route path="/novo-agendamento" element={<NovoAgendamento />} />
               <Route path="/gerenciar-agendamentos" element={<GerenciarAgendamentos />} />
               <Route path="/agendamento" element={<Agendamento />} />

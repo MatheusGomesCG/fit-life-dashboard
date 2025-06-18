@@ -1,50 +1,79 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, User, Calendar, Phone, Mail, Target, Activity, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import LoadingSpinner from "@/components/LoadingSpinner";
-import HistoricoMedidas from "@/components/HistoricoMedidas";
-import { buscarAlunoPorId, Aluno } from "@/services/alunosService";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Plus, FileText, Calendar, User } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+interface Aluno {
+  user_id: string;
+  nome: string;
+  email: string;
+  genero: string;
+  idade: number;
+}
+
+interface AvaliacaoCompleta {
+  id: string;
+  data_avaliacao: string;
+  observacoes: string;
+  aluno_nome: string;
+  aluno_email: string;
+  dados: Array<{
+    grupo_estrategia: string;
+    estrategia: string;
+    valor: number;
+    valor_texto: string;
+    unidade: string;
+  }>;
+}
 
 const HistoricoMedidasAluno: React.FC = () => {
-  const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
-  const [aluno, setAluno] = useState<Aluno | null>(null);
+  const { alunoId } = useParams<{ alunoId: string }>();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [aluno, setAluno] = useState<Aluno | null>(null);
+  const [avaliacoes, setAvaliacoes] = useState<AvaliacaoCompleta[]>([]);
 
   useEffect(() => {
-    if (!isAuthenticated || user?.tipo !== "professor") {
-      navigate("/");
-      return;
-    }
-
     if (alunoId) {
-      carregarDadosAluno();
+      carregarDados();
     }
-  }, [alunoId, isAuthenticated, user?.tipo, navigate]);
+  }, [alunoId]);
 
-  const carregarDadosAluno = async () => {
-    if (!alunoId) return;
-
+  const carregarDados = async () => {
     try {
-      setLoading(true);
-      const dadosAluno = await buscarAlunoPorId(alunoId);
-      
-      if (!dadosAluno) {
-        toast.error("Aluno não encontrado");
-        navigate("/gerenciar-alunos");
-        return;
-      }
+      // Carregar dados do aluno
+      const { data: alunoData, error: alunoError } = await supabase
+        .from("aluno_profiles")
+        .select("user_id, nome, email, genero, idade")
+        .eq("user_id", alunoId)
+        .eq("professor_id", user?.id)
+        .single();
 
-      setAluno(dadosAluno);
+      if (alunoError) throw alunoError;
+      setAluno(alunoData);
+
+      // Carregar avaliações
+      const { data: avaliacoesData, error: avaliacoesError } = await supabase
+        .from("avaliacoes_completas")
+        .select("*")
+        .eq("aluno_id", alunoId)
+        .eq("professor_id", user?.id)
+        .order("data_avaliacao", { ascending: false });
+
+      if (avaliacoesError) throw avaliacoesError;
+      setAvaliacoes(avaliacoesData || []);
     } catch (error) {
-      console.error("Erro ao carregar dados do aluno:", error);
+      console.error("Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados do aluno");
       navigate("/gerenciar-alunos");
     } finally {
@@ -52,237 +81,170 @@ const HistoricoMedidasAluno: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-40">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
-
-  if (!aluno) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>Aluno não encontrado</p>
-      </div>
-    );
-  }
-
-  const calcularIdade = (dataNascimento: Date | null): number | null => {
-    if (!dataNascimento) return null;
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const mesAtual = hoje.getMonth();
-    const mesNascimento = nascimento.getMonth();
-    
-    if (mesAtual < mesNascimento || (mesAtual === mesNascimento && hoje.getDate() < nascimento.getDate())) {
-      idade--;
-    }
-    
-    return idade;
+  const exportarPDF = (avaliacaoId: string) => {
+    // TODO: Implementar exportação para PDF
+    toast.info("Exportação para PDF em desenvolvimento");
   };
 
-  const formatarData = (data: Date | null): string => {
-    if (!data) return "Não informado";
-    return new Date(data).toLocaleDateString('pt-BR');
+  const agruparDadosPorGrupo = (dados: AvaliacaoCompleta['dados']) => {
+    return dados.reduce((acc, item) => {
+      if (!acc[item.grupo_estrategia]) {
+        acc[item.grupo_estrategia] = [];
+      }
+      acc[item.grupo_estrategia].push(item);
+      return acc;
+    }, {} as Record<string, typeof dados>);
   };
 
-  const idadeCalculada = aluno.dataNascimento ? calcularIdade(aluno.dataNascimento) : aluno.idade;
-
-  // Filter gender to only pass supported values to HistoricoMedidas
-  const generoParaHistorico = aluno.genero && (aluno.genero === "masculino" || aluno.genero === "feminino") 
-    ? aluno.genero 
-    : undefined;
+  if (loading) return <LoadingSpinner />;
+  if (!aluno) return <div>Aluno não encontrado</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Header com botão de voltar */}
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/gerenciar-alunos")}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Voltar
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Histórico de Medidas - {aluno.nome}
-          </h1>
-          <p className="text-gray-600">
-            Acompanhe a evolução das medidas corporais do aluno
-          </p>
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/gerenciar-alunos")}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">Histórico de Medidas</h1>
         </div>
+        
+        <Button
+          onClick={() => navigate(`/cadastrar-medidas/${alunoId}`)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Avaliação
+        </Button>
       </div>
 
-      {/* Informações do Aluno */}
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Informações do Aluno
+            Dados do Aluno
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Dados Pessoais */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Dados Pessoais
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-gray-600">Nome:</span>
-                  <p className="text-gray-900">{aluno.nome}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600 flex items-center gap-1">
-                    <Mail className="h-3 w-3" />
-                    Email:
-                  </span>
-                  <p className="text-gray-900">{aluno.email}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600 flex items-center gap-1">
-                    <Phone className="h-3 w-3" />
-                    Telefone:
-                  </span>
-                  <p className="text-gray-900">{aluno.telefone || "Não informado"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600 flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Idade:
-                  </span>
-                  <p className="text-gray-900">
-                    {idadeCalculada ? `${idadeCalculada} anos` : "Não informado"}
-                  </p>
-                </div>
-                {aluno.genero && (
-                  <div>
-                    <span className="font-medium text-gray-600">Gênero:</span>
-                    <p className="text-gray-900 capitalize">{aluno.genero}</p>
-                  </div>
-                )}
-                {aluno.dataNascimento && (
-                  <div>
-                    <span className="font-medium text-gray-600">Data de Nascimento:</span>
-                    <p className="text-gray-900">{formatarData(aluno.dataNascimento)}</p>
-                  </div>
-                )}
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <span className="text-sm font-medium text-gray-500">Nome</span>
+              <p className="text-gray-900 font-medium">{aluno.nome}</p>
             </div>
-
-            {/* Dados Físicos Atuais */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <Activity className="h-4 w-4" />
-                Medidas Atuais
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-gray-600">Peso:</span>
-                  <p className="text-gray-900">{aluno.peso ? `${aluno.peso} kg` : "Não informado"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Altura:</span>
-                  <p className="text-gray-900">{aluno.altura ? `${aluno.altura} cm` : "Não informado"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">IMC:</span>
-                  <p className="text-gray-900">{aluno.imc ? aluno.imc.toFixed(2) : "Não calculado"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">% Gordura:</span>
-                  <p className="text-gray-900">{aluno.percentualGordura ? `${aluno.percentualGordura.toFixed(2)}%` : "Não calculado"}</p>
-                </div>
-              </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Email</span>
+              <p className="text-gray-600">{aluno.email}</p>
             </div>
-
-            {/* Objetivos e Experiência */}
-            <div className="space-y-3">
-              <h4 className="font-medium text-gray-900 flex items-center gap-2">
-                <Target className="h-4 w-4" />
-                Treino e Objetivos
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-gray-600">Objetivo:</span>
-                  <p className="text-gray-900">{aluno.objetivo || "Não informado"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-600">Experiência:</span>
-                  <p className="text-gray-900">{aluno.experiencia || "Não informado"}</p>
-                </div>
-                {aluno.valorMensalidade && (
-                  <div>
-                    <span className="font-medium text-gray-600">Mensalidade:</span>
-                    <p className="text-gray-900">
-                      R$ {aluno.valorMensalidade.toFixed(2).replace('.', ',')}
-                    </p>
-                  </div>
-                )}
-                {aluno.dataVencimento && (
-                  <div>
-                    <span className="font-medium text-gray-600">Vencimento:</span>
-                    <p className="text-gray-900">{formatarData(aluno.dataVencimento)}</p>
-                  </div>
-                )}
-              </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Idade</span>
+              <p className="text-gray-900">{aluno.idade} anos</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Total de Avaliações</span>
+              <p className="text-gray-900 font-medium">{avaliacoes.length}</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Restrições Médicas e Observações */}
-          {(aluno.restricoes_medicas || aluno.observacoes || aluno.endereco) && (
-            <>
-              <Separator className="my-6" />
-              <div className="space-y-4">
-                {aluno.restricoes_medicas && (
-                  <div>
-                    <span className="font-medium text-gray-600 flex items-center gap-2 mb-2">
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
-                      Restrições Médicas:
-                    </span>
-                    <p className="text-gray-900 bg-orange-50 p-3 rounded-md border border-orange-200">
-                      {aluno.restricoes_medicas}
-                    </p>
+      <div className="space-y-6">
+        {avaliacoes.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nenhuma avaliação encontrada
+              </h3>
+              <p className="text-gray-500 mb-4">
+                Este aluno ainda não possui avaliações físicas registradas.
+              </p>
+              <Button onClick={() => navigate(`/cadastrar-medidas/${alunoId}`)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Criar primeira avaliação
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          avaliacoes.map((avaliacao) => {
+            const dadosAgrupados = agruparDadosPorGrupo(avaliacao.dados);
+            
+            return (
+              <Card key={avaliacao.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <CardTitle className="text-lg">
+                          Avaliação de {format(new Date(avaliacao.data_avaliacao), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </CardTitle>
+                        <p className="text-sm text-gray-500">
+                          {Object.keys(dadosAgrupados).length} grupo(s) de estratégias
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportarPDF(avaliacao.id)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Exportar PDF
+                    </Button>
                   </div>
-                )}
+                </CardHeader>
                 
-                {aluno.endereco && (
-                  <div>
-                    <span className="font-medium text-gray-600 mb-2 block">Endereço:</span>
-                    <p className="text-gray-900">{aluno.endereco}</p>
+                <CardContent>
+                  {avaliacao.observacoes && (
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                      <h4 className="font-medium text-gray-900 mb-2">Observações</h4>
+                      <p className="text-gray-700">{avaliacao.observacoes}</p>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-6">
+                    {Object.entries(dadosAgrupados).map(([grupo, estrategias]) => (
+                      <div key={grupo}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Badge variant="secondary" className="text-sm">
+                            {grupo}
+                          </Badge>
+                          <span className="text-sm text-gray-500">
+                            {estrategias.length} medição(ões)
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {estrategias.map((estrategia, index) => (
+                            <div key={index} className="p-3 border rounded-lg bg-white">
+                              <div className="text-sm font-medium text-gray-900 mb-1">
+                                {estrategia.estrategia}
+                              </div>
+                              <div className="text-lg font-semibold text-blue-600">
+                                {estrategia.valor_texto || `${estrategia.valor}`}
+                                {estrategia.unidade !== "texto" && (
+                                  <span className="text-sm text-gray-500 ml-1">
+                                    {estrategia.unidade}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                )}
-
-                {aluno.observacoes && (
-                  <div>
-                    <span className="font-medium text-gray-600 mb-2 block">Observações:</span>
-                    <p className="text-gray-900 bg-gray-50 p-3 rounded-md border">
-                      {aluno.observacoes}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Histórico de Medidas */}
-      <Card>
-        <CardContent className="p-6">
-          <HistoricoMedidas 
-            alunoId={alunoId} 
-            genero={generoParaHistorico}
-            idade={idadeCalculada || undefined}
-          />
-        </CardContent>
-      </Card>
+                </CardContent>
+              </Card>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };

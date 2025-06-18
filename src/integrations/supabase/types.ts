@@ -173,6 +173,36 @@ export type Database = {
         }
         Relationships: []
       }
+      avaliacoes_fisicas: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_avaliacao: string
+          id: string
+          observacoes: string | null
+          professor_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_avaliacao?: string
+          id?: string
+          observacoes?: string | null
+          professor_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_avaliacao?: string
+          id?: string
+          observacoes?: string | null
+          professor_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversas: {
         Row: {
           aluno_id: string
@@ -199,6 +229,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      dados_avaliacao: {
+        Row: {
+          avaliacao_id: string
+          created_at: string
+          estrategia: string
+          grupo_estrategia: string
+          id: string
+          unidade: string | null
+          valor: number | null
+          valor_texto: string | null
+        }
+        Insert: {
+          avaliacao_id: string
+          created_at?: string
+          estrategia: string
+          grupo_estrategia: string
+          id?: string
+          unidade?: string | null
+          valor?: number | null
+          valor_texto?: string | null
+        }
+        Update: {
+          avaliacao_id?: string
+          created_at?: string
+          estrategia?: string
+          grupo_estrategia?: string
+          id?: string
+          unidade?: string | null
+          valor?: number | null
+          valor_texto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dados_avaliacao_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacoes_completas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dados_avaliacao_avaliacao_id_fkey"
+            columns: ["avaliacao_id"]
+            isOneToOne: false
+            referencedRelation: "avaliacoes_fisicas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       exercicios_treino: {
         Row: {
@@ -559,6 +637,21 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      avaliacoes_completas: {
+        Row: {
+          aluno_email: string | null
+          aluno_id: string | null
+          aluno_nome: string | null
+          created_at: string | null
+          dados: Json | null
+          data_avaliacao: string | null
+          id: string | null
+          observacoes: string | null
+          professor_id: string | null
+          updated_at: string | null
+        }
+        Relationships: []
       }
       conversas_completas: {
         Row: {
