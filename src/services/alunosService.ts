@@ -202,13 +202,13 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
       nome: aluno.nome,
       email: aluno.email,
       idade: aluno.idade,
-      peso: aluno.peso,
-      altura: aluno.altura,
+      peso: aluno.peso || 0,
+      altura: aluno.altura || 0,
       objetivo: aluno.objetivo,
       experiencia: aluno.experiencia,
       telefone: aluno.telefone,
       restricoes_medicas: aluno.restricoes_medicas,
-      imc: aluno.imc || calcularIMC(aluno.peso, aluno.altura),
+      imc: aluno.imc || calcularIMC(aluno.peso || 0, aluno.altura || 0),
       percentualGordura: aluno.percentual_gordura || 22,
       dataNascimento: aluno.data_nascimento ? new Date(aluno.data_nascimento) : null,
       genero: aluno.genero as "masculino" | "feminino" | "outro",
@@ -228,8 +228,8 @@ export const listarAlunos = async (): Promise<Aluno[]> => {
   }
 };
 
-// Criar um novo aluno (also exported as cadastrarAluno)
-export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura" | "fotos">): Promise<Aluno> => {
+// Criar um novo aluno - Updated to make peso and altura optional
+export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGordura" | "fotos" | "peso" | "altura"> & { peso?: number; altura?: number }): Promise<Aluno> => {
   try {
     console.log("🔄 [criarAluno] Iniciando criação de aluno:", aluno.email);
     
@@ -269,6 +269,10 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
 
     console.log("✅ [criarAluno] Usuário auth criado:", authData.user.id);
 
+    // Use default values for peso and altura if not provided
+    const peso = aluno.peso || 0;
+    const altura = aluno.altura || 0;
+
     // Create student profile with the CURRENT professor's ID
     const { data, error } = await supabase
       .from('aluno_profiles')
@@ -277,8 +281,8 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
         nome: aluno.nome,
         email: aluno.email,
         idade: aluno.idade,
-        peso: aluno.peso,
-        altura: aluno.altura,
+        peso: peso,
+        altura: altura,
         objetivo: aluno.objetivo,
         experiencia: aluno.experiencia,
         telefone: aluno.telefone,
@@ -292,7 +296,7 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
         valor_mensalidade: aluno.valorMensalidade,
         data_vencimento: aluno.dataVencimento?.toISOString().split('T')[0] || null,
         dobras_cutaneas: aluno.dobrasCutaneas,
-        imc: calcularIMC(aluno.peso, aluno.altura),
+        imc: calcularIMC(peso, altura),
         percentual_gordura: 22 // default value
       })
       .select()
@@ -310,13 +314,13 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
       nome: aluno.nome,
       email: aluno.email,
       idade: aluno.idade,
-      peso: aluno.peso,
-      altura: aluno.altura,
+      peso: peso,
+      altura: altura,
       objetivo: aluno.objetivo,
       experiencia: aluno.experiencia,
       telefone: aluno.telefone,
       restricoes_medicas: aluno.restricoes_medicas,
-      imc: calcularIMC(aluno.peso, aluno.altura),
+      imc: calcularIMC(peso, altura),
       percentualGordura: 22,
       dataNascimento: aluno.dataNascimento,
       genero: aluno.genero,
