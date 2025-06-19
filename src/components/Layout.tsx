@@ -15,10 +15,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
 
+  console.log("🔄 [Layout] === INÍCIO DA VERIFICAÇÃO ===");
   console.log("🔄 [Layout] Renderizando layout", {
     userType: user?.tipo,
     currentPath: location.pathname,
-    user: user
+    user: user,
+    hasUser: !!user
   });
 
   // Lista de páginas de professor que devem usar o layout moderno
@@ -45,6 +47,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/editar-avaliacao"
   ];
 
+  console.log("📋 [Layout] Lista de páginas de professor:", professorPages);
+  console.log("🎯 [Layout] Página atual:", location.pathname);
+
   // Verifica se a página atual é uma página de professor
   const isProfessorPage = professorPages.some(page => {
     const isMatch = location.pathname === page || location.pathname.startsWith(page + "/");
@@ -55,15 +60,31 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   console.log("🎯 [Layout] Resultado da verificação:", {
     isProfessorPage,
     userTipo: user?.tipo,
-    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage
+    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage,
+    userExists: !!user,
+    userTipoExact: user?.tipo
   });
 
   // Se for usuário professor E estiver em uma página de professor, usar o layout moderno
   if (user?.tipo === "professor" && isProfessorPage) {
+    console.log("✅ [Layout] === USANDO PROFESSOR LAYOUT ===");
     console.log("✅ [Layout] Usando ProfessorLayout para:", location.pathname);
+    console.log("✅ [Layout] Dados do usuário:", {
+      id: user.id,
+      nome: user.nome,
+      tipo: user.tipo
+    });
     return <ProfessorLayout>{children}</ProfessorLayout>;
   }
 
+  console.log("❌ [Layout] === USANDO LAYOUT PADRÃO ===");
+  console.log("❌ [Layout] Motivo:", {
+    userType: user?.tipo,
+    isProfessorPage,
+    condition1: user?.tipo === "professor",
+    condition2: isProfessorPage,
+    bothConditions: user?.tipo === "professor" && isProfessorPage
+  });
   console.log("❌ [Layout] Usando layout padrão para:", location.pathname);
 
   const renderNavigation = () => {

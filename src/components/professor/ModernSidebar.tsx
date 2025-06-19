@@ -26,13 +26,17 @@ const ModernSidebar: React.FC = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  console.log("🎨 [ModernSidebar] Renderizando ModernSidebar", {
+  console.log("🎨 [ModernSidebar] === RENDERIZANDO MODERN SIDEBAR ===");
+  console.log("🎨 [ModernSidebar] Estado atual:", {
     currentPath: location.pathname,
-    isCollapsed
+    isCollapsed,
+    timestamp: new Date().toISOString()
   });
 
   const isActive = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(path + "/");
+    const result = location.pathname === path || location.pathname.startsWith(path + "/");
+    console.log(`🔗 [ModernSidebar] isActive check: ${path} vs ${location.pathname} = ${result}`);
+    return result;
   };
 
   const mainNavItems = [
@@ -57,6 +61,14 @@ const ModernSidebar: React.FC = () => {
     { path: "/cadastrar-pagamento", label: "Cadastrar Pagamento" },
   ];
 
+  console.log("📋 [ModernSidebar] Itens do menu principal:", mainNavItems.map(item => ({
+    path: item.path,
+    label: item.label,
+    isActive: isActive(item.path)
+  })));
+
+  console.log("🎨 [ModernSidebar] Retornando JSX da sidebar");
+
   return (
     <div className={`bg-gray-900 text-white h-full transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
       <div className="p-4 flex items-center justify-between">
@@ -67,7 +79,10 @@ const ModernSidebar: React.FC = () => {
           {!isCollapsed && <span className="font-bold text-lg">GYMCLOUD</span>}
         </div>
         <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => {
+            console.log("🔄 [ModernSidebar] Toggle collapse:", !isCollapsed);
+            setIsCollapsed(!isCollapsed);
+          }}
           className="text-white hover:bg-gray-800 p-1 rounded cursor-pointer"
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -78,7 +93,7 @@ const ModernSidebar: React.FC = () => {
         {mainNavItems.map((item) => {
           const Icon = item.icon;
           const itemIsActive = isActive(item.path);
-          console.log(`🔗 [ModernSidebar] Item ${item.label} (${item.path}) - Active: ${itemIsActive}`);
+          console.log(`🔗 [ModernSidebar] Renderizando item: ${item.label} (${item.path}) - Active: ${itemIsActive}`);
           return (
             <Link
               key={item.path + item.label}
@@ -89,6 +104,7 @@ const ModernSidebar: React.FC = () => {
                   : "text-gray-300 hover:bg-gray-800"
               }`}
               title={isCollapsed ? item.label : undefined}
+              onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em: ${item.label} -> ${item.path}`)}
             >
               <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
               {!isCollapsed && <span>{item.label}</span>}
@@ -111,6 +127,7 @@ const ModernSidebar: React.FC = () => {
                     ? "bg-gray-800 text-white" 
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
+                onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em ação rápida: ${item.label} -> ${item.path}`)}
               >
                 <span className="text-sm">{item.label}</span>
               </Link>
@@ -129,6 +146,7 @@ const ModernSidebar: React.FC = () => {
                     ? "bg-gray-800 text-white" 
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
+                onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em gestão: ${item.label} -> ${item.path}`)}
               >
                 <span className="text-sm">{item.label}</span>
               </Link>
@@ -139,5 +157,7 @@ const ModernSidebar: React.FC = () => {
     </div>
   );
 };
+
+console.log("📦 [ModernSidebar] Componente ModernSidebar definido e exportado");
 
 export default ModernSidebar;

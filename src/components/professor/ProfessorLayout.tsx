@@ -8,12 +8,21 @@ interface ProfessorLayoutProps {
 }
 
 const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
-  console.log("🏗️ [ProfessorLayout] Renderizando ProfessorLayout");
+  console.log("🏗️ [ProfessorLayout] === RENDERIZANDO PROFESSOR LAYOUT ===");
+  console.log("🏗️ [ProfessorLayout] Props recebidas:", {
+    hasChildren: !!children,
+    childrenType: typeof children
+  });
+  
+  console.log("📱 [ProfessorLayout] Iniciando renderização do ModernSidebar");
+  console.log("🎨 [ProfessorLayout] Iniciando renderização do ModernHeader");
   
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <ModernSidebar />
+      <div className="sidebar-container">
+        <ModernSidebar />
+      </div>
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
