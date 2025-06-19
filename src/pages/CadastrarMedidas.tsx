@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -83,12 +82,6 @@ const CadastrarMedidas: React.FC = () => {
       { nome: "Dobra da Coxa", unidade: "mm" },
       { nome: "Dobra da Panturrilha", unidade: "mm" }
     ],
-    "Composição Corporal": [
-      { nome: "IMC", unidade: "kg/m²" },
-      { nome: "Percentual de Gordura", unidade: "%" },
-      { nome: "Massa Magra", unidade: "kg" },
-      { nome: "Massa Gorda", unidade: "kg" }
-    ],
     "Avaliação Postural": [
       { nome: "Cabeça", unidade: "texto" },
       { nome: "Ombros", unidade: "texto" },
@@ -130,6 +123,7 @@ const CadastrarMedidas: React.FC = () => {
   const inicializarGrupos = () => {
     const gruposIniciais: GrupoEstrategias = {};
     
+    // Inicializar grupos visíveis
     Object.keys(estrategiasPorGrupo).forEach(grupo => {
       gruposIniciais[grupo] = {
         ativas: false,
@@ -145,6 +139,17 @@ const CadastrarMedidas: React.FC = () => {
         };
       });
     });
+
+    // Inicializar grupo de Composição Corporal (oculto, apenas para cálculos)
+    gruposIniciais["Composição Corporal"] = {
+      ativas: false,
+      dados: {
+        "IMC": { estrategia: "IMC", unidade: "kg/m²", valor: undefined },
+        "Percentual de Gordura": { estrategia: "Percentual de Gordura", unidade: "%", valor: undefined },
+        "Massa Magra": { estrategia: "Massa Magra", unidade: "kg", valor: undefined },
+        "Massa Gorda": { estrategia: "Massa Gorda", unidade: "kg", valor: undefined }
+      }
+    };
     
     setGrupos(gruposIniciais);
   };
@@ -214,12 +219,12 @@ const CadastrarMedidas: React.FC = () => {
 
     setComposicaoCorporal(novaComposicao);
 
-    // Atualizar valores no grupo Composição Corporal
+    // Atualizar valores no grupo Composição Corporal (interno)
     setGrupos(prev => ({
       ...prev,
       "Composição Corporal": {
         ...prev["Composição Corporal"],
-        ativas: true,
+        ativas: true, // Marcar como ativo para salvar no banco
         dados: {
           ...prev["Composição Corporal"].dados,
           "IMC": { ...prev["Composição Corporal"].dados["IMC"], valor: novaComposicao.imc },
@@ -444,8 +449,6 @@ const CadastrarMedidas: React.FC = () => {
                         }
                         onChange={(e) => updateEstrategiaValor(nomeGrupo, estrategia.nome, e.target.value)}
                         placeholder={estrategia.unidade === "texto" ? "Descreva..." : "0"}
-                        readOnly={nomeGrupo === "Composição Corporal"}
-                        className={nomeGrupo === "Composição Corporal" ? "bg-gray-100" : ""}
                       />
                     </div>
                   ))}

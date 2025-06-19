@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { criarAluno, calcularPercentualGordura } from "@/services/alunosService";
+import { criarAluno } from "@/services/alunosService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +19,6 @@ const alunoSchema = z.object({
   email: z.string().email("Email inválido"),
   telefone: z.string().min(10, "Telefone deve ter pelo menos 10 dígitos"),
   idade: z.number().min(1, "Idade deve ser maior que 0"),
-  peso: z.number().min(1, "Peso deve ser maior que 0"),
-  altura: z.number().min(1, "Altura deve ser maior que 0"),
   objetivo: z.string().min(1, "Objetivo é obrigatório"),
   experiencia: z.string().min(1, "Experiência é obrigatória"),
   restricoes_medicas: z.string(),
@@ -29,14 +28,6 @@ const alunoSchema = z.object({
   dataVencimento: z.string(),
   endereco: z.string().optional(),
   observacoes: z.string().optional(),
-  // Dobras cutâneas
-  triceps: z.number().min(0),
-  subescapular: z.number().min(0),
-  axilarMedia: z.number().min(0),
-  peitoral: z.number().min(0),
-  suprailiaca: z.number().min(0),
-  abdominal: z.number().min(0),
-  coxa: z.number().min(0),
 });
 
 type AlunoFormData = z.infer<typeof alunoSchema>;
@@ -51,13 +42,6 @@ const CadastrarAluno: React.FC = () => {
       restricoes_medicas: "",
       endereco: "",
       observacoes: "",
-      triceps: 0,
-      subescapular: 0,
-      axilarMedia: 0,
-      peitoral: 0,
-      suprailiaca: 0,
-      abdominal: 0,
-      coxa: 0,
     }
   });
 
@@ -65,40 +49,20 @@ const CadastrarAluno: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const dobrasCutaneas = {
-        triceps: data.triceps,
-        subescapular: data.subescapular,
-        axilarMedia: data.axilarMedia,
-        peitoral: data.peitoral,
-        suprailiaca: data.suprailiaca,
-        abdominal: data.abdominal,
-        coxa: data.coxa,
-      };
-
-      const percentualGordura = calcularPercentualGordura(
-        dobrasCutaneas,
-        data.genero,
-        data.idade
-      );
-
       const novoAluno = {
         nome: data.nome,
         email: data.email,
         telefone: data.telefone,
         idade: data.idade,
-        peso: data.peso,
-        altura: data.altura,
         objetivo: data.objetivo,
         experiencia: data.experiencia,
-        restricoes_medicas: data.restricoes_medicas, // Added this line
+        restricoes_medicas: data.restricoes_medicas,
         genero: data.genero,
         dataNascimento: new Date(data.dataNascimento),
         valorMensalidade: data.valorMensalidade,
         dataVencimento: new Date(data.dataVencimento),
         endereco: data.endereco || "",
         observacoes: data.observacoes || "",
-        dobrasCutaneas,
-        percentualGordura
       };
 
       await criarAluno(novoAluno);
@@ -126,7 +90,7 @@ const CadastrarAluno: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Cadastrar Novo Aluno</h1>
           <p className="text-gray-600 mt-1">
-            Preencha as informações do aluno para criar sua ficha
+            Preencha as informações básicas do aluno para criar sua conta
           </p>
         </div>
       </div>
@@ -215,117 +179,6 @@ const CadastrarAluno: React.FC = () => {
                 {...register("endereco")}
                 placeholder="Digite o endereço completo"
               />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Informações Físicas</CardTitle>
-            <CardDescription>
-              Medidas e dados físicos do aluno
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="peso">Peso (kg)</Label>
-                <Input
-                  id="peso"
-                  type="number"
-                  step="0.1"
-                  {...register("peso", { valueAsNumber: true })}
-                  placeholder="Digite o peso"
-                />
-                {errors.peso && <p className="text-red-500 text-sm">{errors.peso.message}</p>}
-              </div>
-
-              <div>
-                <Label htmlFor="altura">Altura (cm)</Label>
-                <Input
-                  id="altura"
-                  type="number"
-                  {...register("altura", { valueAsNumber: true })}
-                  placeholder="Digite a altura"
-                />
-                {errors.altura && <p className="text-red-500 text-sm">{errors.altura.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <Label>Dobras Cutâneas (mm)</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-                <div>
-                  <Label htmlFor="triceps" className="text-sm">Tríceps</Label>
-                  <Input
-                    id="triceps"
-                    type="number"
-                    step="0.1"
-                    {...register("triceps", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subescapular" className="text-sm">Subescapular</Label>
-                  <Input
-                    id="subescapular"
-                    type="number"
-                    step="0.1"
-                    {...register("subescapular", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="axilarMedia" className="text-sm">Axilar Média</Label>
-                  <Input
-                    id="axilarMedia"
-                    type="number"
-                    step="0.1"
-                    {...register("axilarMedia", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="peitoral" className="text-sm">Peitoral</Label>
-                  <Input
-                    id="peitoral"
-                    type="number"
-                    step="0.1"
-                    {...register("peitoral", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="suprailiaca" className="text-sm">Suprailíaca</Label>
-                  <Input
-                    id="suprailiaca"
-                    type="number"
-                    step="0.1"
-                    {...register("suprailiaca", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="abdominal" className="text-sm">Abdominal</Label>
-                  <Input
-                    id="abdominal"
-                    type="number"
-                    step="0.1"
-                    {...register("abdominal", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="coxa" className="text-sm">Coxa</Label>
-                  <Input
-                    id="coxa"
-                    type="number"
-                    step="0.1"
-                    {...register("coxa", { valueAsNumber: true })}
-                    placeholder="mm"
-                  />
-                </div>
-              </div>
             </div>
           </CardContent>
         </Card>
