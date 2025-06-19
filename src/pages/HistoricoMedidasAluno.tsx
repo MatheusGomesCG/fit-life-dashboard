@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,10 +6,33 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, FileText, Calendar, User } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Plus, 
+  FileText, 
+  Calendar, 
+  User, 
+  Edit, 
+  Trash2,
+  Download,
+  AlertTriangle
+} from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { excluirAvaliacao } from "@/services/avaliacaoService";
+import { gerarPDFAvaliacao, downloadPDFAvaliacao } from "@/services/avaliacaoPdfService";
 
 interface Aluno {
   user_id: string;
@@ -94,9 +116,31 @@ const HistoricoMedidasAluno: React.FC = () => {
     }
   };
 
-  const exportarPDF = (avaliacaoId: string) => {
-    // TODO: Implementar exportação para PDF
-    toast.info("Exportação para PDF em desenvolvimento");
+  const editarAvaliacao = (avaliacaoId: string) => {
+    navigate(`/editar-avaliacao/${alunoId}/${avaliacaoId}`);
+  };
+
+  const confirmarExclusao = async (avaliacaoId: string) => {
+    try {
+      await excluirAvaliacao(avaliacaoId);
+      toast.success("Avaliação excluída com sucesso!");
+      carregarDados(); // Recarregar a lista
+    } catch (error) {
+      console.error("Erro ao excluir avaliação:", error);
+      toast.error("Erro ao excluir avaliação");
+    }
+  };
+
+  const exportarPDF = (avaliacao: AvaliacaoCompleta) => {
+    try {
+      const doc = gerarPDFAvaliacao(avaliacao);
+      const filename = `avaliacao_${avaliacao.aluno_nome}_${format(new Date(avaliacao.data_avaliacao), "dd-MM-yyyy")}.pdf`;
+      downloadPDFAvaliacao(doc, filename);
+      toast.success("PDF gerado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast.error("Erro ao gerar PDF");
+    }
   };
 
   const agruparDadosPorGrupo = (dados: DadoAvaliacao[]) => {
@@ -201,14 +245,58 @@ const HistoricoMedidasAluno: React.FC = () => {
                       </div>
                     </div>
                     
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => exportarPDF(avaliacao.id)}
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Exportar PDF
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => exportarPDF(avaliacao)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => editarAvaliacao(avaliacao.id)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Editar
+                      </Button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Excluir
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-red-600" />
+                              Confirmar Exclusão
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir esta avaliação? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => confirmarExclusao(avaliacao.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </CardHeader>
                 
