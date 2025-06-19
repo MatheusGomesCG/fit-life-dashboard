@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
@@ -35,19 +36,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/editar-pagamento",
     "/gerenciar-pagamentos",
     "/chat-professor",
-    "/fotos-aluno",
+    "/gerenciar-fotos",
     "/historico-medidas",
     "/historico-geral",
-    "/configuracoes-professor"
+    "/configuracoes",
+    "/editar-avaliacao"
   ];
 
-  // Verifica se a página atual é uma página de professor
-  const isProfessorPage = professorPages.some(page => 
-    location.pathname === page || location.pathname.startsWith(page + "/")
-  );
+  // Verifica se a página atual é uma página de professor - melhorada a verificação
+  const isProfessorPage = professorPages.some(page => {
+    if (page === "/dashboard-professor") {
+      return location.pathname === page;
+    }
+    return location.pathname === page || location.pathname.startsWith(page + "/");
+  });
 
-  // Se for uma página de professor, usar o layout moderno
+  // Se for usuário professor E estiver em uma página de professor, usar o layout moderno
   if (user?.tipo === "professor" && isProfessorPage) {
+    console.log("🎯 [Layout] Usando ProfessorLayout para:", location.pathname);
     return <ProfessorLayout>{children}</ProfessorLayout>;
   }
 
