@@ -26,6 +26,11 @@ const ModernSidebar: React.FC = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
+  console.log("🎨 [ModernSidebar] Renderizando ModernSidebar", {
+    currentPath: location.pathname,
+    isCollapsed
+  });
+
   const isActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
@@ -72,12 +77,14 @@ const ModernSidebar: React.FC = () => {
       <nav className="mt-6">
         {mainNavItems.map((item) => {
           const Icon = item.icon;
+          const itemIsActive = isActive(item.path);
+          console.log(`🔗 [ModernSidebar] Item ${item.label} (${item.path}) - Active: ${itemIsActive}`);
           return (
             <Link
               key={item.path + item.label}
               to={item.path}
               className={`px-4 py-3 flex items-center cursor-pointer transition-colors ${
-                isActive(item.path) 
+                itemIsActive 
                   ? "bg-gray-800 text-white" 
                   : "text-gray-300 hover:bg-gray-800"
               }`}

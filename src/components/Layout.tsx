@@ -17,7 +17,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   console.log("🔄 [Layout] Renderizando layout", {
     userType: user?.tipo,
-    currentPath: location.pathname
+    currentPath: location.pathname,
+    user: user
   });
 
   // Lista de páginas de professor que devem usar o layout moderno
@@ -40,22 +41,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/historico-medidas",
     "/historico-geral",
     "/configuracoes",
+    "/configuracoes-professor",
     "/editar-avaliacao"
   ];
 
-  // Verifica se a página atual é uma página de professor - melhorada a verificação
+  // Verifica se a página atual é uma página de professor
   const isProfessorPage = professorPages.some(page => {
-    if (page === "/dashboard-professor") {
-      return location.pathname === page;
-    }
-    return location.pathname === page || location.pathname.startsWith(page + "/");
+    const isMatch = location.pathname === page || location.pathname.startsWith(page + "/");
+    console.log(`🔍 [Layout] Checking ${page} against ${location.pathname}: ${isMatch}`);
+    return isMatch;
+  });
+
+  console.log("🎯 [Layout] Resultado da verificação:", {
+    isProfessorPage,
+    userTipo: user?.tipo,
+    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage
   });
 
   // Se for usuário professor E estiver em uma página de professor, usar o layout moderno
   if (user?.tipo === "professor" && isProfessorPage) {
-    console.log("🎯 [Layout] Usando ProfessorLayout para:", location.pathname);
+    console.log("✅ [Layout] Usando ProfessorLayout para:", location.pathname);
     return <ProfessorLayout>{children}</ProfessorLayout>;
   }
+
+  console.log("❌ [Layout] Usando layout padrão para:", location.pathname);
 
   const renderNavigation = () => {
     switch (user?.tipo) {

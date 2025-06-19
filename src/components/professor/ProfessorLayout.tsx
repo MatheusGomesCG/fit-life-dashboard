@@ -8,6 +8,8 @@ interface ProfessorLayoutProps {
 }
 
 const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
+  console.log("🏗️ [ProfessorLayout] Renderizando ProfessorLayout");
+  
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
