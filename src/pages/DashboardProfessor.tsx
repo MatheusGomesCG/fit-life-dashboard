@@ -67,10 +67,10 @@ const DashboardProfessor: React.FC = () => {
   const totalPendente = calcularTotalPendente(pagamentos);
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-600">
+    <div className="space-y-4 md:space-y-6">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Dashboard</h1>
+        <p className="text-sm md:text-base text-gray-600">
           Visão geral do sistema - {new Date().toLocaleDateString('pt-BR', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -80,10 +80,10 @@ const DashboardProfessor: React.FC = () => {
         </p>
       </div>
 
-      {/* Layout Principal em Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
+      {/* Layout Principal em Grid Responsivo */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
         {/* Coluna 1 - Cards de Estatísticas */}
-        <div className="xl:col-span-1">
+        <div className="lg:col-span-1 xl:col-span-1">
           <DashboardCards 
             totalAlunos={totalAlunos}
             totalRecebido={totalRecebido}
@@ -94,7 +94,7 @@ const DashboardProfessor: React.FC = () => {
         </div>
         
         {/* Coluna 2 - Atividades e Plano */}
-        <div className="xl:col-span-1 space-y-6">
+        <div className="lg:col-span-1 xl:col-span-1 space-y-4 md:space-y-6">
           <AtividadesRecentes 
             agendamentosSemana={agendamentosSemana}
             isLoading={isLoading}
@@ -107,7 +107,7 @@ const DashboardProfessor: React.FC = () => {
         </div>
         
         {/* Coluna 3 - Próximos Agendamentos */}
-        <div className="xl:col-span-2">
+        <div className="lg:col-span-2 xl:col-span-2">
           <ProximosAgendamentos 
             agendamentosSemana={agendamentosSemana}
             isLoading={isLoading}
@@ -116,7 +116,7 @@ const DashboardProfessor: React.FC = () => {
       </div>
 
       {/* Seção de Gráficos */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6">
         <div className="xl:col-span-1">
           <PagamentosAnuais 
             pagamentos={pagamentos} 
