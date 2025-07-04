@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Send, User, MessageCircle, Bot, Phone, Video, MoreVertical } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -136,9 +135,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
   }
 
   return (
-    <div className={`flex-1 flex flex-col ${isMobile ? 'h-[calc(100vh-140px)]' : 'h-full'} bg-white`}>
+    <div className={`flex flex-col h-full bg-white`}>
       {/* Cabeçalho da conversa - estilo WhatsApp */}
-      <div className={`${isMobile ? 'bg-green-600' : 'bg-white border-b border-gray-200'} ${isMobile ? 'text-white' : 'text-gray-900'} ${isMobile ? 'p-3' : 'p-4'} flex items-center justify-between shadow-sm`}>
+      <div className={`${isMobile ? 'bg-green-600' : 'bg-white border-b border-gray-200'} ${isMobile ? 'text-white' : 'text-gray-900'} ${isMobile ? 'p-3' : 'p-4'} flex items-center justify-between shadow-sm flex-shrink-0`}>
         <div className="flex items-center flex-1">
           <div className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} rounded-full ${isMobile ? 'bg-white/20' : 'bg-fitness-primary/20'} flex items-center justify-center mr-3`}>
             <User className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${isMobile ? 'text-white' : 'text-fitness-primary'}`} />
@@ -165,10 +164,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
         )}
       </div>
 
-      {/* Área de mensagens - estilo WhatsApp */}
-      <div className={`flex-1 overflow-y-auto ${isMobile ? 'bg-gray-100 px-3 py-2' : 'bg-white p-4'} space-y-2`}>
+      {/* Área de mensagens - ocupa todo espaço disponível */}
+      <div className={`flex-1 overflow-y-auto ${isMobile ? 'bg-gray-100 px-3 py-2' : 'bg-white p-4'} space-y-2 min-h-0`}>
         {mensagens.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 h-full flex flex-col items-center justify-center">
             <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
             <p>Nenhuma mensagem ainda</p>
             <p className="text-sm">Envie a primeira mensagem para iniciar a conversa</p>
@@ -233,8 +232,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Campo de input - estilo WhatsApp */}
-      <div className={`${isMobile ? 'bg-gray-100 p-2' : 'bg-white border-t border-gray-200 p-4'}`}>
+      {/* Campo de input - fixo na parte inferior */}
+      <div className={`${isMobile ? 'bg-gray-100 p-2' : 'bg-white border-t border-gray-200 p-4'} flex-shrink-0`}>
         <form onSubmit={handleEnviarMensagem} className="flex items-center space-x-2">
           <input
             type="text"
