@@ -54,17 +54,17 @@ const ModernSidebar: React.FC = () => {
   const SidebarContent = () => (
     <div className="bg-gray-900 text-white h-full flex flex-col">
       {/* Header da Sidebar */}
-      <div className={`p-3 md:p-4 flex items-center justify-between border-b border-gray-800 ${
+      <div className={`p-4 flex items-center justify-between border-b border-gray-800 ${
         isCollapsed && !isMobile ? 'px-2' : ''
       }`}>
         <div className={`flex items-center ${isCollapsed && !isMobile ? 'justify-center w-full' : ''}`}>
-          <div className={`bg-orange-500 h-7 w-7 md:h-8 md:w-8 flex items-center justify-center rounded-sm flex-shrink-0 ${
-            isCollapsed && !isMobile ? 'mr-0' : 'mr-2 md:mr-3'
+          <div className={`bg-orange-500 h-8 w-8 flex items-center justify-center rounded-sm flex-shrink-0 ${
+            isCollapsed && !isMobile ? 'mr-0' : 'mr-3'
           }`}>
-            <Dumbbell className="h-4 w-4 md:h-5 md:w-5" />
+            <Dumbbell className="h-5 w-5" />
           </div>
           {(!isCollapsed || isMobile) && (
-            <span className="font-bold text-base md:text-lg xl:text-xl tracking-wide">GYMCLOUD</span>
+            <span className="font-bold text-lg tracking-wide">GYMCLOUD</span>
           )}
         </div>
         
@@ -72,17 +72,17 @@ const ModernSidebar: React.FC = () => {
         {!isMobile && (
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`text-white hover:bg-gray-800 p-1.5 md:p-2 rounded transition-colors ${
+            className={`text-white hover:bg-gray-800 p-2 rounded transition-colors ${
               isCollapsed ? 'hidden' : ''
             }`}
             title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
           >
-            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
         )}
       </div>
       
-      <nav className="mt-2 md:mt-4 flex-1 overflow-y-auto">
+      <nav className="mt-4 flex-1 overflow-y-auto">
         {/* Menu Principal */}
         {mainNavItems.map((item) => {
           const Icon = item.icon;
@@ -91,7 +91,7 @@ const ModernSidebar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`px-2 md:px-3 lg:px-4 py-2 md:py-2.5 lg:py-3 flex items-center cursor-pointer transition-colors group ${
+              className={`px-4 py-3 flex items-center cursor-pointer transition-colors group relative ${
                 itemIsActive 
                   ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                   : "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -101,15 +101,15 @@ const ModernSidebar: React.FC = () => {
                 if (isMobile) setIsOpen(false);
               }}
             >
-              <Icon className={`h-4 w-4 md:h-5 md:w-5 flex-shrink-0 ${
-                isCollapsed && !isMobile ? 'mr-0' : 'mr-2 md:mr-3'
+              <Icon className={`h-5 w-5 flex-shrink-0 ${
+                isCollapsed && !isMobile ? 'mr-0' : 'mr-3'
               }`} />
               {(!isCollapsed || isMobile) && (
-                <span className="text-xs md:text-sm font-medium truncate">{item.label}</span>
+                <span className="text-sm font-medium truncate">{item.label}</span>
               )}
               {/* Tooltip para modo colapsado */}
               {isCollapsed && !isMobile && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                   {item.label}
                 </div>
               )}
@@ -120,7 +120,7 @@ const ModernSidebar: React.FC = () => {
         {/* Seções adicionais apenas quando não colapsado */}
         {(!isCollapsed || isMobile) && (
           <>
-            <div className="mt-4 md:mt-6 px-3 md:px-4 py-2">
+            <div className="mt-6 px-4 py-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 AÇÕES RÁPIDAS
               </span>
@@ -130,7 +130,7 @@ const ModernSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3 md:px-4 py-2 flex items-center cursor-pointer transition-colors ${
+                className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
                   isActive(item.path) 
                     ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -139,11 +139,11 @@ const ModernSidebar: React.FC = () => {
                   if (isMobile) setIsOpen(false);
                 }}
               >
-                <span className="text-xs md:text-sm truncate">{item.label}</span>
+                <span className="text-sm truncate">{item.label}</span>
               </Link>
             ))}
             
-            <div className="mt-4 md:mt-6 px-3 md:px-4 py-2">
+            <div className="mt-6 px-4 py-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                 GESTÃO
               </span>
@@ -153,7 +153,7 @@ const ModernSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-3 md:px-4 py-2 flex items-center cursor-pointer transition-colors ${
+                className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
                   isActive(item.path) 
                     ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                     : "text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -162,7 +162,7 @@ const ModernSidebar: React.FC = () => {
                   if (isMobile) setIsOpen(false);
                 }}
               >
-                <span className="text-xs md:text-sm truncate">{item.label}</span>
+                <span className="text-sm truncate">{item.label}</span>
               </Link>
             ))}
           </>
@@ -179,12 +179,12 @@ const ModernSidebar: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="fixed top-2 md:top-3 left-2 md:left-3 z-50 bg-gray-900 text-white hover:bg-gray-800 shadow-lg rounded-md p-1.5 md:p-2 h-8 w-8 md:h-10 md:w-10"
+            className="fixed top-3 left-3 z-50 bg-gray-900 text-white hover:bg-gray-800 shadow-lg rounded-md p-2 h-10 w-10"
           >
-            <Menu className="h-4 w-4 md:h-5 md:w-5" />
+            <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0 w-72 md:w-80 max-w-[85vw]">
+        <SheetContent side="left" className="p-0 w-80 max-w-[85vw]">
           <SidebarContent />
         </SheetContent>
       </Sheet>
@@ -194,21 +194,23 @@ const ModernSidebar: React.FC = () => {
   // Desktop: Fixed sidebar com animação suave
   return (
     <>
-      <div className={`transition-all duration-300 ease-in-out ${
+      <div className={`transition-all duration-300 ease-in-out flex-shrink-0 relative ${
         isCollapsed ? 'w-16' : 'w-64'
-      } flex-shrink-0 relative`}>
-        <SidebarContent />
+      }`}>
+        <div className="fixed left-0 top-0 h-full z-20">
+          <SidebarContent />
+        </div>
       </div>
       
       {/* Botão flutuante para expandir quando colapsada */}
       {isCollapsed && !isMobile && (
         <button
           onClick={() => setIsCollapsed(false)}
-          className="fixed top-16 left-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-all duration-300 z-20 group"
+          className="fixed top-20 left-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-all duration-300 z-30 group"
           title="Expandir sidebar"
         >
           <ChevronRight className="h-4 w-4" />
-          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
             Expandir menu
           </div>
         </button>
