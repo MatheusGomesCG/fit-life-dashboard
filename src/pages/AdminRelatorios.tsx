@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, 
@@ -247,7 +248,7 @@ const AdminRelatorios: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/dashboard-admin')}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
