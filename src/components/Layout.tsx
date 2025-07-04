@@ -15,13 +15,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-  console.log("🔄 [Layout] === INÍCIO DA VERIFICAÇÃO ===");
-  console.log("🔄 [Layout] Renderizando layout", {
-    userType: user?.tipo,
-    currentPath: location.pathname,
-    user: user,
-    hasUser: !!user
+  console.log("🔄 [Layout] === VERIFICAÇÃO DE LAYOUT ===");
+  console.log("🔄 [Layout] Usuário:", {
+    id: user?.id,
+    tipo: user?.tipo,
+    nome: user?.nome
   });
+  console.log("🔄 [Layout] Rota atual:", location.pathname);
 
   // Lista de páginas de professor que devem usar o layout moderno
   const professorPages = [
@@ -47,48 +47,29 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/editar-avaliacao"
   ];
 
-  console.log("📋 [Layout] Lista de páginas de professor:", professorPages);
-  console.log("🎯 [Layout] Página atual:", location.pathname);
+  // Verifica se é uma página de professor
+  const isProfessorPage = professorPages.some(page => 
+    location.pathname === page || location.pathname.startsWith(page + "/")
+  );
 
-  // Verifica se a página atual é uma página de professor
-  const isProfessorPage = professorPages.some(page => {
-    const isMatch = location.pathname === page || location.pathname.startsWith(page + "/");
-    console.log(`🔍 [Layout] Checking ${page} against ${location.pathname}: ${isMatch}`);
-    return isMatch;
-  });
-
-  console.log("🎯 [Layout] Resultado da verificação:", {
+  console.log("🎯 [Layout] Condições:", {
     isProfessorPage,
     userTipo: user?.tipo,
-    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage,
-    userExists: !!user,
-    userTipoExact: user?.tipo
+    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage
   });
 
-  // Se for usuário professor E estiver em uma página de professor, usar o layout moderno
+  // Se for professor E estiver numa página de professor, usar layout moderno
   if (user?.tipo === "professor" && isProfessorPage) {
-    console.log("✅ [Layout] === USANDO PROFESSOR LAYOUT ===");
-    console.log("✅ [Layout] Usando ProfessorLayout para:", location.pathname);
-    console.log("✅ [Layout] Dados do usuário:", {
-      id: user.id,
-      nome: user.nome,
-      tipo: user.tipo
-    });
+    console.log("✅ [Layout] USANDO PROFESSOR LAYOUT MODERNO");
     return <ProfessorLayout>{children}</ProfessorLayout>;
   }
 
-  console.log("❌ [Layout] === USANDO LAYOUT PADRÃO ===");
-  console.log("❌ [Layout] Motivo:", {
-    userType: user?.tipo,
-    isProfessorPage,
-    condition1: user?.tipo === "professor",
-    condition2: isProfessorPage,
-    bothConditions: user?.tipo === "professor" && isProfessorPage
-  });
-  console.log("❌ [Layout] Usando layout padrão para:", location.pathname);
+  console.log("❌ [Layout] Usando layout padrão");
 
   const renderNavigation = () => {
-    switch (user?.tipo) {
+    if (!user) return null;
+    
+    switch (user.tipo) {
       case "professor":
         return <ProfessorNavigation />;
       case "admin":

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import Layout from "@/components/Layout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -50,41 +51,42 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard-professor" element={<DashboardProfessor />} />
-              <Route path="/dashboard-admin" element={<DashboardAdmin />} />
-              <Route path="/cadastrar-aluno" element={<CadastrarAluno />} />
-              <Route path="/listar-alunos" element={<ListarAlunos />} />
-              <Route path="/editar-aluno/:id" element={<EditarAluno />} />
-              <Route path="/gerenciar-alunos" element={<GerenciarAlunos />} />
-              <Route path="/cadastrar-treino/:alunoId" element={<CadastrarTreino />} />
-              <Route path="/ficha-treino" element={<FichaTreino />} />
-              <Route path="/gerenciar-ficha-treino/:alunoId" element={<GerenciarFichaTreino />} />
-              <Route path="/meus-treinos" element={<MeusTreinos />} />
-              <Route path="/novo-agendamento" element={<NovoAgendamento />} />
-              <Route path="/agendamento" element={<Agendamento />} />
-              <Route path="/gerenciar-agendamentos" element={<GerenciarAgendamentos />} />
-              <Route path="/cadastrar-pagamento/:alunoId" element={<CadastrarPagamento />} />
-              <Route path="/editar-pagamento/:id" element={<EditarPagamento />} />
-              <Route path="/gerenciar-pagamentos" element={<GerenciarPagamentos />} />
-              <Route path="/meus-pagamentos" element={<MeusPagamentos />} />
-              <Route path="/historico-geral" element={<HistoricoGeral />} />
-              <Route path="/minhas-medidas" element={<MinhasMedidas />} />
-              <Route path="/historico-medidas/:alunoId" element={<HistoricoMedidasAluno />} />
-              <Route path="/cadastrar-medidas/:alunoId" element={<CadastrarMedidas />} />
-              <Route path="/editar-avaliacao/:alunoId/:avaliacaoId" element={<EditarAvaliacao />} />
-              <Route path="/gerenciar-fotos/:alunoId" element={<GerenciarFotosAluno />} />
-              <Route path="/chat" element={<Chat />} />
-              <Route path="/chat-professor" element={<ChatProfessor />} />
-              <Route path="/configuracoes" element={<ConfiguracoesProfessor />} />
-              <Route path="/admin/professores" element={<AdminProfessores />} />
-              <Route path="/admin/cadastrar-professor" element={<AdminCadastrarProfessor />} />
-              <Route path="/admin/planos" element={<AdminPlanosProfessores />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+              <Route path="/dashboard-professor" element={<Layout><DashboardProfessor /></Layout>} />
+              <Route path="/dashboard-admin" element={<Layout><DashboardAdmin /></Layout>} />
+              <Route path="/cadastrar-aluno" element={<Layout><CadastrarAluno /></Layout>} />
+              <Route path="/listar-alunos" element={<Layout><ListarAlunos /></Layout>} />
+              <Route path="/editar-aluno/:id" element={<Layout><EditarAluno /></Layout>} />
+              <Route path="/gerenciar-alunos" element={<Layout><GerenciarAlunos /></Layout>} />
+              <Route path="/cadastrar-treino/:alunoId" element={<Layout><CadastrarTreino /></Layout>} />
+              <Route path="/ficha-treino" element={<Layout><FichaTreino /></Layout>} />
+              <Route path="/gerenciar-ficha-treino/:alunoId" element={<Layout><GerenciarFichaTreino /></Layout>} />
+              <Route path="/meus-treinos" element={<Layout><MeusTreinos /></Layout>} />
+              <Route path="/novo-agendamento" element={<Layout><NovoAgendamento /></Layout>} />
+              <Route path="/agendamento" element={<Layout><Agendamento /></Layout>} />
+              <Route path="/gerenciar-agendamentos" element={<Layout><GerenciarAgendamentos /></Layout>} />
+              <Route path="/cadastrar-pagamento/:alunoId" element={<Layout><CadastrarPagamento /></Layout>} />
+              <Route path="/editar-pagamento/:id" element={<Layout><EditarPagamento /></Layout>} />
+              <Route path="/gerenciar-pagamentos" element={<Layout><GerenciarPagamentos /></Layout>} />
+              <Route path="/meus-pagamentos" element={<Layout><MeusPagamentos /></Layout>} />
+              <Route path="/historico-geral" element={<Layout><HistoricoGeral /></Layout>} />
+              <Route path="/minhas-medidas" element={<Layout><MinhasMedidas /></Layout>} />
+              <Route path="/historico-medidas/:alunoId" element={<Layout><HistoricoMedidasAluno /></Layout>} />
+              <Route path="/cadastrar-medidas/:alunoId" element={<Layout><CadastrarMedidas /></Layout>} />
+              <Route path="/editar-avaliacao/:alunoId/:avaliacaoId" element={<Layout><EditarAvaliacao /></Layout>} />
+              <Route path="/gerenciar-fotos/:alunoId" element={<Layout><GerenciarFotosAluno /></Layout>} />
+              <Route path="/chat" element={<Layout><Chat /></Layout>} />
+              <Route path="/chat-professor" element={<Layout><ChatProfessor /></Layout>} />
+              <Route path="/configuracoes" element={<Layout><ConfiguracoesProfessor /></Layout>} />
+              <Route path="/configuracoes-professor" element={<Layout><ConfiguracoesProfessor /></Layout>} />
+              <Route path="/admin/professores" element={<Layout><AdminProfessores /></Layout>} />
+              <Route path="/admin/cadastrar-professor" element={<Layout><AdminCadastrarProfessor /></Layout>} />
+              <Route path="/admin/planos" element={<Layout><AdminPlanosProfessores /></Layout>} />
+              <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>
-      </TooltipProvider>
+      </ToultipProvider>
     </QueryClientProvider>
   );
 }

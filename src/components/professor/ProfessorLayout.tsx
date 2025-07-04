@@ -14,22 +14,19 @@ const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
     childrenType: typeof children
   });
   
-  console.log("📱 [ProfessorLayout] Iniciando renderização do ModernSidebar");
-  console.log("🎨 [ProfessorLayout] Iniciando renderização do ModernHeader");
-  
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="sidebar-container">
+      {/* Sidebar fixa */}
+      <div className="flex-shrink-0">
         <ModernSidebar />
       </div>
       
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation */}
+      {/* Conteúdo principal */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
         <ModernHeader />
         
-        {/* Content */}
+        {/* Área de conteúdo */}
         <main className="flex-1 overflow-y-auto p-6 bg-gray-50">
           {children}
         </main>
