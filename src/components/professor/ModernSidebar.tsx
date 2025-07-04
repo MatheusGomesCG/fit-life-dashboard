@@ -51,8 +51,9 @@ const ModernSidebar: React.FC = () => {
     { path: "/gerenciar-alunos", icon: Users, label: "Alunos", type: "main" },
     // Ações Rápidas
     { path: "/cadastrar-aluno", icon: Plus, label: "Novo", type: "quick" },
-    { path: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagtos", type: "quick" },
+    { path: "/historico-geral", icon: Ruler, label: "Medidas", type: "quick" },
     // Gestão
+    { path: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagtos", type: "management" },
     { path: "/chat-professor", icon: MessageCircle, label: "Chat", type: "management" },
     { path: "/gerenciar-agendamentos", icon: Calendar, label: "Agenda", type: "management" },
     { path: "/configuracoes-professor", icon: Settings, label: "Config", type: "management" },
@@ -205,7 +206,7 @@ const ModernSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors min-w-0 ${
+                className={`flex flex-col items-center justify-center py-1 px-1 rounded-lg transition-colors min-w-0 ${
                   itemIsActive 
                     ? "text-orange-500" 
                     : "text-gray-500 hover:text-orange-500"
