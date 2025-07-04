@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -15,7 +16,9 @@ import {
   X,
   Home,
   Plus,
-  BarChart3
+  BarChart3,
+  MessageCircle,
+  CreditCard
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -41,13 +44,18 @@ const ModernSidebar: React.FC = () => {
     { path: "/configuracoes-professor", icon: Settings, label: "CONFIGURAÇÕES" },
   ];
 
-  // Navegação mobile expandida com mais funcionalidades
+  // Navegação mobile com todas as funcionalidades organizadas
   const mobileNavItems = [
-    { path: "/dashboard-professor", icon: Home, label: "Início" },
-    { path: "/gerenciar-alunos", icon: Users, label: "Alunos" },
-    { path: "/cadastrar-aluno", icon: Plus, label: "Adicionar" },
-    { path: "/gerenciar-pagamentos", icon: DollarSign, label: "Financeiro" },
-    { path: "/configuracoes-professor", icon: Settings, label: "Perfil" },
+    // Principais
+    { path: "/dashboard-professor", icon: Home, label: "Início", type: "main" },
+    { path: "/gerenciar-alunos", icon: Users, label: "Alunos", type: "main" },
+    // Ações Rápidas
+    { path: "/cadastrar-aluno", icon: Plus, label: "Novo", type: "quick" },
+    { path: "/gerenciar-pagamentos", icon: DollarSign, label: "Pagtos", type: "quick" },
+    // Gestão
+    { path: "/chat-professor", icon: MessageCircle, label: "Chat", type: "management" },
+    { path: "/gerenciar-agendamentos", icon: Calendar, label: "Agenda", type: "management" },
+    { path: "/configuracoes-professor", icon: Settings, label: "Config", type: "management" },
   ];
 
   const quickActions = [
@@ -79,11 +87,11 @@ const ModernSidebar: React.FC = () => {
           )}
         </div>
         
-        {/* Botão de colapso apenas no desktop - SEMPRE VISÍVEL */}
+        {/* Botão de colapso apenas no desktop */}
         {!isMobile && (
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-white hover:bg-gray-800 p-1.5 rounded transition-colors flex-shrink-0 z-50"
+            className="text-white hover:bg-gray-800 p-1.5 rounded transition-colors flex-shrink-0"
             title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
           >
             {isCollapsed ? (
@@ -184,11 +192,11 @@ const ModernSidebar: React.FC = () => {
     </div>
   );
 
-  // Mobile: Apenas navegação inferior
+  // Mobile: Navegação inferior expandida
   if (isMobile) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="flex items-center justify-around py-2">
+        <div className="flex items-center justify-around py-1">
           {mobileNavItems.map((item) => {
             const Icon = item.icon;
             const itemIsActive = isActive(item.path);
@@ -197,18 +205,18 @@ const ModernSidebar: React.FC = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
+                className={`flex flex-col items-center justify-center py-1 px-2 rounded-lg transition-colors min-w-0 ${
                   itemIsActive 
                     ? "text-orange-500" 
                     : "text-gray-500 hover:text-orange-500"
                 }`}
               >
-                <div className={`p-2 rounded-lg ${
+                <div className={`p-1.5 rounded-lg ${
                   itemIsActive ? "bg-orange-500 text-white" : ""
                 }`}>
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4" />
                 </div>
-                <span className="text-xs mt-1 font-medium">{item.label}</span>
+                <span className="text-xs mt-0.5 font-medium truncate">{item.label}</span>
               </Link>
             );
           })}
