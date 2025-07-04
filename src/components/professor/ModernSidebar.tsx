@@ -15,21 +15,28 @@ import {
   CalendarPlus,
   CreditCard,
   Settings,
-  HelpCircle,
   ChevronLeft,
   ChevronRight,
   TrendingUp,
-  Ruler
+  Ruler,
+  X
 } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 const ModernSidebar: React.FC = () => {
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   console.log("🎨 [ModernSidebar] === RENDERIZANDO MODERN SIDEBAR ===");
   console.log("🎨 [ModernSidebar] Estado atual:", {
     currentPath: location.pathname,
     isCollapsed,
+    isMobile,
+    isOpen,
     timestamp: new Date().toISOString()
   });
 
@@ -61,35 +68,37 @@ const ModernSidebar: React.FC = () => {
     { path: "/cadastrar-pagamento", label: "Cadastrar Pagamento" },
   ];
 
-  console.log("📋 [ModernSidebar] Itens do menu principal:", mainNavItems.map(item => ({
-    path: item.path,
-    label: item.label,
-    isActive: isActive(item.path)
-  })));
-
-  console.log("🎨 [ModernSidebar] Retornando JSX da sidebar");
-
-  return (
-    <div className={`bg-gray-900 text-white h-full transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'}`}>
-      <div className="p-4 flex items-center justify-between">
-        <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
-          <div className="bg-orange-500 h-6 w-6 flex items-center justify-center rounded-sm mr-2">
-            <Dumbbell className="h-4 w-4" />
+  const SidebarContent = () => (
+    <div className="bg-gray-900 text-white h-full flex flex-col">
+      <div className="p-4 flex items-center justify-between border-b border-gray-800">
+        <div className={`flex items-center ${isCollapsed && !isMobile ? 'justify-center' : ''}`}>
+          <div className="bg-orange-500 h-8 w-8 flex items-center justify-center rounded-sm mr-3">
+            <Dumbbell className="h-5 w-5" />
           </div>
-          {!isCollapsed && <span className="font-bold text-lg">GYMCLOUD</span>}
+          {(!isCollapsed || isMobile) && <span className="font-bold text-xl">GYMCLOUD</span>}
         </div>
-        <button 
-          onClick={() => {
-            console.log("🔄 [ModernSidebar] Toggle collapse:", !isCollapsed);
-            setIsCollapsed(!isCollapsed);
-          }}
-          className="text-white hover:bg-gray-800 p-1 rounded cursor-pointer"
-        >
-          {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </button>
+        {!isMobile && (
+          <button 
+            onClick={() => {
+              console.log("🔄 [ModernSidebar] Toggle collapse:", !isCollapsed);
+              setIsCollapsed(!isCollapsed);
+            }}
+            className="text-white hover:bg-gray-800 p-2 rounded cursor-pointer"
+          >
+            {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </button>
+        )}
+        {isMobile && (
+          <button 
+            onClick={() => setIsOpen(false)}
+            className="text-white hover:bg-gray-800 p-2 rounded cursor-pointer"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
       
-      <nav className="mt-6">
+      <nav className="mt-4 flex-1 overflow-y-auto">
         {mainNavItems.map((item) => {
           const Icon = item.icon;
           const itemIsActive = isActive(item.path);
@@ -100,22 +109,25 @@ const ModernSidebar: React.FC = () => {
               to={item.path}
               className={`px-4 py-3 flex items-center cursor-pointer transition-colors ${
                 itemIsActive 
-                  ? "bg-gray-800 text-white" 
+                  ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                   : "text-gray-300 hover:bg-gray-800"
               }`}
-              title={isCollapsed ? item.label : undefined}
-              onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em: ${item.label} -> ${item.path}`)}
+              title={isCollapsed && !isMobile ? item.label : undefined}
+              onClick={() => {
+                console.log(`🖱️ [ModernSidebar] Clicou em: ${item.label} -> ${item.path}`);
+                if (isMobile) setIsOpen(false);
+              }}
             >
               <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
-              {!isCollapsed && <span>{item.label}</span>}
+              {(!isCollapsed || isMobile) && <span className="text-sm font-medium">{item.label}</span>}
             </Link>
           );
         })}
         
-        {!isCollapsed && (
+        {(!isCollapsed || isMobile) && (
           <>
             <div className="mt-6 px-4 py-2">
-              <span className="text-xs font-semibold text-gray-400">AÇÕES RÁPIDAS</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">AÇÕES RÁPIDAS</span>
             </div>
             
             {categoryItems.map((item) => (
@@ -124,17 +136,20 @@ const ModernSidebar: React.FC = () => {
                 to={item.path}
                 className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
                   isActive(item.path) 
-                    ? "bg-gray-800 text-white" 
+                    ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
-                onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em ação rápida: ${item.label} -> ${item.path}`)}
+                onClick={() => {
+                  console.log(`🖱️ [ModernSidebar] Clicou em ação rápida: ${item.label} -> ${item.path}`);
+                  if (isMobile) setIsOpen(false);
+                }}
               >
                 <span className="text-sm">{item.label}</span>
               </Link>
             ))}
             
             <div className="mt-6 px-4 py-2">
-              <span className="text-xs font-semibold text-gray-400">GESTÃO</span>
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">GESTÃO</span>
             </div>
             
             {managementItems.map((item) => (
@@ -143,10 +158,13 @@ const ModernSidebar: React.FC = () => {
                 to={item.path}
                 className={`px-4 py-2 flex items-center cursor-pointer transition-colors ${
                   isActive(item.path) 
-                    ? "bg-gray-800 text-white" 
+                    ? "bg-gray-800 text-white border-r-4 border-orange-500" 
                     : "text-gray-300 hover:bg-gray-800"
                 }`}
-                onClick={() => console.log(`🖱️ [ModernSidebar] Clicou em gestão: ${item.label} -> ${item.path}`)}
+                onClick={() => {
+                  console.log(`🖱️ [ModernSidebar] Clicou em gestão: ${item.label} -> ${item.path}`);
+                  if (isMobile) setIsOpen(false);
+                }}
               >
                 <span className="text-sm">{item.label}</span>
               </Link>
@@ -154,6 +172,36 @@ const ModernSidebar: React.FC = () => {
           </>
         )}
       </nav>
+    </div>
+  );
+
+  // Mobile: Sheet/Drawer
+  if (isMobile) {
+    return (
+      <>
+        {/* Trigger button for mobile */}
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="fixed top-4 left-4 z-50 bg-gray-900 text-white hover:bg-gray-800 md:hidden"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0 w-80">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  // Desktop: Fixed sidebar
+  return (
+    <div className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} flex-shrink-0`}>
+      <SidebarContent />
     </div>
   );
 };
