@@ -86,7 +86,7 @@ function App() {
             </Routes>
           </AuthProvider>
         </BrowserRouter>
-      </ToultipProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
