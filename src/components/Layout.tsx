@@ -56,7 +56,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/admin/cadastrar-professor",
     "/admin/dashboard",
     "/admin/transacoes",
-    "/admin/planos"
+    "/admin/planos",
+    "/admin/relatorios"
   ];
 
   // Verifica se é uma página de professor

@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -42,6 +41,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminTransacoes from "./pages/AdminTransacoes";
 import CriarUsuarioAdmin from "./pages/CriarUsuarioAdmin";
 import NotFound from "./pages/NotFound";
+import AdminRelatorios from "./pages/AdminRelatorios";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +58,62 @@ function App() {
               <Route path="/criar-admin" element={<CriarUsuarioAdmin />} />
               <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
               <Route path="/dashboard-professor" element={<Layout><DashboardProfessor /></Layout>} />
-              <Route path="/dashboard-admin" element={<Layout><DashboardAdmin /></Layout>} />
+              <Route 
+                path="/dashboard-admin" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <DashboardAdmin />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/professores" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminProfessores />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/cadastrar-professor" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminCadastrarProfessor />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/transacoes" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminTransacoes />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/planos" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminPlanosProfessores />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/relatorios" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminRelatorios />
+                  </ProtectedRoute>
+                } 
+              />
               <Route path="/cadastrar-aluno" element={<Layout><CadastrarAluno /></Layout>} />
               <Route path="/listar-alunos" element={<Layout><ListarAlunos /></Layout>} />
               <Route path="/editar-aluno/:id" element={<Layout><EditarAluno /></Layout>} />
@@ -85,11 +140,6 @@ function App() {
               <Route path="/chat-professor" element={<Layout><ChatProfessor /></Layout>} />
               <Route path="/configuracoes" element={<Layout><ConfiguracoesProfessor /></Layout>} />
               <Route path="/configuracoes-professor" element={<Layout><ConfiguracoesProfessor /></Layout>} />
-              <Route path="/admin/professores" element={<Layout><AdminProfessores /></Layout>} />
-              <Route path="/admin/cadastrar-professor" element={<Layout><AdminCadastrarProfessor /></Layout>} />
-              <Route path="/admin/planos" element={<Layout><AdminPlanosProfessores /></Layout>} />
-              <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
-              <Route path="/admin/transacoes" element={<Layout><AdminTransacoes /></Layout>} />
               <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </AuthProvider>
