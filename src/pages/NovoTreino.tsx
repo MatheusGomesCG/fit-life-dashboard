@@ -10,11 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
-interface ExercicioForm extends Omit<CargaExercicio, 'cargaIdeal'> {
-  cargaIdeal: string;
+interface ExercicioForm {
+  nomeExercicio: string;
+  grupoMuscular: string;
+  cargaIdeal: number;
+  series: number;
+  repeticoes: number;
+  estrategia: string;
+  videoUrl: string;
+  diaTreino: string;
 }
 
 const gruposMusculares = [
@@ -50,7 +56,7 @@ const NovoTreino: React.FC = () => {
   const [exercicios, setExercicios] = useState<ExercicioForm[]>([{
     nomeExercicio: "",
     grupoMuscular: "",
-    cargaIdeal: "0",
+    cargaIdeal: 0,
     series: 3,
     repeticoes: 12,
     estrategia: "",
@@ -61,10 +67,12 @@ const NovoTreino: React.FC = () => {
   useEffect(() => {
     const fetchAlunos = async () => {
       try {
+        console.log("🔍 [NovoTreino] Carregando alunos...");
         const alunosData = await listarAlunos();
+        console.log("✅ [NovoTreino] Alunos carregados:", alunosData.length);
         setAlunos(alunosData);
       } catch (error) {
-        console.error("Erro ao buscar alunos:", error);
+        console.error("❌ [NovoTreino] Erro ao buscar alunos:", error);
         toast.error("Erro ao carregar lista de alunos");
       } finally {
         setLoading(false);
@@ -75,6 +83,7 @@ const NovoTreino: React.FC = () => {
   }, []);
 
   const handleExercicioChange = (index: number, field: keyof ExercicioForm, value: string | number) => {
+    console.log(`🔄 [NovoTreino] Alterando exercício ${index}, campo ${field}:`, value);
     const updatedExercicios = [...exercicios];
     updatedExercicios[index] = {
       ...updatedExercicios[index],
@@ -84,12 +93,13 @@ const NovoTreino: React.FC = () => {
   };
 
   const addExercicio = () => {
+    console.log("✅ [NovoTreino] Adicionando novo exercício");
     setExercicios([
       ...exercicios,
       {
         nomeExercicio: "",
         grupoMuscular: "",
-        cargaIdeal: "0",
+        cargaIdeal: 0,
         series: 3,
         repeticoes: 12,
         estrategia: "",
@@ -105,11 +115,14 @@ const NovoTreino: React.FC = () => {
       return;
     }
     
+    console.log(`🗑️ [NovoTreino] Removendo exercício ${index}`);
     const updatedExercicios = exercicios.filter((_, i) => i !== index);
     setExercicios(updatedExercicios);
   };
 
   const validateForm = () => {
+    console.log("🔍 [NovoTreino] Validando formulário...");
+    
     if (!alunoSelecionado) {
       toast.error("Por favor, selecione um aluno para o treino.");
       return false;
@@ -117,34 +130,61 @@ const NovoTreino: React.FC = () => {
 
     for (let i = 0; i < exercicios.length; i++) {
       const exercicio = exercicios[i];
-      if (!exercicio.nomeExercicio || !exercicio.grupoMuscular || !exercicio.diaTreino) {
-        toast.error(`Preencha o nome, grupo muscular e dia do treino do exercício ${i + 1}.`);
+      if (!exercicio.nomeExercicio.trim()) {
+        toast.error(`Preencha o nome do exercício ${i + 1}.`);
+        return false;
+      }
+      if (!exercicio.grupoMuscular) {
+        toast.error(`Selecione o grupo muscular do exercício ${i + 1}.`);
+        return false;
+      }
+      if (!exercicio.diaTreino) {
+        toast.error(`Selecione o dia do treino do exercício ${i + 1}.`);
         return false;
       }
     }
     
+    console.log("✅ [NovoTreino] Formulário validado com sucesso");
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    console.log("📝 [NovoTreino] Iniciando submissão do formulário...");
+    
+    if (!validateForm()) {
+      console.log("❌ [NovoTreino] Validação falhou");
+      return;
+    }
     
     try {
       setSaving(true);
       
+      console.log("🔄 [NovoTreino] Formatando exercícios...");
       const exerciciosFormatted: CargaExercicio[] = exercicios.map(ex => ({
-        ...ex,
-        cargaIdeal: Number(ex.cargaIdeal)
+        nomeExercicio: ex.nomeExercicio.trim(),
+        grupoMuscular: ex.grupoMuscular,
+        cargaIdeal: Number(ex.cargaIdeal) || 0,
+        series: Number(ex.series) || 3,
+        repeticoes: Number(ex.repeticoes) || 12,
+        estrategia: ex.estrategia.trim() || "",
+        videoUrl: ex.videoUrl.trim() || "",
+        diaTreino: ex.diaTreino
       }));
+      
+      console.log("💾 [NovoTreino] Salvando ficha de treino...", {
+        alunoId: alunoSelecionado,
+        exercicios: exerciciosFormatted.length
+      });
       
       await criarOuAtualizarFichaTreino(alunoSelecionado, exerciciosFormatted);
       
+      console.log("✅ [NovoTreino] Treino criado com sucesso!");
       toast.success("Treino criado com sucesso!");
       navigate("/gerenciar-alunos");
     } catch (error) {
-      console.error("Erro ao criar treino:", error);
+      console.error("❌ [NovoTreino] Erro ao criar treino:", error);
       toast.error("Erro ao criar treino. Tente novamente.");
     } finally {
       setSaving(false);
@@ -216,19 +256,19 @@ const NovoTreino: React.FC = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg text-sm">
                 <div>
                   <span className="text-gray-500 block">Idade</span>
-                  <span className="font-medium">{alunoInfo.idade} anos</span>
+                  <span className="font-medium">{alunoInfo.idade || 'N/A'} anos</span>
                 </div>
                 <div>
                   <span className="text-gray-500 block">Peso</span>
-                  <span className="font-medium">{alunoInfo.peso} kg</span>
+                  <span className="font-medium">{alunoInfo.peso || 'N/A'} kg</span>
                 </div>
                 <div>
                   <span className="text-gray-500 block">Altura</span>
-                  <span className="font-medium">{alunoInfo.altura} cm</span>
+                  <span className="font-medium">{alunoInfo.altura || 'N/A'} cm</span>
                 </div>
                 <div>
                   <span className="text-gray-500 block">Experiência</span>
-                  <span className="font-medium capitalize">{alunoInfo.experiencia}</span>
+                  <span className="font-medium capitalize">{alunoInfo.experiencia || 'N/A'}</span>
                 </div>
               </div>
             )}
@@ -310,7 +350,7 @@ const NovoTreino: React.FC = () => {
                       Dia do Treino *
                     </Label>
                     <Select
-                      value={exercicio.diaTreino || ""}
+                      value={exercicio.diaTreino}
                       onValueChange={(value) => handleExercicioChange(index, "diaTreino", value)}
                     >
                       <SelectTrigger id={`exercicio-${index}-dia`}>
@@ -332,7 +372,7 @@ const NovoTreino: React.FC = () => {
                       id={`exercicio-${index}-carga`}
                       type="number"
                       value={exercicio.cargaIdeal}
-                      onChange={(e) => handleExercicioChange(index, "cargaIdeal", e.target.value)}
+                      onChange={(e) => handleExercicioChange(index, "cargaIdeal", Number(e.target.value) || 0)}
                       placeholder="0"
                       className="text-sm"
                       min="0"
@@ -348,7 +388,7 @@ const NovoTreino: React.FC = () => {
                       id={`exercicio-${index}-series`}
                       type="number"
                       value={exercicio.series}
-                      onChange={(e) => handleExercicioChange(index, "series", Number(e.target.value))}
+                      onChange={(e) => handleExercicioChange(index, "series", Number(e.target.value) || 3)}
                       className="text-sm"
                       min="1"
                       max="10"
@@ -363,7 +403,7 @@ const NovoTreino: React.FC = () => {
                       id={`exercicio-${index}-repeticoes`}
                       type="number"
                       value={exercicio.repeticoes}
-                      onChange={(e) => handleExercicioChange(index, "repeticoes", Number(e.target.value))}
+                      onChange={(e) => handleExercicioChange(index, "repeticoes", Number(e.target.value) || 12)}
                       className="text-sm"
                       min="1"
                       max="50"
@@ -376,7 +416,7 @@ const NovoTreino: React.FC = () => {
                     </Label>
                     <Input
                       id={`exercicio-${index}-estrategia`}
-                      value={exercicio.estrategia || ""}
+                      value={exercicio.estrategia}
                       onChange={(e) => handleExercicioChange(index, "estrategia", e.target.value)}
                       placeholder="Ex: Pausa de 2 segundos na descida"
                       className="text-sm"
@@ -389,7 +429,7 @@ const NovoTreino: React.FC = () => {
                     </Label>
                     <Input
                       id={`exercicio-${index}-video`}
-                      value={exercicio.videoUrl || ""}
+                      value={exercicio.videoUrl}
                       onChange={(e) => handleExercicioChange(index, "videoUrl", e.target.value)}
                       placeholder="https://youtube.com/watch?v=..."
                       className="text-sm"
