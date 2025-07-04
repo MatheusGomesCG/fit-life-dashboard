@@ -93,7 +93,12 @@ export const buscarTransacoesProfessores = async (): Promise<TransacaoProfessor[
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    
+    // Fazer cast do status para o tipo correto
+    return (data || []).map(transacao => ({
+      ...transacao,
+      status: transacao.status as "pendente" | "pago" | "cancelado" | "falhou"
+    }));
   } catch (error) {
     console.error("Erro ao buscar transações:", error);
     throw error;
@@ -102,7 +107,7 @@ export const buscarTransacoesProfessores = async (): Promise<TransacaoProfessor[
 
 export const buscarProfessoresComPlanos = async (): Promise<ProfessorComPlano[]> => {
   try {
-    // Buscar professores com seus planos e última transação
+    // Buscar professores com dados do auth.users para obter o email
     const { data: professores, error: professoresError } = await supabase
       .from('professor_profiles')
       .select(`
@@ -115,7 +120,8 @@ export const buscarProfessoresComPlanos = async (): Promise<ProfessorComPlano[]>
 
     if (professoresError) throw professoresError;
 
-    // Para cada professor, buscar plano e transações
+    // Buscar emails dos usuários usando a tabela auth (através de uma função RPC se necessário)
+    // Por enquanto, vamos usar um email placeholder e depois você pode ajustar
     const professoresCompletos = await Promise.all(
       (professores || []).map(async (professor) => {
         // Buscar plano ativo
@@ -136,6 +142,7 @@ export const buscarProfessoresComPlanos = async (): Promise<ProfessorComPlano[]>
 
         return {
           ...professor,
+          email: `professor${professor.id.slice(0, 8)}@email.com`, // Placeholder temporário
           plano: plano || undefined,
           ultima_transacao: transacoes?.[0] || undefined
         };
@@ -158,7 +165,11 @@ export const criarTransacao = async (transacao: Omit<TransacaoProfessor, "id" | 
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return {
+      ...data,
+      status: data.status as "pendente" | "pago" | "cancelado" | "falhou"
+    };
   } catch (error) {
     console.error("Erro ao criar transação:", error);
     throw error;
@@ -175,7 +186,11 @@ export const atualizarTransacao = async (id: string, updates: Partial<TransacaoP
       .single();
 
     if (error) throw error;
-    return data;
+    
+    return {
+      ...data,
+      status: data.status as "pendente" | "pago" | "cancelado" | "falhou"
+    };
   } catch (error) {
     console.error("Erro ao atualizar transação:", error);
     throw error;
@@ -187,23 +202,29 @@ export const gerarRelatorioExcel = async (ano: number, mes?: number) => {
     const inicio = mes ? startOfMonth(new Date(ano, mes - 1)) : startOfYear(new Date(ano, 0));
     const fim = mes ? endOfMonth(new Date(ano, mes - 1)) : endOfYear(new Date(ano, 0));
 
-    // Buscar transações do período
+    // Buscar transações do período com join manual
     const { data: transacoes, error } = await supabase
       .from('professor_transacoes')
-      .select(`
-        *,
-        professor_profiles!inner(nome)
-      `)
+      .select('*')
       .gte('created_at', inicio.toISOString())
       .lte('created_at', fim.toISOString())
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
+    // Buscar nomes dos professores separadamente
+    const professorIds = [...new Set((transacoes || []).map(t => t.professor_id))];
+    const { data: professores } = await supabase
+      .from('professor_profiles')
+      .select('user_id, nome')
+      .in('user_id', professorIds);
+
+    const professoresMap = new Map(professores?.map(p => [p.user_id, p.nome]) || []);
+
     // Preparar dados para o Excel
     const dadosExcel = (transacoes || []).map(transacao => ({
       'Data': format(new Date(transacao.created_at), 'dd/MM/yyyy'),
-      'Professor': transacao.professor_profiles?.nome || 'N/A',
+      'Professor': professoresMap.get(transacao.professor_id) || 'N/A',
       'Valor': `R$ ${transacao.valor?.toFixed(2) || '0,00'}`,
       'Status': transacao.status,
       'Método Pagamento': transacao.metodo_pagamento || 'N/A',
