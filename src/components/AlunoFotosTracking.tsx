@@ -8,16 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Camera, ChevronLeft, ChevronRight, Calendar, Image } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, Calendar, Image, Trash2 } from "lucide-react";
 import { FotoAluno, adicionarFotoAluno, removerFotoAluno } from "@/services/alunosService";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface AlunoFotosTrackingProps {
   alunoId: string;
@@ -145,109 +140,149 @@ const AlunoFotosTracking: React.FC<AlunoFotosTrackingProps> = ({ alunoId, fotos,
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">
+    <div className="p-4 sm:p-6">
+      {/* Header responsivo */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-lg sm:text-xl font-medium text-gray-900">
             Acompanhamento Mensal de Fotos
-          </CardTitle>
-          <div>
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Acompanhe o progresso do aluno mês a mês através de fotos
+          </p>
+        </div>
+        <div>
+          <input
+            type="file"
+            id="foto-upload"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileUpload}
+            disabled={isUploading}
+          />
+          <label htmlFor="foto-upload">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isUploading}
+              className="flex items-center gap-2 cursor-pointer w-full sm:w-auto"
+              asChild
+            >
+              <span>
+                {isUploading ? "Enviando..." : (
+                  <>
+                    <Camera className="h-4 w-4" />
+                    <span>Adicionar Foto</span>
+                  </>
+                )}
+              </span>
+            </Button>
+          </label>
+        </div>
+      </div>
+
+      {/* Navegação de mês responsiva */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 rounded-lg">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigateMonth('prev')}
+          className="flex items-center text-gray-500 w-full sm:w-auto justify-center sm:justify-start"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Mês Anterior
+        </Button>
+        
+        <div className="flex items-center justify-center gap-2 font-medium text-center">
+          <Calendar className="h-4 w-4" />
+          <span className="text-sm sm:text-base">
+            {monthNames[activeMonth]} {activeYear}
+          </span>
+        </div>
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => navigateMonth('next')}
+          className="flex items-center text-gray-500 w-full sm:w-auto justify-center sm:justify-start"
+        >
+          Próximo Mês
+          <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+
+      {/* Grid de fotos responsivo */}
+      {currentMonthPhotos.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+          {currentMonthPhotos.map(foto => (
+            <Card key={foto.id} className="overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="relative aspect-square">
+                <img 
+                  src={foto.url} 
+                  alt={foto.descricao || "Foto do aluno"} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {format(new Date(foto.data || foto.data_upload), "dd 'de' MMMM", { locale: ptBR })}
+                    </p>
+                    {foto.observacoes && (
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                        {foto.observacoes}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => foto.id && handleRemovePhoto(foto.id)}
+                    className="text-red-600 hover:text-red-700 shrink-0 p-2"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="border-2 border-dashed border-gray-200 rounded-lg p-8 sm:p-12 flex flex-col items-center justify-center text-center">
+          <Image className="h-12 w-12 sm:h-16 sm:w-16 text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Nenhuma foto para {monthNames[activeMonth]} {activeYear}
+          </h3>
+          <p className="text-gray-500 text-sm mb-4 max-w-md">
+            Adicione fotos para acompanhar o progresso do aluno neste mês
+          </p>
+          <label htmlFor="foto-upload-empty">
             <input
               type="file"
-              id="foto-upload"
+              id="foto-upload-empty"
               accept="image/*"
               className="hidden"
               onChange={handleFileUpload}
               disabled={isUploading}
             />
-            <label htmlFor="foto-upload">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={isUploading}
-                className="flex items-center gap-2 cursor-pointer"
-                asChild
-              >
-                <span>
-                  {isUploading ? "Enviando..." : (
-                    <>
-                      <Camera className="h-4 w-4" />
-                      <span>Adicionar Foto</span>
-                    </>
-                  )}
-                </span>
-              </Button>
-            </label>
-          </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isUploading}
+              className="cursor-pointer"
+              asChild
+            >
+              <span>
+                <Camera className="h-4 w-4 mr-2" />
+                Adicionar primeira foto
+              </span>
+            </Button>
+          </label>
         </div>
-        <CardDescription>
-          Acompanhe o progresso do aluno mês a mês através de fotos
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigateMonth('prev')}
-            className="flex items-center text-gray-500"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Anterior
-          </Button>
-          
-          <div className="flex items-center gap-2 font-medium">
-            <Calendar className="h-4 w-4" />
-            {monthNames[activeMonth]} {activeYear}
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigateMonth('next')}
-            className="flex items-center text-gray-500"
-          >
-            Próximo
-            <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
-
-        {currentMonthPhotos.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
-            {currentMonthPhotos.map(foto => (
-              <div key={foto.id} className="border border-gray-200 rounded-md overflow-hidden">
-                <div className="relative pt-[75%]">
-                  <img 
-                    src={foto.url} 
-                    alt={foto.descricao || "Foto do aluno"} 
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-3 bg-gray-50 flex justify-between items-center">
-                  <span className="text-sm font-medium">
-                    {format(new Date(foto.data || foto.data_upload), "dd/MM/yyyy")}
-                  </span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => foto.id && handleRemovePhoto(foto.id)}
-                  >
-                    Remover
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400">
-            <Image className="h-12 w-12 mb-2" />
-            <p>Nenhuma foto para {monthNames[activeMonth]} {activeYear}</p>
-            <p className="text-sm mt-1">Adicione fotos para acompanhar o progresso</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 };
 
