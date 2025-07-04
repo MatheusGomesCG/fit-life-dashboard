@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -338,136 +339,155 @@ const CadastrarMedidas: React.FC = () => {
   if (!aluno) return <div>Aluno não encontrado</div>;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/gerenciar-alunos")}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Nova Avaliação Física</h1>
-      </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Dados do Aluno
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label className="text-sm font-medium">Nome</Label>
-              <p className="text-gray-900">{aluno.nome}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Email</Label>
-              <p className="text-gray-600">{aluno.email}</p>
-            </div>
-            <div>
-              <Label className="text-sm font-medium">Idade</Label>
-              <p className="text-gray-900">{aluno.idade} anos</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Informações da Avaliação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="data">Data da Avaliação</Label>
-            <DatePicker
-              selected={dataAvaliacao}
-              onSelect={(date) => date && setDataAvaliacao(date)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="observacoes">Observações Gerais</Label>
-            <Textarea
-              id="observacoes"
-              value={observacoes}
-              onChange={(e) => setObservacoes(e.target.value)}
-              placeholder="Observações sobre a avaliação..."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Botão para calcular composição corporal */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-6xl">
+        {/* Header responsivo */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
           <Button
-            onClick={calcularComposicaoCorporal}
-            className="w-full"
             variant="outline"
+            size="sm"
+            onClick={() => navigate("/gerenciar-alunos")}
+            className="shrink-0"
           >
-            <Calculator className="h-4 w-4 mr-2" />
-            Calcular Composição Corporal Automaticamente
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
           </Button>
-        </CardContent>
-      </Card>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Nova Avaliação Física</h1>
+        </div>
 
-      <div className="space-y-6">
-        {Object.entries(estrategiasPorGrupo).map(([nomeGrupo, estrategias]) => (
-          <Card key={nomeGrupo}>
-            <CardHeader>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={nomeGrupo}
-                  checked={grupos[nomeGrupo]?.ativas || false}
-                  onCheckedChange={() => toggleGrupo(nomeGrupo)}
-                />
-                <Label htmlFor={nomeGrupo} className="text-lg font-semibold cursor-pointer">
-                  {nomeGrupo}
-                </Label>
+        {/* Card de dados do aluno - Layout responsivo */}
+        <Card className="mb-6 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <User className="h-5 w-5" />
+              Dados do Aluno
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-500">Nome</Label>
+                <p className="text-gray-900 break-words">{aluno.nome}</p>
               </div>
-            </CardHeader>
-            
-            {grupos[nomeGrupo]?.ativas && (
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {estrategias.map((estrategia) => (
-                    <div key={estrategia.nome}>
-                      <Label className="text-sm font-medium">
-                        {estrategia.nome} {estrategia.unidade !== "texto" && `(${estrategia.unidade})`}
-                      </Label>
-                      <Input
-                        type={estrategia.unidade === "texto" ? "text" : "number"}
-                        step={estrategia.unidade === "texto" ? undefined : "0.1"}
-                        value={
-                          estrategia.unidade === "texto"
-                            ? grupos[nomeGrupo]?.dados[estrategia.nome]?.valor_texto || ""
-                            : grupos[nomeGrupo]?.dados[estrategia.nome]?.valor || ""
-                        }
-                        onChange={(e) => updateEstrategiaValor(nomeGrupo, estrategia.nome, e.target.value)}
-                        placeholder={estrategia.unidade === "texto" ? "Descreva..." : "0"}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        ))}
-      </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-500">Email</Label>
+                <p className="text-gray-600 break-all text-sm">{aluno.email}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-sm font-medium text-gray-500">Idade</Label>
+                <p className="text-gray-900">{aluno.idade} anos</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      <div className="flex justify-end mt-8">
-        <Button
-          onClick={salvarAvaliacao}
-          disabled={saving}
-          className="min-w-[120px]"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? "Salvando..." : "Salvar Avaliação"}
-        </Button>
+        {/* Card de informações da avaliação */}
+        <Card className="mb-6 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-lg">Informações da Avaliação</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="data">Data da Avaliação</Label>
+                <DatePicker
+                  selected={dataAvaliacao}
+                  onSelect={(date) => date && setDataAvaliacao(date)}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="observacoes">Observações Gerais</Label>
+              <Textarea
+                id="observacoes"
+                value={observacoes}
+                onChange={(e) => setObservacoes(e.target.value)}
+                placeholder="Observações sobre a avaliação..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Botão para calcular composição corporal */}
+        <Card className="mb-6 shadow-sm">
+          <CardContent className="pt-6">
+            <Button
+              onClick={calcularComposicaoCorporal}
+              className="w-full"
+              variant="outline"
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              Calcular Composição Corporal Automaticamente
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Grupos de estratégias - Layout responsivo */}
+        <div className="space-y-4 sm:space-y-6">
+          {Object.entries(estrategiasPorGrupo).map(([nomeGrupo, estrategias]) => (
+            <Card key={nomeGrupo} className="shadow-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id={nomeGrupo}
+                    checked={grupos[nomeGrupo]?.ativas || false}
+                    onCheckedChange={() => toggleGrupo(nomeGrupo)}
+                  />
+                  <Label htmlFor={nomeGrupo} className="text-base sm:text-lg font-semibold cursor-pointer">
+                    {nomeGrupo}
+                  </Label>
+                </div>
+              </CardHeader>
+              
+              {grupos[nomeGrupo]?.ativas && (
+                <CardContent className="pt-0">
+                  {/* Grid responsivo para os campos */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {estrategias.map((estrategia) => (
+                      <div key={estrategia.nome} className="space-y-2">
+                        <Label className="text-sm font-medium break-words">
+                          {estrategia.nome} 
+                          {estrategia.unidade !== "texto" && (
+                            <span className="text-gray-500 ml-1">({estrategia.unidade})</span>
+                          )}
+                        </Label>
+                        <Input
+                          type={estrategia.unidade === "texto" ? "text" : "number"}
+                          step={estrategia.unidade === "texto" ? undefined : "0.1"}
+                          value={
+                            estrategia.unidade === "texto"
+                              ? grupos[nomeGrupo]?.dados[estrategia.nome]?.valor_texto || ""
+                              : grupos[nomeGrupo]?.dados[estrategia.nome]?.valor || ""
+                          }
+                          onChange={(e) => updateEstrategiaValor(nomeGrupo, estrategia.nome, e.target.value)}
+                          placeholder={estrategia.unidade === "texto" ? "Descreva..." : "0"}
+                          className="w-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))}
+        </div>
+
+        {/* Botão de salvar - Fixo na parte inferior em mobile */}
+        <div className="mt-8 sticky bottom-4 sm:static sm:bottom-auto">
+          <div className="flex justify-center sm:justify-end">
+            <Button
+              onClick={salvarAvaliacao}
+              disabled={saving}
+              className="w-full sm:w-auto min-w-[200px] shadow-lg sm:shadow-none"
+              size="lg"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? "Salvando..." : "Salvar Avaliação"}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
