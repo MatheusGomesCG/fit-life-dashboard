@@ -69,6 +69,7 @@ const ModernSidebar: React.FC = () => {
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="text-white hover:bg-gray-800 p-2 rounded transition-colors"
+            title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
           >
             {isCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
           </button>
@@ -176,10 +177,21 @@ const ModernSidebar: React.FC = () => {
     );
   }
 
-  // Desktop: Fixed sidebar
+  // Desktop: Fixed sidebar com botão de expansão sempre visível
   return (
-    <div className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} flex-shrink-0`}>
+    <div className={`transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-64'} flex-shrink-0 relative`}>
       <SidebarContent />
+      
+      {/* Botão flutuante para expandir quando colapsada */}
+      {isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="absolute top-4 -right-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-1 shadow-lg transition-colors z-10"
+          title="Expandir sidebar"
+        >
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 };
