@@ -17,15 +17,17 @@ const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
       <ModernSidebar />
       
       {/* Conteúdo principal */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header */}
         <ModernHeader />
         
         {/* Área de conteúdo */}
         <main className={`flex-1 overflow-y-auto bg-gray-50 ${
-          isMobile ? 'p-3' : 'p-6'
+          isMobile ? 'p-2 pt-12' : 'p-4 md:p-6'
         }`}>
-          {children}
+          <div className={`${isMobile ? 'max-w-full' : 'max-w-7xl mx-auto'}`}>
+            {children}
+          </div>
         </main>
       </div>
     </div>
