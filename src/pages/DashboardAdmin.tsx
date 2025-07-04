@@ -209,7 +209,7 @@ const DashboardAdmin: React.FC = () => {
         </Link>
 
         <Link
-          to="/admin/planos-professores"
+          to="/admin/planos"
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
         >
           <div className="mb-4 p-3 bg-purple-50 rounded-full w-fit">
