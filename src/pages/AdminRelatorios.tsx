@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { 
   TrendingUp, 
@@ -8,10 +7,8 @@ import {
   Download,
   Filter,
   BarChart3,
-  PieChart,
-  ArrowLeft
+  PieChart
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { DatePicker } from "@/components/date-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +34,7 @@ import {
 } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 import { toast } from "sonner";
 
 interface FiltrosRelatorio {
@@ -61,8 +59,6 @@ interface EstatisticasGerais {
 }
 
 const AdminRelatorios: React.FC = () => {
-  const navigate = useNavigate();
-  
   const [filtros, setFiltros] = useState<FiltrosRelatorio>({
     dataInicio: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1),
     dataFim: new Date(),
@@ -242,30 +238,16 @@ const AdminRelatorios: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Header com botão de voltar */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/dashboard-admin')}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Relatórios Financeiros</h1>
-            <p className="text-gray-600 mt-1">
-              Análise detalhada da receita e crescimento da plataforma
-            </p>
-          </div>
-        </div>
+      {/* Header com botão de voltar e logout */}
+      <AdminPageHeader
+        title="Relatórios Financeiros"
+        description="Análise detalhada da receita e crescimento da plataforma"
+      >
         <Button onClick={exportarParaExcel} className="gap-2">
           <Download className="h-4 w-4" />
           Exportar Excel
         </Button>
-      </div>
+      </AdminPageHeader>
 
       {/* Filtros */}
       <Card>

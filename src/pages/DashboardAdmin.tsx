@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -9,7 +8,8 @@ import {
   ChevronRight,
   Activity,
   BarChart3,
-  Receipt
+  Receipt,
+  LogOut
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ interface ProfessorStats {
 }
 
 const DashboardAdmin: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [stats, setStats] = useState<ProfessorStats>({
     total: 0,
     ativos: 0,
@@ -104,13 +104,33 @@ const DashboardAdmin: React.FC = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      console.log("🚪 [DashboardAdmin] Iniciando logout...");
+      await logout();
+    } catch (error) {
+      console.error("❌ [DashboardAdmin] Erro ao fazer logout:", error);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
-        <p className="text-gray-600 mt-1">
-          Bem-vindo ao painel de administração, {user?.nome || "Admin"}
-        </p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
+          <p className="text-gray-600 mt-1">
+            Bem-vindo ao painel de administração, {user?.nome || "Admin"}
+          </p>
+        </div>
+        
+        {/* Botão de Logout */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
       </div>
 
       {/* Cards de Estatísticas */}

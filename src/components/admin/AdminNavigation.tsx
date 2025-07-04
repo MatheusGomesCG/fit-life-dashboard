@@ -65,6 +65,12 @@ const AdminNavigation: React.FC = () => {
           href: "/admin/planos",
           description: "Visualizar e gerenciar planos dos professores",
           icon: CreditCard
+        },
+        {
+          title: "Relatórios Financeiros",
+          href: "/admin/relatorios",
+          description: "Gerar e exportar relatórios detalhados",
+          icon: Receipt
         }
       ]
     }
@@ -81,7 +87,6 @@ const AdminNavigation: React.FC = () => {
       await logout();
     } catch (error) {
       console.error("❌ [AdminNavigation] Erro ao fazer logout:", error);
-      // O AuthContext já lida com o redirecionamento mesmo em caso de erro
     }
   };
 
