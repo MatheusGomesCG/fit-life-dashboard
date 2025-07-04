@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { format, parseISO, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
+import { format, parseISO, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 export interface Agendamento {

@@ -128,7 +128,7 @@ const GerenciarAgendamentos: React.FC = () => {
           <Calendar className="h-4 w-4 mr-1" />
           <span className="mr-3">{formatarData(agendamento.data)}</span>
           <Clock className="h-4 w-4 mr-1" />
-          <span>{agendamento.hora}</span>
+          <span>{agendamento.horario}</span>
         </div>
 
         <div className="flex gap-2">
@@ -246,7 +246,7 @@ const GerenciarAgendamentos: React.FC = () => {
                           </div>
                           <div className="text-sm text-gray-500 flex items-center">
                             <Clock size={16} className="text-gray-400 mr-1" />
-                            {agendamento.hora}
+                            {agendamento.horario}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -337,7 +337,7 @@ const GerenciarAgendamentos: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Hora</p>
-                  <p className="font-medium">{detalhesAgendamento.hora}</p>
+                  <p className="font-medium">{detalhesAgendamento.horario}</p>
                 </div>
               </div>
               {detalhesAgendamento.observacoes && (
