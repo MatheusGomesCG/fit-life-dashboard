@@ -12,9 +12,11 @@ const ModernHeader: React.FC = () => {
 
   const handleLogout = async () => {
     try {
+      console.log("🚪 [ModernHeader] Iniciando logout...");
       await logout();
     } catch (error) {
-      console.error("Erro ao fazer logout:", error);
+      console.error("❌ [ModernHeader] Erro ao fazer logout:", error);
+      // O AuthContext já lida com o redirecionamento mesmo em caso de erro
     }
   };
 

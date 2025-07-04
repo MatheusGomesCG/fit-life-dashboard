@@ -76,7 +76,13 @@ const AdminNavigation: React.FC = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      console.log("🚪 [AdminNavigation] Iniciando logout...");
+      await logout();
+    } catch (error) {
+      console.error("❌ [AdminNavigation] Erro ao fazer logout:", error);
+      // O AuthContext já lida com o redirecionamento mesmo em caso de erro
+    }
   };
 
   return (
