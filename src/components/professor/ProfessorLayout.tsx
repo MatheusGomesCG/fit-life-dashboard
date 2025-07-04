@@ -23,7 +23,7 @@ const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
         
         {/* Área de conteúdo */}
         <main className={`flex-1 overflow-y-auto bg-gray-50 ${
-          isMobile ? 'p-4 pt-16' : 'p-6'
+          isMobile ? 'p-4 pt-16 pb-20' : 'p-6'
         }`}>
           <div className="max-w-full mx-auto">
             {children}
