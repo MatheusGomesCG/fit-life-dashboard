@@ -40,6 +40,7 @@ import AdminCadastrarProfessor from "./pages/AdminCadastrarProfessor";
 import AdminPlanosProfessores from "./pages/AdminPlanosProfessores";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminTransacoes from "./pages/AdminTransacoes";
+import CriarUsuarioAdmin from "./pages/CriarUsuarioAdmin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/criar-admin" element={<CriarUsuarioAdmin />} />
               <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
               <Route path="/dashboard-professor" element={<Layout><DashboardProfessor /></Layout>} />
               <Route path="/dashboard-admin" element={<Layout><DashboardAdmin /></Layout>} />
