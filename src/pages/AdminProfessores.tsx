@@ -48,45 +48,82 @@ const AdminProfessores: React.FC = () => {
   const carregarProfessores = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 [AdminProfessores] Carregando professores...");
 
+      // Buscar todos os professores sem filtros RLS específicos
       const { data: professoresData, error } = await supabase
         .from('professor_profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log("📊 [AdminProfessores] Resultado da consulta:", {
+        data: professoresData,
+        error,
+        count: professoresData?.length || 0
+      });
 
-      // Para cada professor, buscar o número de alunos e se tem plano ativo
+      if (error) {
+        console.error("❌ [AdminProfessores] Erro na consulta:", error);
+        throw error;
+      }
+
+      if (!professoresData || professoresData.length === 0) {
+        console.log("⚠️ [AdminProfessores] Nenhum professor encontrado");
+        setProfessores([]);
+        return;
+      }
+
+      // Para cada professor, buscar informações adicionais
       const professoresComInfo = await Promise.all(
-        (professoresData || []).map(async (professor) => {
-          // Contar alunos
-          const { data: alunos } = await supabase
-            .from('aluno_profiles')
-            .select('id')
-            .eq('professor_id', professor.id);
+        professoresData.map(async (professor) => {
+          try {
+            // Contar alunos do professor
+            const { data: alunos, error: alunosError } = await supabase
+              .from('aluno_profiles')
+              .select('id')
+              .eq('professor_id', professor.user_id);
 
-          // Verificar plano ativo
-          const { data: plano } = await supabase
-            .from('professor_planos')
-            .select('id')
-            .eq('professor_id', professor.id)
-            .eq('status', 'ativo')
-            .maybeSingle();
+            if (alunosError) {
+              console.warn("⚠️ [AdminProfessores] Erro ao buscar alunos para professor", professor.id, alunosError);
+            }
 
-          return {
-            ...professor,
-            status: professor.status as "ativo" | "inativo" | "suspenso",
-            totalAlunos: alunos?.length || 0,
-            planoAtivo: !!plano
-          } as Professor;
+            // Verificar plano ativo
+            const { data: plano, error: planoError } = await supabase
+              .from('professor_planos')
+              .select('id')
+              .eq('professor_id', professor.user_id)
+              .eq('status', 'ativo')
+              .maybeSingle();
+
+            if (planoError) {
+              console.warn("⚠️ [AdminProfessores] Erro ao buscar plano para professor", professor.id, planoError);
+            }
+
+            return {
+              ...professor,
+              status: professor.status as "ativo" | "inativo" | "suspenso",
+              totalAlunos: alunos?.length || 0,
+              planoAtivo: !!plano
+            } as Professor;
+          } catch (error) {
+            console.error("❌ [AdminProfessores] Erro ao processar professor", professor.id, error);
+            return {
+              ...professor,
+              status: professor.status as "ativo" | "inativo" | "suspenso",
+              totalAlunos: 0,
+              planoAtivo: false
+            } as Professor;
+          }
         })
       );
 
+      console.log("✅ [AdminProfessores] Professores processados:", professoresComInfo.length);
       setProfessores(professoresComInfo);
 
     } catch (error) {
-      console.error("Erro ao carregar professores:", error);
+      console.error("❌ [AdminProfessores] Erro ao carregar professores:", error);
       toast.error("Erro ao carregar lista de professores");
+      setProfessores([]);
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +131,8 @@ const AdminProfessores: React.FC = () => {
 
   const alterarStatusProfessor = async (professorId: string, novoStatus: "ativo" | "inativo" | "suspenso") => {
     try {
+      console.log("🔄 [AdminProfessores] Alterando status do professor:", { professorId, novoStatus });
+      
       const { error } = await supabase
         .from('professor_profiles')
         .update({ status: novoStatus })
@@ -102,10 +141,10 @@ const AdminProfessores: React.FC = () => {
       if (error) throw error;
 
       toast.success(`Status do professor atualizado para ${novoStatus}`);
-      carregarProfessores();
+      await carregarProfessores();
 
     } catch (error) {
-      console.error("Erro ao alterar status:", error);
+      console.error("❌ [AdminProfessores] Erro ao alterar status:", error);
       toast.error("Erro ao alterar status do professor");
     }
   };
@@ -147,6 +186,7 @@ const AdminProfessores: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6">
+      {/* Header */}
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -197,6 +237,15 @@ const AdminProfessores: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Debug Info */}
+      {!isLoading && (
+        <div className="mb-4 p-3 bg-blue-50 rounded-md">
+          <p className="text-sm text-blue-700">
+            Debug: {professores.length} professor(es) carregado(s), {professoresFiltrados.length} após filtros
+          </p>
+        </div>
+      )}
+
       {/* Lista de Professores */}
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -209,7 +258,7 @@ const AdminProfessores: React.FC = () => {
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Users className="h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Nenhum professor encontrado
+                  {professores.length === 0 ? "Nenhum professor cadastrado" : "Nenhum professor encontrado"}
                 </h3>
                 <p className="text-gray-600 text-center">
                   {busca || filtroStatus !== "todos" 
@@ -217,6 +266,14 @@ const AdminProfessores: React.FC = () => {
                     : "Comece cadastrando o primeiro professor"
                   }
                 </p>
+                {professores.length === 0 && (
+                  <Link to="/admin/cadastrar-professor" className="mt-4">
+                    <Button>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Cadastrar Primeiro Professor
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           ) : (
