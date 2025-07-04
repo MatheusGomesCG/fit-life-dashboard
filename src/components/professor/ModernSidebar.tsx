@@ -41,12 +41,12 @@ const ModernSidebar: React.FC = () => {
     { path: "/configuracoes-professor", icon: Settings, label: "CONFIGURAÇÕES" },
   ];
 
-  // Itens principais para navegação mobile (baseado no design fornecido)
+  // Navegação mobile expandida com mais funcionalidades
   const mobileNavItems = [
     { path: "/dashboard-professor", icon: Home, label: "Início" },
     { path: "/gerenciar-alunos", icon: Users, label: "Alunos" },
     { path: "/cadastrar-aluno", icon: Plus, label: "Adicionar" },
-    { path: "/gerenciar-pagamentos", icon: BarChart3, label: "Relatórios" },
+    { path: "/gerenciar-pagamentos", icon: DollarSign, label: "Financeiro" },
     { path: "/configuracoes-professor", icon: Settings, label: "Perfil" },
   ];
 
@@ -184,55 +184,36 @@ const ModernSidebar: React.FC = () => {
     </div>
   );
 
-  // Mobile: Navegação inferior + Sheet para menu completo
+  // Mobile: Apenas navegação inferior
   if (isMobile) {
     return (
-      <>
-        {/* Navegação inferior mobile */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-          <div className="flex items-center justify-around py-2">
-            {mobileNavItems.map((item) => {
-              const Icon = item.icon;
-              const itemIsActive = isActive(item.path);
-              
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
-                    itemIsActive 
-                      ? "text-orange-500" 
-                      : "text-gray-500 hover:text-orange-500"
-                  }`}
-                >
-                  <div className={`p-2 rounded-lg ${
-                    itemIsActive ? "bg-orange-500 text-white" : ""
-                  }`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <span className="text-xs mt-1 font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+        <div className="flex items-center justify-around py-2">
+          {mobileNavItems.map((item) => {
+            const Icon = item.icon;
+            const itemIsActive = isActive(item.path);
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-colors ${
+                  itemIsActive 
+                    ? "text-orange-500" 
+                    : "text-gray-500 hover:text-orange-500"
+                }`}
+              >
+                <div className={`p-2 rounded-lg ${
+                  itemIsActive ? "bg-orange-500 text-white" : ""
+                }`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="text-xs mt-1 font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
-
-        {/* Sheet para menu completo (acionado pelo botão do header) */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="fixed top-3 left-3 z-50 bg-gray-900 text-white hover:bg-gray-800 shadow-lg rounded-md p-2 h-10 w-10"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-80 max-w-[85vw]">
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
-      </>
+      </div>
     );
   }
 
