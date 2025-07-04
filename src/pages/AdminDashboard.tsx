@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { 
   TrendingUp, 
@@ -21,6 +22,7 @@ import {
 } from "@/services/adminService";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -134,132 +136,158 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard Administrativo</h1>
-          <p className="text-gray-600">Visão geral do negócio e métricas</p>
-        </div>
-        <div className="flex gap-3">
-          <Button onClick={atualizarMetricas} disabled={isRefreshing} variant="outline" size="sm">
-            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Atualizar
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Dashboard Avançado" 
+        description="Visão geral detalhada do negócio e métricas de crescimento"
+      >
+        <Button onClick={atualizarMetricas} disabled={isRefreshing} variant="outline" size="sm">
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Atualizar
+        </Button>
+      </AdminPageHeader>
 
-      {/* Cards de Métricas - Responsivos */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
+      {/* Cards de Métricas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Receita Mensal</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Receita Mensal</CardTitle>
+            <div className="p-2 bg-green-50 rounded-lg">
+              <DollarSign className="h-5 w-5 text-green-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-2xl font-bold">R$ {metricaAtual?.receita_mensal?.toFixed(2) || '0,00'}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-green-600">
+              R$ {metricaAtual?.receita_mensal?.toFixed(2) || '0,00'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
               Acumulado: R$ {metricaAtual?.receita_acumulada?.toFixed(2) || '0,00'}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Professores Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Professores Ativos</CardTitle>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <Users className="h-5 w-5 text-blue-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-2xl font-bold">{metricaAtual?.total_professores_ativos || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-blue-600">
+              {metricaAtual?.total_professores_ativos || 0}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
               Novos: {metricaAtual?.novos_professores_mes || 0}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total de Planos</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Total de Planos</CardTitle>
+            <div className="p-2 bg-purple-50 rounded-lg">
+              <CreditCard className="h-5 w-5 text-purple-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-2xl font-bold">
+            <div className="text-2xl font-bold text-purple-600">
               {(metricaAtual?.planos_25_ativos || 0) + 
                (metricaAtual?.planos_50_ativos || 0) + 
                (metricaAtual?.planos_100_ativos || 0) + 
                (metricaAtual?.planos_100plus_ativos || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 mt-1">
               Planos ativos
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Crescimento</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Crescimento</CardTitle>
+            <div className="p-2 bg-orange-50 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-orange-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-lg sm:text-2xl font-bold">
+            <div className="text-2xl font-bold text-orange-600">
               {metricas.length > 1 ? 
                 (((metricaAtual?.total_professores_ativos || 0) - (metricas[1]?.total_professores_ativos || 0)) > 0 ? '+' : '') +
                 ((metricaAtual?.total_professores_ativos || 0) - (metricas[1]?.total_professores_ativos || 0))
                 : '0'
               }
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-gray-500 mt-1">
               vs mês anterior
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Gráficos - Stack em mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+      {/* Gráficos */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Evolução da Receita</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+              Evolução da Receita
+            </CardTitle>
             <CardDescription>Receita mensal e acumulada dos últimos 6 meses</CardDescription>
           </CardHeader>
           <CardContent>
             {dadosGraficoReceita.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={dadosGraficoReceita}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="mes" className="text-xs" />
                   <YAxis className="text-xs" />
-                  <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, '']} />
-                  <Line type="monotone" dataKey="receita" stroke="#8884d8" name="Mensal" />
-                  <Line type="monotone" dataKey="acumulada" stroke="#82ca9d" name="Acumulada" />
+                  <Tooltip 
+                    formatter={(value: number) => [`R$ ${value.toFixed(2)}`, '']}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  />
+                  <Line type="monotone" dataKey="receita" stroke="#3b82f6" strokeWidth={3} name="Mensal" />
+                  <Line type="monotone" dataKey="acumulada" stroke="#10b981" strokeWidth={3} name="Acumulada" />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-500">
-                Nenhum dado disponível
+              <div className="flex items-center justify-center h-64 text-gray-400">
+                <div className="text-center">
+                  <TrendingUp className="h-12 w-12 mx-auto mb-2" />
+                  <p>Nenhum dado disponível</p>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Crescimento de Professores</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-500" />
+              Crescimento de Professores
+            </CardTitle>
             <CardDescription>Professores ativos e novos cadastros</CardDescription>
           </CardHeader>
           <CardContent>
             {dadosGraficoProfessores.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dadosGraficoProfessores}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="mes" className="text-xs" />
                   <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Bar dataKey="ativos" fill="#8884d8" name="Ativos" />
-                  <Bar dataKey="novos" fill="#82ca9d" name="Novos" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                  />
+                  <Bar dataKey="ativos" fill="#8b5cf6" name="Ativos" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="novos" fill="#06b6d4" name="Novos" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-48 text-gray-500">
-                Nenhum dado disponível
+              <div className="flex items-center justify-center h-64 text-gray-400">
+                <div className="text-center">
+                  <Users className="h-12 w-12 mx-auto mb-2" />
+                  <p>Nenhum dado disponível</p>
+                </div>
               </div>
             )}
           </CardContent>
@@ -267,45 +295,57 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Distribuição de Planos */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Distribuição de Planos</CardTitle>
-          <CardDescription>Quantidade e valor por tipo de plano</CardDescription>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-green-500" />
+            Distribuição de Planos
+          </CardTitle>
+          <CardDescription>Quantidade e receita por tipo de plano</CardDescription>
         </CardHeader>
         <CardContent>
           {dadosGraficoPlanos.length > 0 && dadosGraficoPlanos.some(item => item.quantidade > 0) ? (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={dadosGraficoPlanos}>
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="nome" className="text-xs" />
                 <YAxis className="text-xs" />
-                <Tooltip formatter={(value: number, name: string) => [
-                  name === 'valor' ? `R$ ${value.toFixed(2)}` : value,
-                  name === 'valor' ? 'Receita' : 'Quantidade'
-                ]} />
-                <Bar dataKey="quantidade" fill="#8884d8" name="quantidade" />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    name === 'valor' ? `R$ ${value.toFixed(2)}` : value,
+                    name === 'valor' ? 'Receita' : 'Quantidade'
+                  ]}
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                />
+                <Bar dataKey="quantidade" fill="#10b981" name="quantidade" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex items-center justify-center h-48 text-gray-500">
-              Nenhum plano ativo encontrado
+            <div className="flex items-center justify-center h-48 text-gray-400">
+              <div className="text-center">
+                <CreditCard className="h-12 w-12 mx-auto mb-2" />
+                <p>Nenhum plano ativo encontrado</p>
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Seção de Relatórios - Responsiva */}
-      <Card>
+      {/* Seção de Relatórios */}
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Exportar Relatórios</CardTitle>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Download className="h-5 w-5 text-indigo-500" />
+            Exportar Relatórios
+          </CardTitle>
           <CardDescription>Gere relatórios detalhados em formato CSV</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 items-end">
+          <div className="flex flex-col lg:flex-row gap-4 items-end">
             <div className="flex-1 w-full">
-              <label className="text-sm font-medium">Ano</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">Ano</label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Selecione o ano" />
                 </SelectTrigger>
                 <SelectContent>
@@ -316,9 +356,9 @@ const AdminDashboard: React.FC = () => {
               </Select>
             </div>
             <div className="flex-1 w-full">
-              <label className="text-sm font-medium">Mês (Opcional)</label>
+              <label className="text-sm font-medium text-gray-700 block mb-2">Mês (Opcional)</label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12">
                   <SelectValue placeholder="Todos os meses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -331,7 +371,7 @@ const AdminDashboard: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={exportarRelatorio} className="w-full sm:w-auto">
+            <Button onClick={exportarRelatorio} className="w-full lg:w-auto h-12 px-8">
               <Download className="h-4 w-4 mr-2" />
               Exportar CSV
             </Button>

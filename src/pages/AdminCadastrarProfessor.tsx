@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -16,6 +16,7 @@ import ProfessorForm from "@/components/admin/ProfessorForm";
 import { gerarSenhaAleatoria } from "@/utils/passwordGenerator";
 import { validateProfessorForm, ProfessorFormData } from "@/utils/professorValidation";
 import { createProfessor } from "@/services/adminProfessorService";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 const AdminCadastrarProfessor: React.FC = () => {
   const navigate = useNavigate();
@@ -91,37 +92,27 @@ const AdminCadastrarProfessor: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate("/admin/professores")}
-          className="mb-4"
-          disabled={isLoading}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar para lista de professores
-        </Button>
-        
-        <h1 className="text-2xl font-bold text-gray-900">Cadastrar Professor</h1>
-        <p className="text-gray-600 mt-1">
-          Preencha os dados abaixo para cadastrar um novo professor
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader 
+        title="Cadastrar Professor" 
+        description="Preencha os dados abaixo para cadastrar um novo professor"
+      />
 
-      <div className="max-w-2xl mx-auto">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
+      <div className="max-w-4xl mx-auto">
+        <Card className="shadow-sm">
+          <CardHeader className="pb-6">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <div className="p-2 bg-blue-50 rounded-lg">
+                <UserPlus className="h-6 w-6 text-blue-500" />
+              </div>
               Dados do Professor
             </CardTitle>
-            <CardDescription>
-              Informações básicas para o cadastro do professor
+            <CardDescription className="text-base">
+              Informações básicas para o cadastro do professor no sistema
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit}>
+          <CardContent className="pt-0">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <ProfessorForm
                 formData={formData}
                 onInputChange={handleInputChange}
@@ -131,20 +122,20 @@ const AdminCadastrarProfessor: React.FC = () => {
                 isLoading={isLoading}
               />
 
-              <div className="flex gap-4 pt-6 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
                 <Button 
                   type="button" 
                   variant="outline" 
                   disabled={isLoading}
                   onClick={() => navigate("/admin/professores")}
-                  className="flex-1"
+                  className="flex-1 h-12"
                 >
                   Cancelar
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isLoading}
-                  className="flex-1"
+                  className="flex-1 h-12"
                 >
                   {isLoading ? (
                     <>
@@ -153,7 +144,7 @@ const AdminCadastrarProfessor: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-5 w-5 mr-2" />
                       Cadastrar Professor
                     </>
                   )}

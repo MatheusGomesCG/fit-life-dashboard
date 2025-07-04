@@ -1,6 +1,5 @@
 
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { 
   CreditCard, 
   Calendar, 
@@ -20,6 +19,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { format } from "date-fns";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface PlanoDetalhado {
   id: string;
@@ -132,13 +132,13 @@ const AdminPlanosProfessores: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ativo":
-        return "text-green-600 bg-green-50";
+        return "text-green-600 bg-green-50 border-green-200";
       case "suspenso":
-        return "text-amber-600 bg-amber-50";
+        return "text-amber-600 bg-amber-50 border-amber-200";
       case "cancelado":
-        return "text-red-600 bg-red-50";
+        return "text-red-600 bg-red-50 border-red-200";
       default:
-        return "text-gray-600 bg-gray-50";
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
@@ -164,34 +164,32 @@ const AdminPlanosProfessores: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Planos dos Professores</h1>
-        <p className="text-gray-600 mt-1">
-          Visualize e gerencie os planos de todos os professores
-        </p>
-      </div>
+    <div className="space-y-6">
+      <AdminPageHeader 
+        title="Planos dos Professores" 
+        description="Visualize e gerencie os planos de todos os professores"
+      />
 
       {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total de Planos</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-blue-600">
                   {isLoading ? <LoadingSpinner size="small" /> : estatisticas.totalPlanos}
                 </p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-full">
+              <div className="p-3 bg-blue-50 rounded-xl">
                 <CreditCard className="h-6 w-6 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Planos Ativos</p>
@@ -199,15 +197,15 @@ const AdminPlanosProfessores: React.FC = () => {
                   {isLoading ? <LoadingSpinner size="small" /> : estatisticas.planosAtivos}
                 </p>
               </div>
-              <div className="p-3 bg-green-50 rounded-full">
+              <div className="p-3 bg-green-50 rounded-xl">
                 <CheckCircle className="h-6 w-6 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Receita Mensal</p>
@@ -215,15 +213,15 @@ const AdminPlanosProfessores: React.FC = () => {
                   {isLoading ? <LoadingSpinner size="small" /> : `R$ ${estatisticas.receitaTotal.toFixed(2)}`}
                 </p>
               </div>
-              <div className="p-3 bg-purple-50 rounded-full">
+              <div className="p-3 bg-purple-50 rounded-xl">
                 <TrendingUp className="h-6 w-6 text-purple-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Vencendo em 30 dias</p>
@@ -231,7 +229,7 @@ const AdminPlanosProfessores: React.FC = () => {
                   {isLoading ? <LoadingSpinner size="small" /> : estatisticas.planosVencendo}
                 </p>
               </div>
-              <div className="p-3 bg-amber-50 rounded-full">
+              <div className="p-3 bg-amber-50 rounded-xl">
                 <AlertTriangle className="h-6 w-6 text-amber-500" />
               </div>
             </div>
@@ -245,65 +243,91 @@ const AdminPlanosProfessores: React.FC = () => {
           <LoadingSpinner size="large" />
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="space-y-4">
           {planos.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <CreditCard className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Card className="shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-16">
+                <div className="p-4 bg-gray-50 rounded-full mb-4">
+                  <CreditCard className="h-12 w-12 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-medium text-gray-900 mb-2">
                   Nenhum plano encontrado
                 </h3>
-                <p className="text-gray-600 text-center">
+                <p className="text-gray-500 text-center">
                   Não há planos cadastrados no sistema
                 </p>
               </CardContent>
             </Card>
           ) : (
             planos.map((plano) => (
-              <Card key={plano.id} className={isPlanoVencendo(plano.data_vencimento) ? "border-amber-200 bg-amber-50" : ""}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {plano.professor_nome}
-                        </h3>
-                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(plano.status)}`}>
-                          {getStatusIcon(plano.status)}
-                          {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
+              <Card 
+                key={plano.id} 
+                className={`shadow-sm hover:shadow-md transition-all ${
+                  isPlanoVencendo(plano.data_vencimento) ? "border-amber-200 bg-amber-50/30" : ""
+                }`}
+              >
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    {/* Cabeçalho */}
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-blue-50 rounded-xl">
+                          <Users className="h-6 w-6 text-blue-500" />
                         </div>
-                        {isPlanoVencendo(plano.data_vencimento) && (
-                          <div className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-amber-600 bg-amber-100">
-                            <AlertTriangle className="h-3 w-3" />
-                            Vencendo
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                        <div>
-                          <span className="font-medium text-gray-600">Plano:</span>
-                          <p className="text-gray-900">{getTipoPlanoLabel(plano.tipo_plano)}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Preço Mensal:</span>
-                          <p className="text-gray-900">R$ {Number(plano.preco_mensal).toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Uso:</span>
-                          <p className="text-gray-900">
-                            {plano.total_alunos} / {plano.limite_alunos === -1 ? "∞" : plano.limite_alunos} alunos
-                            {plano.limite_alunos !== -1 && (
-                              <span className={`ml-1 text-xs ${plano.percentual_uso > 80 ? 'text-red-600' : 'text-gray-500'}`}>
-                                ({plano.percentual_uso}%)
-                              </span>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                            {plano.professor_nome}
+                          </h3>
+                          <div className="flex flex-wrap gap-2">
+                            <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(plano.status)}`}>
+                              {getStatusIcon(plano.status)}
+                              {plano.status.charAt(0).toUpperCase() + plano.status.slice(1)}
+                            </div>
+                            {isPlanoVencendo(plano.data_vencimento) && (
+                              <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium text-amber-600 bg-amber-100 border border-amber-200">
+                                <AlertTriangle className="h-4 w-4" />
+                                Vencendo
+                              </div>
                             )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Informações do plano */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-gray-100">
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Plano</span>
+                        <p className="text-gray-900 font-medium">{getTipoPlanoLabel(plano.tipo_plano)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Preço Mensal</span>
+                        <p className="text-lg font-bold text-green-600">R$ {Number(plano.preco_mensal).toFixed(2)}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Uso de Alunos</span>
+                        <div className="space-y-1">
+                          <p className="text-gray-900 font-medium">
+                            {plano.total_alunos} / {plano.limite_alunos === -1 ? "∞" : plano.limite_alunos} alunos
                           </p>
+                          {plano.limite_alunos !== -1 && (
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  plano.percentual_uso > 80 ? 'bg-red-500' : 
+                                  plano.percentual_uso > 60 ? 'bg-amber-500' : 'bg-green-500'
+                                }`}
+                                style={{ width: `${Math.min(plano.percentual_uso, 100)}%` }}
+                              />
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <span className="font-medium text-gray-600">Vencimento:</span>
-                          <p className="text-gray-900">{format(new Date(plano.data_vencimento), "dd/MM/yyyy")}</p>
-                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Vencimento</span>
+                        <p className="text-gray-900 font-medium">
+                          {format(new Date(plano.data_vencimento), "dd/MM/yyyy")}
+                        </p>
                       </div>
                     </div>
                   </div>

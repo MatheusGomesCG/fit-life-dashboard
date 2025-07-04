@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -22,6 +23,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface Professor {
   id: string;
@@ -170,54 +172,50 @@ const AdminProfessores: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ativo":
-        return "text-green-600 bg-green-50";
+        return "text-green-600 bg-green-50 border-green-200";
       case "inativo":
-        return "text-gray-600 bg-gray-50";
+        return "text-gray-600 bg-gray-50 border-gray-200";
       case "suspenso":
-        return "text-red-600 bg-red-50";
+        return "text-red-600 bg-red-50 border-red-200";
       default:
-        return "text-gray-600 bg-gray-50";
+        return "text-gray-600 bg-gray-50 border-gray-200";
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header - Responsivo */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Professores</h1>
-          <p className="text-gray-600 mt-1">
-            Visualize e gerencie todos os professores cadastrados
-          </p>
-        </div>
+      <AdminPageHeader 
+        title="Gerenciar Professores" 
+        description="Visualize e gerencie todos os professores cadastrados"
+      >
         <Link to="/admin/cadastrar-professor">
-          <Button className="flex items-center gap-2 w-full sm:w-auto">
+          <Button className="flex items-center gap-2">
             <UserPlus className="h-4 w-4" />
             Cadastrar Professor
           </Button>
         </Link>
-      </div>
+      </AdminPageHeader>
 
-      {/* Filtros - Responsivos */}
-      <Card>
+      {/* Filtros */}
+      <Card className="shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <input
                   type="text"
                   placeholder="Buscar por nome ou especialidade..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                 />
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 min-w-fit">
               <Filter className="h-4 w-4 text-gray-400" />
               <select
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
+                className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[150px] transition-colors"
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
               >
@@ -231,16 +229,7 @@ const AdminProfessores: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Debug Info */}
-      {!isLoading && (
-        <div className="p-3 bg-blue-50 rounded-md">
-          <p className="text-sm text-blue-700">
-            Debug: {professores.length} professor(es) carregado(s), {professoresFiltrados.length} após filtros
-          </p>
-        </div>
-      )}
-
-      {/* Lista de Professores - Responsiva */}
+      {/* Lista de Professores */}
       {isLoading ? (
         <div className="flex justify-center py-12">
           <LoadingSpinner size="large" />
@@ -248,22 +237,22 @@ const AdminProfessores: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {professoresFiltrados.length === 0 ? (
-            <Card>
+            <Card className="shadow-sm">
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <Users className="h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <Users className="h-16 w-16 text-gray-300 mb-4" />
+                <h3 className="text-xl font-medium text-gray-900 mb-2">
                   {professores.length === 0 ? "Nenhum professor cadastrado" : "Nenhum professor encontrado"}
                 </h3>
-                <p className="text-gray-600 text-center">
+                <p className="text-gray-500 text-center mb-6">
                   {busca || filtroStatus !== "todos" 
                     ? "Tente ajustar os filtros de busca"
                     : "Comece cadastrando o primeiro professor"
                   }
                 </p>
                 {professores.length === 0 && (
-                  <Link to="/admin/cadastrar-professor" className="mt-4">
-                    <Button>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                  <Link to="/admin/cadastrar-professor">
+                    <Button size="lg">
+                      <UserPlus className="h-5 w-5 mr-2" />
                       Cadastrar Primeiro Professor
                     </Button>
                   </Link>
@@ -272,26 +261,31 @@ const AdminProfessores: React.FC = () => {
             </Card>
           ) : (
             professoresFiltrados.map((professor) => (
-              <Card key={professor.id}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col gap-4">
-                    {/* Cabeçalho com nome e status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {professor.nome}
-                        </h3>
-                        <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(professor.status)}`}>
-                          {getStatusIcon(professor.status)}
-                          {professor.status.charAt(0).toUpperCase() + professor.status.slice(1)}
+              <Card key={professor.id} className="shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex flex-col space-y-4">
+                    {/* Cabeçalho */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-blue-50 rounded-full">
+                          <Users className="h-6 w-6 text-blue-500" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-xl font-semibold text-gray-900 truncate">
+                            {professor.nome}
+                          </h3>
+                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(professor.status)} mt-2`}>
+                            {getStatusIcon(professor.status)}
+                            {professor.status.charAt(0).toUpperCase() + professor.status.slice(1)}
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Ações - Botões responsivos */}
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
-                          Visualizar
+                      {/* Ações */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          <span className="hidden sm:inline">Visualizar</span>
                         </Button>
                         
                         {professor.status === "ativo" ? (
@@ -299,6 +293,7 @@ const AdminProfessores: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             onClick={() => alterarStatusProfessor(professor.id, "inativo")}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
                             Desativar
                           </Button>
@@ -307,6 +302,7 @@ const AdminProfessores: React.FC = () => {
                             variant="outline" 
                             size="sm" 
                             onClick={() => alterarStatusProfessor(professor.id, "ativo")}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
                             Ativar
                           </Button>
@@ -314,21 +310,31 @@ const AdminProfessores: React.FC = () => {
                       </div>
                     </div>
                     
-                    {/* Informações do professor - Grid responsivo */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium block sm:inline">Especialidade:</span>
-                        <p className="sm:inline sm:ml-1">{professor.especialidade || "Não informado"}</p>
+                    {/* Informações do professor */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-gray-100">
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Especialidade</span>
+                        <p className="text-gray-900">{professor.especialidade || "Não informado"}</p>
                       </div>
-                      <div>
-                        <span className="font-medium block sm:inline">Total de Alunos:</span>
-                        <p className="sm:inline sm:ml-1">{professor.totalAlunos}</p>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Total de Alunos</span>
+                        <p className="text-2xl font-bold text-blue-600">{professor.totalAlunos}</p>
                       </div>
-                      <div>
-                        <span className="font-medium block sm:inline">Plano Ativo:</span>
-                        <p className={`sm:inline sm:ml-1 ${professor.planoAtivo ? "text-green-600" : "text-red-600"}`}>
-                          {professor.planoAtivo ? "Sim" : "Não"}
-                        </p>
+                      <div className="space-y-1">
+                        <span className="text-sm font-medium text-gray-500">Plano Ativo</span>
+                        <div className="flex items-center gap-2">
+                          {professor.planoAtivo ? (
+                            <>
+                              <CheckCircle className="h-5 w-5 text-green-500" />
+                              <span className="text-green-600 font-medium">Sim</span>
+                            </>
+                          ) : (
+                            <>
+                              <XCircle className="h-5 w-5 text-red-500" />
+                              <span className="text-red-600 font-medium">Não</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
