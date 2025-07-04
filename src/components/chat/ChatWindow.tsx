@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
-import { Send, User, MessageCircle, Bot } from "lucide-react";
+import { Send, User, MessageCircle, Bot, Phone, Video, MoreVertical } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Mensagem, 
   Conversa, 
@@ -19,6 +20,7 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [novaMensagem, setNovaMensagem] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -110,11 +112,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
     yesterday.setDate(today.getDate() - 1);
 
     if (messageDate.toDateString() === today.toDateString()) {
-      return `Hoje, ${format(messageDate, "HH:mm")}`;
+      return format(messageDate, "HH:mm");
     } else if (messageDate.toDateString() === yesterday.toDateString()) {
-      return `Ontem, ${format(messageDate, "HH:mm")}`;
+      return `Ontem ${format(messageDate, "HH:mm")}`;
     } else {
-      return format(messageDate, "dd/MM/yyyy, HH:mm");
+      return format(messageDate, "dd/MM HH:mm");
     }
   };
 
@@ -134,28 +136,37 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
-      {/* Cabeçalho da conversa */}
-      <div className="border-b border-gray-200 p-4 bg-white">
-        <div className="flex items-center">
-          <div className="h-10 w-10 rounded-full bg-fitness-primary/20 flex items-center justify-center mr-3">
-            <User className="h-5 w-5 text-fitness-primary" />
+    <div className={`flex-1 flex flex-col ${isMobile ? 'h-[calc(100vh-140px)]' : 'h-full'} bg-white`}>
+      {/* Cabeçalho da conversa - estilo WhatsApp */}
+      <div className={`${isMobile ? 'bg-green-600' : 'bg-white border-b border-gray-200'} ${isMobile ? 'text-white' : 'text-gray-900'} ${isMobile ? 'p-3' : 'p-4'} flex items-center justify-between shadow-sm`}>
+        <div className="flex items-center flex-1">
+          <div className={`${isMobile ? 'h-8 w-8' : 'h-10 w-10'} rounded-full ${isMobile ? 'bg-white/20' : 'bg-fitness-primary/20'} flex items-center justify-center mr-3`}>
+            <User className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} ${isMobile ? 'text-white' : 'text-fitness-primary'}`} />
           </div>
-          <div>
-            <h3 className="font-medium text-gray-900">{conversa.aluno_nome}</h3>
-            <p className="text-sm text-gray-500">{conversa.aluno_email}</p>
-          </div>
-          <div className="ml-auto">
-            <div className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-              <Bot className="h-3 w-3 mr-1" />
-              IA Ativa
-            </div>
+          <div className="flex-1 min-w-0">
+            <h3 className={`font-medium ${isMobile ? 'text-white text-sm' : 'text-gray-900'} truncate`}>{conversa.aluno_nome}</h3>
+            <p className={`text-xs ${isMobile ? 'text-white/80' : 'text-gray-500'} truncate`}>
+              {isMobile ? 'online' : conversa.aluno_email}
+            </p>
           </div>
         </div>
+        
+        {isMobile ? (
+          <div className="flex items-center space-x-4">
+            <Phone className="h-5 w-5 text-white" />
+            <Video className="h-5 w-5 text-white" />
+            <MoreVertical className="h-5 w-5 text-white" />
+          </div>
+        ) : (
+          <div className="flex items-center text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+            <Bot className="h-3 w-3 mr-1" />
+            IA Ativa
+          </div>
+        )}
       </div>
 
-      {/* Área de mensagens */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Área de mensagens - estilo WhatsApp */}
+      <div className={`flex-1 overflow-y-auto ${isMobile ? 'bg-gray-100 px-3 py-2' : 'bg-white p-4'} space-y-2`}>
         {mensagens.length === 0 ? (
           <div className="text-center text-gray-500 mt-8">
             <MessageCircle className="h-12 w-12 mx-auto mb-2 text-gray-300" />
@@ -168,24 +179,30 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
               key={mensagem.id}
               className={`flex ${
                 mensagem.remetente_id === user?.id ? "justify-end" : "justify-start"
-              }`}
+              } mb-2`}
             >
               <div
-                className={`max-w-[75%] rounded-lg p-3 ${
+                className={`${isMobile ? 'max-w-[80%]' : 'max-w-[75%]'} ${
                   mensagem.remetente_id === user?.id
-                    ? "bg-fitness-primary text-white rounded-tr-none"
+                    ? isMobile 
+                      ? "bg-green-500 text-white rounded-l-2xl rounded-tr-sm rounded-br-2xl"
+                      : "bg-fitness-primary text-white rounded-tr-none rounded-2xl"
                     : isAIMessage(mensagem.conteudo)
-                    ? "bg-blue-100 text-blue-900 rounded-tl-none border border-blue-200"
-                    : "bg-gray-100 text-gray-900 rounded-tl-none"
-                }`}
+                    ? isMobile
+                      ? "bg-blue-100 text-blue-900 rounded-r-2xl rounded-tl-sm rounded-bl-2xl border border-blue-200"
+                      : "bg-blue-100 text-blue-900 rounded-tl-none rounded-2xl border border-blue-200"
+                    : isMobile
+                    ? "bg-white text-gray-900 rounded-r-2xl rounded-tl-sm rounded-bl-2xl shadow-sm"
+                    : "bg-gray-100 text-gray-900 rounded-tl-none rounded-2xl"
+                } ${isMobile ? 'p-2 px-3' : 'p-3'} relative`}
               >
                 {isAIMessage(mensagem.conteudo) && (
-                  <div className="flex items-center mb-1 text-xs text-blue-600">
+                  <div className={`flex items-center mb-1 text-xs ${isMobile ? 'text-blue-600' : 'text-blue-600'}`}>
                     <Bot className="h-3 w-3 mr-1" />
                     Assistente IA
                   </div>
                 )}
-                <p className="whitespace-pre-wrap break-words">
+                <p className={`whitespace-pre-wrap break-words ${isMobile ? 'text-sm' : ''}`}>
                   {isAIMessage(mensagem.conteudo) 
                     ? mensagem.conteudo.replace('🤖 ', '') 
                     : mensagem.conteudo
@@ -194,14 +211,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
                 <p 
                   className={`text-xs mt-1 ${
                     mensagem.remetente_id === user?.id 
-                      ? "text-white/70" 
+                      ? isMobile ? "text-white/70" : "text-white/70"
                       : isAIMessage(mensagem.conteudo)
                       ? "text-blue-600/70"
-                      : "text-gray-500"
-                  }`}
+                      : isMobile ? "text-gray-500" : "text-gray-500"
+                  } ${isMobile ? 'text-right' : ''}`}
                 >
                   {formatarDataMensagem(mensagem.created_at)}
                 </p>
+                
+                {/* Indicador de leitura estilo WhatsApp (apenas mobile) */}
+                {isMobile && mensagem.remetente_id === user?.id && (
+                  <div className="absolute -bottom-1 -right-1">
+                    <div className="text-white/70 text-xs">✓✓</div>
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -209,29 +233,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversa }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Campo de input */}
-      <div className="border-t border-gray-200 p-4 bg-white">
+      {/* Campo de input - estilo WhatsApp */}
+      <div className={`${isMobile ? 'bg-gray-100 p-2' : 'bg-white border-t border-gray-200 p-4'}`}>
         <form onSubmit={handleEnviarMensagem} className="flex items-center space-x-2">
           <input
             type="text"
-            placeholder="Digite sua mensagem..."
-            className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-fitness-primary focus:border-transparent"
+            placeholder={isMobile ? "Mensagem" : "Digite sua mensagem..."}
+            className={`flex-1 ${isMobile ? 'py-2 px-4 text-sm' : 'p-3'} border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-fitness-primary focus:border-transparent bg-white`}
             value={novaMensagem}
             onChange={(e) => setNovaMensagem(e.target.value)}
             disabled={enviando}
           />
           <button
             type="submit"
-            className="p-3 bg-fitness-primary text-white rounded-lg hover:bg-fitness-primary/90 transition-colors disabled:opacity-50"
+            className={`${isMobile ? 'p-2' : 'p-3'} bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 flex-shrink-0`}
             disabled={!novaMensagem.trim() || enviando}
           >
-            <Send className="h-5 w-5" />
+            <Send className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'}`} />
           </button>
         </form>
-        <p className="text-xs text-gray-500 mt-2 flex items-center">
-          <Bot className="h-3 w-3 mr-1" />
-          Assistente IA responderá automaticamente quando o professor não estiver disponível
-        </p>
+        {!isMobile && (
+          <p className="text-xs text-gray-500 mt-2 flex items-center">
+            <Bot className="h-3 w-3 mr-1" />
+            Assistente IA responderá automaticamente quando o professor não estiver disponível
+          </p>
+        )}
       </div>
     </div>
   );

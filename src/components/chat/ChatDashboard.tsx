@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { MessageSquare, Plus } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ConversasList from "./ConversasList";
 import ChatWindow from "./ChatWindow";
 import IniciarConversa from "./IniciarConversa";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 const ChatDashboard: React.FC = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [conversas, setConversas] = useState<Conversa[]>([]);
   const [conversaSelecionada, setConversaSelecionada] = useState<Conversa | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,20 +62,25 @@ const ChatDashboard: React.FC = () => {
     setMostrarIniciarConversa(false);
   };
 
+  // No mobile, se há conversa selecionada, mostra só o chat
+  if (isMobile && conversaSelecionada) {
+    return <ChatWindow conversa={conversaSelecionada} />;
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-[calc(100vh-200px)] flex">
-      <div className="w-80 border-r border-gray-200 bg-white flex flex-col">
+    <div className={`bg-white ${isMobile ? 'h-[calc(100vh-140px)]' : 'rounded-lg shadow-sm border border-gray-200 h-[calc(100vh-200px)]'} flex`}>
+      <div className={`${isMobile ? 'w-full' : 'w-80'} ${isMobile ? '' : 'border-r border-gray-200'} bg-white flex flex-col`}>
         {/* Cabeçalho com botão de nova conversa */}
-        <div className="p-4 border-b border-gray-200">
+        <div className={`${isMobile ? 'p-3 bg-green-600' : 'p-4'} ${isMobile ? '' : 'border-b border-gray-200'}`}>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-fitness-primary" />
+            <h2 className={`${isMobile ? 'text-lg text-white' : 'text-lg text-gray-900'} font-semibold flex items-center`}>
+              <MessageSquare className={`h-5 w-5 mr-2 ${isMobile ? 'text-white' : 'text-fitness-primary'}`} />
               Conversas
             </h2>
             <Button 
               onClick={handleNovaConversa}
               size="sm"
-              className="bg-fitness-primary hover:bg-fitness-primary/90"
+              className={`${isMobile ? 'bg-white/20 hover:bg-white/30 text-white border-white/30' : 'bg-fitness-primary hover:bg-fitness-primary/90'}`}
             >
               <Plus className="h-4 w-4 mr-1" />
               Nova
@@ -93,26 +99,30 @@ const ChatDashboard: React.FC = () => {
         </div>
       </div>
       
-      {/* Área principal */}
-      {mostrarIniciarConversa ? (
-        <IniciarConversa onConversaCriada={handleConversaCriada} />
-      ) : conversaSelecionada ? (
-        <ChatWindow conversa={conversaSelecionada} />
-      ) : (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center text-gray-500">
-            <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-lg font-medium mb-2">Bem-vindo ao Chat</h3>
-            <p className="mb-4">Selecione uma conversa ou inicie uma nova</p>
-            <Button 
-              onClick={handleNovaConversa}
-              className="bg-fitness-primary hover:bg-fitness-primary/90"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Iniciar Nova Conversa
-            </Button>
-          </div>
-        </div>
+      {/* Área principal - só no desktop */}
+      {!isMobile && (
+        <>
+          {mostrarIniciarConversa ? (
+            <IniciarConversa onConversaCriada={handleConversaCriada} />
+          ) : conversaSelecionada ? (
+            <ChatWindow conversa={conversaSelecionada} />
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-gray-50">
+              <div className="text-center text-gray-500">
+                <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-medium mb-2">Bem-vindo ao Chat</h3>
+                <p className="mb-4">Selecione uma conversa ou inicie uma nova</p>
+                <Button 
+                  onClick={handleNovaConversa}
+                  className="bg-fitness-primary hover:bg-fitness-primary/90"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Iniciar Nova Conversa
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
