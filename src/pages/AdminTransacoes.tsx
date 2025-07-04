@@ -53,12 +53,11 @@ const AdminTransacoes: React.FC = () => {
         professores: professoresData.length
       });
       
-      setTransacoes(transacoesData);
-      setProfessores(professoresData);
+      setTransacoes(transacoesData || []);
+      setProfessores(professoresData || []);
     } catch (error) {
       console.error("❌ [AdminTransacoes] Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados");
-      // Definir arrays vazios para evitar crashes
       setTransacoes([]);
       setProfessores([]);
     } finally {
@@ -213,7 +212,7 @@ const AdminTransacoes: React.FC = () => {
                 <SelectValue placeholder="Todos os status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os status</SelectItem>
+                <SelectItem value="0">Todos os status</SelectItem>
                 <SelectItem value="pendente">Pendente</SelectItem>
                 <SelectItem value="pago">Pago</SelectItem>
                 <SelectItem value="cancelado">Cancelado</SelectItem>

@@ -41,11 +41,10 @@ const AdminDashboard: React.FC = () => {
       console.log("🔄 [AdminDashboard] Carregando métricas...");
       const data = await buscarMetricasAdmin();
       console.log("✅ [AdminDashboard] Métricas carregadas:", data);
-      setMetricas(data);
+      setMetricas(data || []);
     } catch (error) {
       console.error("❌ [AdminDashboard] Erro ao carregar métricas:", error);
       toast.error("Erro ao carregar dados do dashboard");
-      // Definir dados vazios para evitar crashes
       setMetricas([]);
     } finally {
       setIsLoading(false);
@@ -326,7 +325,7 @@ const AdminDashboard: React.FC = () => {
                   <SelectValue placeholder="Todos os meses" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os meses</SelectItem>
+                  <SelectItem value="0">Todos os meses</SelectItem>
                   {Array.from({length: 12}, (_, i) => i + 1).map(month => (
                     <SelectItem key={month} value={month.toString()}>
                       {new Date(2023, month - 1).toLocaleDateString('pt-BR', { month: 'long' })}
