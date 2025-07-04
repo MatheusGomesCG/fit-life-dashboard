@@ -11,13 +11,6 @@ interface ProfessorLayoutProps {
 const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
   
-  console.log("🏗️ [ProfessorLayout] === RENDERIZANDO PROFESSOR LAYOUT ===");
-  console.log("🏗️ [ProfessorLayout] Props recebidas:", {
-    hasChildren: !!children,
-    childrenType: typeof children,
-    isMobile
-  });
-  
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar - responsiva */}
@@ -29,7 +22,9 @@ const ProfessorLayout: React.FC<ProfessorLayoutProps> = ({ children }) => {
         <ModernHeader />
         
         {/* Área de conteúdo */}
-        <main className="flex-1 overflow-y-auto p-3 md:p-6 bg-gray-50">
+        <main className={`flex-1 overflow-y-auto bg-gray-50 ${
+          isMobile ? 'p-3' : 'p-6'
+        }`}>
           {children}
         </main>
       </div>

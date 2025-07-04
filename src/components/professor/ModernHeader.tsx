@@ -1,6 +1,6 @@
 
 import React from "react";
-import { LogOut, Menu } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,10 +32,7 @@ const ModernHeader: React.FC = () => {
   return (
     <header className="bg-white shadow-sm z-10 border-b">
       <div className="flex items-center justify-between p-3 md:p-4">
-        <div className="flex items-center space-x-3">
-          {/* Espaço para o botão do menu mobile */}
-          <div className="w-8 md:w-0"></div>
-          
+        <div className="flex items-center space-x-3 flex-1">
           <Avatar className="h-8 w-8 md:h-10 md:w-10">
             <AvatarImage 
               src={user?.profile?.foto_url} 
@@ -45,17 +42,15 @@ const ModernHeader: React.FC = () => {
               {getInitials(professorName)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col">
-            <h2 className="text-sm md:text-lg font-semibold text-gray-800">
+          <div className="flex flex-col min-w-0 flex-1">
+            <h2 className="text-sm md:text-lg font-semibold text-gray-800 truncate">
               {isMobile ? professorName.split(' ')[0] : professorName}
             </h2>
-            {isMobile && (
-              <span className="text-xs text-gray-500">Professor</span>
-            )}
+            <span className="text-xs text-gray-500">Professor</span>
           </div>
         </div>
         
-        <div className="flex items-center">
+        <div className="flex items-center ml-3">
           <Button
             onClick={handleLogout}
             variant="outline"
