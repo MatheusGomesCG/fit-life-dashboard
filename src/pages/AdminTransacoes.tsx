@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +26,7 @@ import {
   atualizarTransacao
 } from "@/services/adminService";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 const AdminTransacoes: React.FC = () => {
   const [transacoes, setTransacoes] = useState<TransacaoProfessor[]>([]);
@@ -98,14 +100,14 @@ const AdminTransacoes: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const colors = {
-      pago: "bg-green-100 text-green-800",
-      pendente: "bg-yellow-100 text-yellow-800",
-      cancelado: "bg-red-100 text-red-800",
-      falhou: "bg-red-100 text-red-800"
+      pago: "bg-green-100 text-green-800 border-green-200",
+      pendente: "bg-yellow-100 text-yellow-800 border-yellow-200",
+      cancelado: "bg-red-100 text-red-800 border-red-200",
+      falhou: "bg-red-100 text-red-800 border-red-200"
     };
     
     return (
-      <Badge className={colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"}>
+      <Badge className={`${colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800 border-gray-200"} border`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
@@ -137,62 +139,66 @@ const AdminTransacoes: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Gestão de Transações</h1>
-          <p className="text-gray-600">Gerenciar pagamentos e transações dos professores</p>
-        </div>
-      </div>
+      <AdminPageHeader 
+        title="Gestão de Transações" 
+        description="Gerenciar pagamentos e transações dos professores"
+      />
 
-      {/* Cards de Resumo - Responsivos */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
+      {/* Cards de Resumo - Melhor espaçamento e responsivos */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Receita Total</CardTitle>
+            <div className="p-2 bg-green-50 rounded-lg">
+              <DollarSign className="h-5 w-5 text-green-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">R$ {totalReceita.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-green-600">R$ {totalReceita.toFixed(2)}</div>
+            <p className="text-xs text-gray-600 mt-1">
               {transacoes.filter(t => t.status === 'pago').length} transações pagas
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Pendentes</CardTitle>
+            <div className="p-2 bg-yellow-50 rounded-lg">
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{transacoesPendentes}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-yellow-600">{transacoesPendentes}</div>
+            <p className="text-xs text-gray-600 mt-1">
               Aguardando confirmação
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Transações</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-gray-600">Total Transações</CardTitle>
+            <div className="p-2 bg-blue-50 rounded-lg">
+              <CreditCard className="h-5 w-5 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{transacoes.length}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-blue-600">{transacoes.length}</div>
+            <p className="text-xs text-gray-600 mt-1">
               Todas as transações
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filtros - Responsivos */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
+      {/* Filtros - Melhor layout responsivo */}
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Filtros</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -204,183 +210,190 @@ const AdminTransacoes: React.FC = () => {
                 />
               </div>
             </div>
-            <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Todos os status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">Todos os status</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-                <SelectItem value="falhou">Falhou</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="lg:w-48">
+              <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Todos os status</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                  <SelectItem value="falhou">Falhou</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Tabela de Transações - Responsiva */}
-      <Card>
+      {/* Transações - Layout responsivo melhorado */}
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Transações</CardTitle>
+          <CardTitle className="text-lg">Transações</CardTitle>
           <CardDescription>Lista de todas as transações do sistema</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Vista mobile - Cards */}
-          <div className="block md:hidden space-y-4">
-            {transacoesFiltradas.map((transacao) => (
-              <Card key={transacao.id} className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(transacao.status)}
-                    {getStatusBadge(transacao.status)}
-                  </div>
-                  <div className="text-sm font-mono text-gray-500">
-                    {transacao.id.slice(0, 8)}...
-                  </div>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Valor:</span>
-                    <span className="font-medium">R$ {(transacao.valor || 0).toFixed(2)}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Gateway:</span>
-                    <span>{transacao.gateway_pagamento || 'N/A'}</span>
-                  </div>
-                  
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Criação:</span>
-                    <span>{format(new Date(transacao.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
-                  </div>
-                  
-                  {transacao.data_pagamento && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Pagamento:</span>
-                      <span>{format(new Date(transacao.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}</span>
-                    </div>
-                  )}
-                </div>
-                
-                {transacao.status === 'pendente' && (
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
-                      className="flex-1 text-green-600 border-green-300 hover:bg-green-50"
-                    >
-                      Confirmar
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
-                      className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
-                    >
-                      Cancelar
-                    </Button>
-                  </div>
-                )}
-              </Card>
-            ))}
-            
-            {transacoesFiltradas.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+          {transacoesFiltradas.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="p-4 bg-gray-50 rounded-full mx-auto w-fit mb-4">
+                <CreditCard className="h-12 w-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {transacoes.length === 0 
-                  ? "Nenhuma transação encontrada no sistema"
+                  ? "Nenhuma transação encontrada"
                   : "Nenhuma transação encontrada com os filtros aplicados"
                 }
-              </div>
-            )}
-          </div>
-
-          {/* Vista desktop - Tabela */}
-          <div className="hidden md:block overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Gateway</TableHead>
-                  <TableHead>Data Criação</TableHead>
-                  <TableHead>Data Pagamento</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+              </h3>
+              <p className="text-gray-500">
+                {transacoes.length === 0 
+                  ? "Não há transações registradas no sistema"
+                  : "Tente ajustar os filtros de busca"
+                }
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Vista mobile - Cards melhorados */}
+              <div className="block lg:hidden space-y-4">
                 {transacoesFiltradas.map((transacao) => (
-                  <TableRow key={transacao.id}>
-                    <TableCell className="font-mono text-xs">
-                      {transacao.id.slice(0, 8)}...
-                    </TableCell>
-                    <TableCell>
+                  <Card key={transacao.id} className="p-4 border-l-4 border-l-blue-500">
+                    <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(transacao.status)}
                         {getStatusBadge(transacao.status)}
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      R$ {(transacao.valor || 0).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{transacao.gateway_pagamento || 'N/A'}</div>
-                        <div className="text-sm text-gray-500">{transacao.metodo_pagamento || 'N/A'}</div>
+                      <div className="text-sm font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded">
+                        {transacao.id.slice(0, 8)}...
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(transacao.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell>
-                      {transacao.data_pagamento 
-                        ? format(new Date(transacao.data_pagamento), "dd/MM/yyyy HH:mm", { locale: ptBR })
-                        : "N/A"
-                      }
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {transacao.status === 'pendente' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
-                              className="text-green-600 border-green-300 hover:bg-green-50"
-                            >
-                              Confirmar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
-                              className="text-red-600 border-red-300 hover:bg-red-50"
-                            >
-                              Cancelar
-                            </Button>
-                          </>
-                        )}
+                    </div>
+                    
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">Valor:</span>
+                        <span className="font-bold text-lg text-green-600">R$ {(transacao.valor || 0).toFixed(2)}</span>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Gateway:</span>
+                        <span className="font-medium">{transacao.gateway_pagamento || 'N/A'}</span>
+                      </div>
+                      
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Criação:</span>
+                        <span>{format(new Date(transacao.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                      </div>
+                      
+                      {transacao.data_pagamento && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Pagamento:</span>
+                          <span>{format(new Date(transacao.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {transacao.status === 'pendente' && (
+                      <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
+                        <Button
+                          size="sm"
+                          onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Confirmar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
+                          className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    )}
+                  </Card>
                 ))}
-                {transacoesFiltradas.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      {transacoes.length === 0 
-                        ? "Nenhuma transação encontrada no sistema"
-                        : "Nenhuma transação encontrada com os filtros aplicados"
-                      }
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+              </div>
+
+              {/* Vista desktop - Tabela melhorada */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="font-semibold">ID</TableHead>
+                      <TableHead className="font-semibold">Status</TableHead>
+                      <TableHead className="font-semibold">Valor</TableHead>
+                      <TableHead className="font-semibold">Gateway</TableHead>
+                      <TableHead className="font-semibold">Data Criação</TableHead>
+                      <TableHead className="font-semibold">Data Pagamento</TableHead>
+                      <TableHead className="font-semibold text-center">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transacoesFiltradas.map((transacao) => (
+                      <TableRow key={transacao.id} className="hover:bg-gray-50 transition-colors">
+                        <TableCell className="font-mono text-xs bg-gray-50 rounded px-2 py-1">
+                          {transacao.id.slice(0, 8)}...
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(transacao.status)}
+                            {getStatusBadge(transacao.status)}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold text-green-600">
+                          R$ {(transacao.valor || 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{transacao.gateway_pagamento || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{transacao.metodo_pagamento || 'N/A'}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(transacao.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          {transacao.data_pagamento 
+                            ? format(new Date(transacao.data_pagamento), "dd/MM/yyyy HH:mm", { locale: ptBR })
+                            : <span className="text-gray-400">N/A</span>
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2 justify-center">
+                            {transacao.status === 'pendente' && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
+                                  className="text-red-600 border-red-300 hover:bg-red-50"
+                                >
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Cancelar
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
