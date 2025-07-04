@@ -50,7 +50,6 @@ const AdminProfessores: React.FC = () => {
       setIsLoading(true);
       console.log("🔄 [AdminProfessores] Carregando professores...");
 
-      // Buscar todos os professores sem filtros RLS específicos
       const { data: professoresData, error } = await supabase
         .from('professor_profiles')
         .select('*')
@@ -73,11 +72,9 @@ const AdminProfessores: React.FC = () => {
         return;
       }
 
-      // Para cada professor, buscar informações adicionais
       const professoresComInfo = await Promise.all(
         professoresData.map(async (professor) => {
           try {
-            // Contar alunos do professor
             const { data: alunos, error: alunosError } = await supabase
               .from('aluno_profiles')
               .select('id')
@@ -87,7 +84,6 @@ const AdminProfessores: React.FC = () => {
               console.warn("⚠️ [AdminProfessores] Erro ao buscar alunos para professor", professor.id, alunosError);
             }
 
-            // Verificar plano ativo
             const { data: plano, error: planoError } = await supabase
               .from('professor_planos')
               .select('id')
@@ -185,27 +181,25 @@ const AdminProfessores: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gerenciar Professores</h1>
-            <p className="text-gray-600 mt-1">
-              Visualize e gerencie todos os professores cadastrados
-            </p>
-          </div>
-          <Link to="/admin/cadastrar-professor">
-            <Button className="flex items-center gap-2">
-              <UserPlus className="h-4 w-4" />
-              Cadastrar Professor
-            </Button>
-          </Link>
+    <div className="space-y-6">
+      {/* Header - Responsivo */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Gerenciar Professores</h1>
+          <p className="text-gray-600 mt-1">
+            Visualize e gerencie todos os professores cadastrados
+          </p>
         </div>
+        <Link to="/admin/cadastrar-professor">
+          <Button className="flex items-center gap-2 w-full sm:w-auto">
+            <UserPlus className="h-4 w-4" />
+            Cadastrar Professor
+          </Button>
+        </Link>
       </div>
 
-      {/* Filtros */}
-      <Card className="mb-6">
+      {/* Filtros - Responsivos */}
+      <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -223,7 +217,7 @@ const AdminProfessores: React.FC = () => {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <select
-                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto"
                 value={filtroStatus}
                 onChange={(e) => setFiltroStatus(e.target.value)}
               >
@@ -239,20 +233,20 @@ const AdminProfessores: React.FC = () => {
 
       {/* Debug Info */}
       {!isLoading && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-md">
+        <div className="p-3 bg-blue-50 rounded-md">
           <p className="text-sm text-blue-700">
             Debug: {professores.length} professor(es) carregado(s), {professoresFiltrados.length} após filtros
           </p>
         </div>
       )}
 
-      {/* Lista de Professores */}
+      {/* Lista de Professores - Responsiva */}
       {isLoading ? (
         <div className="flex justify-center py-12">
           <LoadingSpinner size="large" />
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="space-y-4">
           {professoresFiltrados.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
@@ -280,9 +274,10 @@ const AdminProfessores: React.FC = () => {
             professoresFiltrados.map((professor) => (
               <Card key={professor.id}>
                 <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                  <div className="flex flex-col gap-4">
+                    {/* Cabeçalho com nome e status */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center gap-3">
                         <h3 className="text-lg font-semibold text-gray-900">
                           {professor.nome}
                         </h3>
@@ -292,47 +287,49 @@ const AdminProfessores: React.FC = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
-                        <div>
-                          <span className="font-medium">Especialidade:</span>
-                          <p>{professor.especialidade || "Não informado"}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium">Total de Alunos:</span>
-                          <p>{professor.totalAlunos}</p>
-                        </div>
-                        <div>
-                          <span className="font-medium">Plano Ativo:</span>
-                          <p className={professor.planoAtivo ? "text-green-600" : "text-red-600"}>
-                            {professor.planoAtivo ? "Sim" : "Não"}
-                          </p>
-                        </div>
+                      {/* Ações - Botões responsivos */}
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <Button variant="outline" size="sm">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Visualizar
+                        </Button>
+                        
+                        {professor.status === "ativo" ? (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => alterarStatusProfessor(professor.id, "inativo")}
+                          >
+                            Desativar
+                          </Button>
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => alterarStatusProfessor(professor.id, "ativo")}
+                          >
+                            Ativar
+                          </Button>
+                        )}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Visualizar
-                      </Button>
-                      
-                      {professor.status === "ativo" ? (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => alterarStatusProfessor(professor.id, "inativo")}
-                        >
-                          Desativar
-                        </Button>
-                      ) : (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => alterarStatusProfessor(professor.id, "ativo")}
-                        >
-                          Ativar
-                        </Button>
-                      )}
+                    
+                    {/* Informações do professor - Grid responsivo */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium block sm:inline">Especialidade:</span>
+                        <p className="sm:inline sm:ml-1">{professor.especialidade || "Não informado"}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium block sm:inline">Total de Alunos:</span>
+                        <p className="sm:inline sm:ml-1">{professor.totalAlunos}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium block sm:inline">Plano Ativo:</span>
+                        <p className={`sm:inline sm:ml-1 ${professor.planoAtivo ? "text-green-600" : "text-red-600"}`}>
+                          {professor.planoAtivo ? "Sim" : "Não"}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

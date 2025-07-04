@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -31,7 +30,7 @@ const AdminTransacoes: React.FC = () => {
   const [transacoes, setTransacoes] = useState<TransacaoProfessor[]>([]);
   const [professores, setProfessores] = useState<ProfessorComPlano[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filtroStatus, setFiltroStatus] = useState("");
+  const [filtroStatus, setFiltroStatus] = useState("0");
   const [filtroSearch, setFiltroSearch] = useState("");
 
   useEffect(() => {
@@ -113,7 +112,7 @@ const AdminTransacoes: React.FC = () => {
   };
 
   const transacoesFiltradas = transacoes.filter(transacao => {
-    const matchStatus = !filtroStatus || transacao.status === filtroStatus;
+    const matchStatus = filtroStatus === "0" || transacao.status === filtroStatus;
     const matchSearch = !filtroSearch || 
       transacao.descricao?.toLowerCase().includes(filtroSearch.toLowerCase()) ||
       transacao.gateway_transaction_id?.toLowerCase().includes(filtroSearch.toLowerCase()) ||
@@ -130,32 +129,30 @@ const AdminTransacoes: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinner />
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestão de Transações</h1>
           <p className="text-gray-600">Gerenciar pagamentos e transações dos professores</p>
         </div>
       </div>
 
-      {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      {/* Cards de Resumo - Responsivos */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R$ {totalReceita.toFixed(2)}</div>
+            <div className="text-xl sm:text-2xl font-bold">R$ {totalReceita.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               {transacoes.filter(t => t.status === 'pago').length} transações pagas
             </p>
@@ -168,7 +165,7 @@ const AdminTransacoes: React.FC = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{transacoesPendentes}</div>
+            <div className="text-xl sm:text-2xl font-bold">{transacoesPendentes}</div>
             <p className="text-xs text-muted-foreground">
               Aguardando confirmação
             </p>
@@ -181,7 +178,7 @@ const AdminTransacoes: React.FC = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{transacoes.length}</div>
+            <div className="text-xl sm:text-2xl font-bold">{transacoes.length}</div>
             <p className="text-xs text-muted-foreground">
               Todas as transações
             </p>
@@ -189,8 +186,8 @@ const AdminTransacoes: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filtros */}
-      <Card className="mb-6">
+      {/* Filtros - Responsivos */}
+      <Card>
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
         </CardHeader>
@@ -223,14 +220,86 @@ const AdminTransacoes: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Tabela de Transações */}
+      {/* Tabela de Transações - Responsiva */}
       <Card>
         <CardHeader>
           <CardTitle>Transações</CardTitle>
           <CardDescription>Lista de todas as transações do sistema</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          {/* Vista mobile - Cards */}
+          <div className="block md:hidden space-y-4">
+            {transacoesFiltradas.map((transacao) => (
+              <Card key={transacao.id} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getStatusIcon(transacao.status)}
+                    {getStatusBadge(transacao.status)}
+                  </div>
+                  <div className="text-sm font-mono text-gray-500">
+                    {transacao.id.slice(0, 8)}...
+                  </div>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Valor:</span>
+                    <span className="font-medium">R$ {(transacao.valor || 0).toFixed(2)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Gateway:</span>
+                    <span>{transacao.gateway_pagamento || 'N/A'}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Criação:</span>
+                    <span>{format(new Date(transacao.created_at), "dd/MM/yyyy", { locale: ptBR })}</span>
+                  </div>
+                  
+                  {transacao.data_pagamento && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Pagamento:</span>
+                      <span>{format(new Date(transacao.data_pagamento), "dd/MM/yyyy", { locale: ptBR })}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {transacao.status === 'pendente' && (
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
+                      className="flex-1 text-green-600 border-green-300 hover:bg-green-50"
+                    >
+                      Confirmar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
+                      className="flex-1 text-red-600 border-red-300 hover:bg-red-50"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            ))}
+            
+            {transacoesFiltradas.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                {transacoes.length === 0 
+                  ? "Nenhuma transação encontrada no sistema"
+                  : "Nenhuma transação encontrada com os filtros aplicados"
+                }
+              </div>
+            )}
+          </div>
+
+          {/* Vista desktop - Tabela */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "react-router-dom";
 import ProfessorNavigation from "@/components/professor/ProfessorNavigation";
 import AdminNavigation from "@/components/admin/AdminNavigation";
+import AdminLayout from "@/components/admin/AdminLayout";
 import AlunoNavigation from "@/components/aluno/AlunoNavigation";
 import ProfessorLayout from "@/components/professor/ProfessorLayout";
 
@@ -48,16 +49,39 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/editar-avaliacao"
   ];
 
+  // Lista de páginas de admin que devem usar o layout de admin
+  const adminPages = [
+    "/dashboard-admin",
+    "/admin/professores",
+    "/admin/cadastrar-professor",
+    "/admin/dashboard",
+    "/admin/transacoes",
+    "/admin/planos"
+  ];
+
   // Verifica se é uma página de professor
   const isProfessorPage = professorPages.some(page => 
     location.pathname === page || location.pathname.startsWith(page + "/")
   );
 
+  // Verifica se é uma página de admin
+  const isAdminPage = adminPages.some(page => 
+    location.pathname === page || location.pathname.startsWith(page + "/")
+  );
+
   console.log("🎯 [Layout] Condições:", {
     isProfessorPage,
+    isAdminPage,
     userTipo: user?.tipo,
-    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage
+    shouldUseProfessorLayout: user?.tipo === "professor" && isProfessorPage,
+    shouldUseAdminLayout: user?.tipo === "admin" && isAdminPage
   });
+
+  // Se for admin E estiver numa página de admin, usar layout de admin
+  if (user?.tipo === "admin" && isAdminPage) {
+    console.log("✅ [Layout] USANDO ADMIN LAYOUT");
+    return <AdminLayout>{children}</AdminLayout>;
+  }
 
   // Se for professor E estiver numa página de professor, usar layout moderno
   if (user?.tipo === "professor" && isProfessorPage) {
