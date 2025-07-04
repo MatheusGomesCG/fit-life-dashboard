@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_metricas: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          id: string
+          novos_professores_mes: number | null
+          planos_100_ativos: number | null
+          planos_100plus_ativos: number | null
+          planos_25_ativos: number | null
+          planos_50_ativos: number | null
+          receita_acumulada: number | null
+          receita_mensal: number | null
+          total_professores_ativos: number | null
+          total_professores_inativos: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          id?: string
+          novos_professores_mes?: number | null
+          planos_100_ativos?: number | null
+          planos_100plus_ativos?: number | null
+          planos_25_ativos?: number | null
+          planos_50_ativos?: number | null
+          receita_acumulada?: number | null
+          receita_mensal?: number | null
+          total_professores_ativos?: number | null
+          total_professores_inativos?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          id?: string
+          novos_professores_mes?: number | null
+          planos_100_ativos?: number | null
+          planos_100plus_ativos?: number | null
+          planos_25_ativos?: number | null
+          planos_50_ativos?: number | null
+          receita_acumulada?: number | null
+          receita_mensal?: number | null
+          total_professores_ativos?: number | null
+          total_professores_inativos?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -609,6 +657,65 @@ export type Database = {
         }
         Relationships: []
       }
+      professor_transacoes: {
+        Row: {
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string | null
+          descricao: string | null
+          gateway_pagamento: string | null
+          gateway_transaction_id: string | null
+          id: string
+          metodo_pagamento: string | null
+          moeda: string | null
+          plano_id: string | null
+          professor_id: string
+          status: string
+          updated_at: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          gateway_pagamento?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          moeda?: string | null
+          plano_id?: string | null
+          professor_id: string
+          status?: string
+          updated_at?: string
+          valor: number
+        }
+        Update: {
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
+          gateway_pagamento?: string | null
+          gateway_transaction_id?: string | null
+          id?: string
+          metodo_pagamento?: string | null
+          moeda?: string | null
+          plano_id?: string | null
+          professor_id?: string
+          status?: string
+          updated_at?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professor_transacoes_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "professor_planos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       agendamentos_com_aluno: {
@@ -696,6 +803,10 @@ export type Database = {
       }
     }
     Functions: {
+      calcular_metricas_admin: {
+        Args: { data_ref?: string }
+        Returns: undefined
+      }
       contar_alunos_professor: {
         Args: { professor_id: string }
         Returns: number

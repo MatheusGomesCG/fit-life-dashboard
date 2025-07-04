@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -37,6 +38,8 @@ import ConfiguracoesProfessor from "./pages/ConfiguracoesProfessor";
 import AdminProfessores from "./pages/AdminProfessores";
 import AdminCadastrarProfessor from "./pages/AdminCadastrarProfessor";
 import AdminPlanosProfessores from "./pages/AdminPlanosProfessores";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminTransacoes from "./pages/AdminTransacoes";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +86,8 @@ function App() {
               <Route path="/admin/professores" element={<Layout><AdminProfessores /></Layout>} />
               <Route path="/admin/cadastrar-professor" element={<Layout><AdminCadastrarProfessor /></Layout>} />
               <Route path="/admin/planos" element={<Layout><AdminPlanosProfessores /></Layout>} />
+              <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
+              <Route path="/admin/transacoes" element={<Layout><AdminTransacoes /></Layout>} />
               <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </AuthProvider>

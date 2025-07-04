@@ -7,7 +7,9 @@ import {
   CreditCard, 
   TrendingUp,
   ChevronRight,
-  Activity
+  Activity,
+  BarChart3,
+  Receipt
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,6 +221,57 @@ const DashboardAdmin: React.FC = () => {
           </p>
           <div className="mt-4 flex items-center text-purple-500">
             <span className="text-sm font-medium">Ver planos</span>
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/dashboard"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="mb-4 p-3 bg-indigo-50 rounded-full w-fit">
+            <BarChart3 className="h-6 w-6 text-indigo-500" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Dashboard Avançado</h2>
+          <p className="text-gray-600 mt-2">
+            Métricas detalhadas, gráficos e relatórios de crescimento
+          </p>
+          <div className="mt-4 flex items-center text-indigo-500">
+            <span className="text-sm font-medium">Ver dashboard</span>
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/transacoes"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="mb-4 p-3 bg-emerald-50 rounded-full w-fit">
+            <Receipt className="h-6 w-6 text-emerald-500" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Gestão de Transações</h2>
+          <p className="text-gray-600 mt-2">
+            Gerenciar pagamentos e transações dos professores
+          </p>
+          <div className="mt-4 flex items-center text-emerald-500">
+            <span className="text-sm font-medium">Gerenciar</span>
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </div>
+        </Link>
+
+        <Link
+          to="/admin/relatorios"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+        >
+          <div className="mb-4 p-3 bg-orange-50 rounded-full w-fit">
+            <TrendingUp className="h-6 w-6 text-orange-500" />
+          </div>
+          <h2 className="text-lg font-semibold text-gray-900">Relatórios Financeiros</h2>
+          <p className="text-gray-600 mt-2">
+            Gerar e exportar relatórios detalhados em Excel
+          </p>
+          <div className="mt-4 flex items-center text-orange-500">
+            <span className="text-sm font-medium">Ver relatórios</span>
             <ChevronRight className="h-4 w-4 ml-1" />
           </div>
         </Link>
