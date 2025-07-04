@@ -38,11 +38,15 @@ const AdminDashboard: React.FC = () => {
   const carregarMetricas = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 [AdminDashboard] Carregando métricas...");
       const data = await buscarMetricasAdmin();
+      console.log("✅ [AdminDashboard] Métricas carregadas:", data);
       setMetricas(data);
     } catch (error) {
-      console.error("Erro ao carregar métricas:", error);
+      console.error("❌ [AdminDashboard] Erro ao carregar métricas:", error);
       toast.error("Erro ao carregar dados do dashboard");
+      // Definir dados vazios para evitar crashes
+      setMetricas([]);
     } finally {
       setIsLoading(false);
     }
@@ -51,11 +55,12 @@ const AdminDashboard: React.FC = () => {
   const atualizarMetricas = async () => {
     try {
       setIsRefreshing(true);
+      console.log("🔄 [AdminDashboard] Atualizando métricas...");
       await calcularMetricasAdmin();
       await carregarMetricas();
       toast.success("Métricas atualizadas com sucesso!");
     } catch (error) {
-      console.error("Erro ao atualizar métricas:", error);
+      console.error("❌ [AdminDashboard] Erro ao atualizar métricas:", error);
       toast.error("Erro ao atualizar métricas");
     } finally {
       setIsRefreshing(false);
@@ -64,16 +69,22 @@ const AdminDashboard: React.FC = () => {
 
   const exportarRelatorio = async () => {
     try {
+      console.log("📊 [AdminDashboard] Exportando relatório...");
       const ano = parseInt(selectedYear);
       const mes = selectedMonth ? parseInt(selectedMonth) : undefined;
       
       const dados = await gerarRelatorioExcel(ano, mes);
       
+      if (!dados || dados.length === 0) {
+        toast.error("Nenhum dado encontrado para o período selecionado");
+        return;
+      }
+
       // Criar CSV
       const headers = Object.keys(dados[0] || {});
       const csvContent = [
         headers.join(','),
-        ...dados.map(row => headers.map(header => `"${row[header]}"`).join(','))
+        ...dados.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
       ].join('\n');
 
       // Download do arquivo
@@ -89,30 +100,30 @@ const AdminDashboard: React.FC = () => {
       
       toast.success("Relatório exportado com sucesso!");
     } catch (error) {
-      console.error("Erro ao exportar relatório:", error);
+      console.error("❌ [AdminDashboard] Erro ao exportar relatório:", error);
       toast.error("Erro ao exportar relatório");
     }
   };
 
-  const metricaAtual = metricas[0];
+  const metricaAtual = metricas && metricas.length > 0 ? metricas[0] : null;
   
-  const dadosGraficoReceita = metricas.slice(0, 6).reverse().map(m => ({
+  const dadosGraficoReceita = metricas && metricas.length > 0 ? metricas.slice(0, 6).reverse().map(m => ({
     mes: new Date(m.data_referencia).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-    receita: m.receita_mensal,
-    acumulada: m.receita_acumulada
-  }));
+    receita: m.receita_mensal || 0,
+    acumulada: m.receita_acumulada || 0
+  })) : [];
 
-  const dadosGraficoProfessores = metricas.slice(0, 6).reverse().map(m => ({
+  const dadosGraficoProfessores = metricas && metricas.length > 0 ? metricas.slice(0, 6).reverse().map(m => ({
     mes: new Date(m.data_referencia).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-    ativos: m.total_professores_ativos,
-    novos: m.novos_professores_mes
-  }));
+    ativos: m.total_professores_ativos || 0,
+    novos: m.novos_professores_mes || 0
+  })) : [];
 
   const dadosGraficoPlanos = metricaAtual ? [
-    { nome: 'Plano 25', quantidade: metricaAtual.planos_25_ativos, valor: metricaAtual.planos_25_ativos * 25 },
-    { nome: 'Plano 50', quantidade: metricaAtual.planos_50_ativos, valor: metricaAtual.planos_50_ativos * 50 },
-    { nome: 'Plano 100', quantidade: metricaAtual.planos_100_ativos, valor: metricaAtual.planos_100_ativos * 100 },
-    { nome: 'Plano 100+', quantidade: metricaAtual.planos_100plus_ativos, valor: metricaAtual.planos_100plus_ativos * 200 }
+    { nome: 'Plano 25', quantidade: metricaAtual.planos_25_ativos || 0, valor: (metricaAtual.planos_25_ativos || 0) * 25 },
+    { nome: 'Plano 50', quantidade: metricaAtual.planos_50_ativos || 0, valor: (metricaAtual.planos_50_ativos || 0) * 50 },
+    { nome: 'Plano 100', quantidade: metricaAtual.planos_100_ativos || 0, valor: (metricaAtual.planos_100_ativos || 0) * 100 },
+    { nome: 'Plano 100+', quantidade: metricaAtual.planos_100plus_ativos || 0, valor: (metricaAtual.planos_100plus_ativos || 0) * 200 }
   ] : [];
 
   if (isLoading) {
@@ -214,16 +225,22 @@ const AdminDashboard: React.FC = () => {
             <CardDescription>Receita mensal e acumulada dos últimos 6 meses</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={dadosGraficoReceita}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis />
-                <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, '']} />
-                <Line type="monotone" dataKey="receita" stroke="#8884d8" name="Mensal" />
-                <Line type="monotone" dataKey="acumulada" stroke="#82ca9d" name="Acumulada" />
-              </LineChart>
-            </ResponsiveContainer>
+            {dadosGraficoReceita.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={dadosGraficoReceita}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="mes" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => [`R$ ${value.toFixed(2)}`, '']} />
+                  <Line type="monotone" dataKey="receita" stroke="#8884d8" name="Mensal" />
+                  <Line type="monotone" dataKey="acumulada" stroke="#82ca9d" name="Acumulada" />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                Nenhum dado disponível
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -233,16 +250,22 @@ const AdminDashboard: React.FC = () => {
             <CardDescription>Professores ativos e novos cadastros</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={dadosGraficoProfessores}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="mes" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="ativos" fill="#8884d8" name="Ativos" />
-                <Bar dataKey="novos" fill="#82ca9d" name="Novos" />
-              </BarChart>
-            </ResponsiveContainer>
+            {dadosGraficoProfessores.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={dadosGraficoProfessores}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="mes" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="ativos" fill="#8884d8" name="Ativos" />
+                  <Bar dataKey="novos" fill="#82ca9d" name="Novos" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                Nenhum dado disponível
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -254,18 +277,24 @@ const AdminDashboard: React.FC = () => {
           <CardDescription>Quantidade e valor por tipo de plano</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={dadosGraficoPlanos}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="nome" />
-              <YAxis />
-              <Tooltip formatter={(value: number, name: string) => [
-                name === 'valor' ? `R$ ${value.toFixed(2)}` : value,
-                name === 'valor' ? 'Receita' : 'Quantidade'
-              ]} />
-              <Bar dataKey="quantidade" fill="#8884d8" name="quantidade" />
-            </BarChart>
-          </ResponsiveContainer>
+          {dadosGraficoPlanos.length > 0 && dadosGraficoPlanos.some(item => item.quantidade > 0) ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={dadosGraficoPlanos}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="nome" />
+                <YAxis />
+                <Tooltip formatter={(value: number, name: string) => [
+                  name === 'valor' ? `R$ ${value.toFixed(2)}` : value,
+                  name === 'valor' ? 'Receita' : 'Quantidade'
+                ]} />
+                <Bar dataKey="quantidade" fill="#8884d8" name="quantidade" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-48 text-gray-500">
+              Nenhum plano ativo encontrado
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -9,9 +9,7 @@ import {
   CheckCircle, 
   XCircle,
   AlertCircle,
-  Plus,
-  Search,
-  Filter
+  Search
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,15 +17,13 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { 
   TransacaoProfessor, 
   ProfessorComPlano,
   buscarTransacoesProfessores, 
   buscarProfessoresComPlanos,
-  atualizarTransacao,
-  criarTransacao
+  atualizarTransacao
 } from "@/services/adminService";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -37,7 +33,6 @@ const AdminTransacoes: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filtroStatus, setFiltroStatus] = useState("");
   const [filtroSearch, setFiltroSearch] = useState("");
-  const [modalAberto, setModalAberto] = useState(false);
 
   useEffect(() => {
     carregarDados();
@@ -46,15 +41,26 @@ const AdminTransacoes: React.FC = () => {
   const carregarDados = async () => {
     try {
       setIsLoading(true);
+      console.log("🔄 [AdminTransacoes] Carregando dados...");
+      
       const [transacoesData, professoresData] = await Promise.all([
         buscarTransacoesProfessores(),
         buscarProfessoresComPlanos()
       ]);
+      
+      console.log("✅ [AdminTransacoes] Dados carregados:", {
+        transacoes: transacoesData.length,
+        professores: professoresData.length
+      });
+      
       setTransacoes(transacoesData);
       setProfessores(professoresData);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      console.error("❌ [AdminTransacoes] Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados");
+      // Definir arrays vazios para evitar crashes
+      setTransacoes([]);
+      setProfessores([]);
     } finally {
       setIsLoading(false);
     }
@@ -62,6 +68,8 @@ const AdminTransacoes: React.FC = () => {
 
   const atualizarStatusTransacao = async (id: string, status: string) => {
     try {
+      console.log("🔄 [AdminTransacoes] Atualizando status da transação:", { id, status });
+      
       const updates: any = { status };
       if (status === 'pago') {
         updates.data_pagamento = new Date().toISOString();
@@ -71,7 +79,7 @@ const AdminTransacoes: React.FC = () => {
       await carregarDados();
       toast.success("Status da transação atualizado!");
     } catch (error) {
-      console.error("Erro ao atualizar transação:", error);
+      console.error("❌ [AdminTransacoes] Erro ao atualizar transação:", error);
       toast.error("Erro ao atualizar transação");
     }
   };
@@ -99,7 +107,7 @@ const AdminTransacoes: React.FC = () => {
     };
     
     return (
-      <Badge className={colors[status] || "bg-gray-100 text-gray-800"}>
+      <Badge className={colors[status as keyof typeof colors] || "bg-gray-100 text-gray-800"}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
@@ -109,14 +117,15 @@ const AdminTransacoes: React.FC = () => {
     const matchStatus = !filtroStatus || transacao.status === filtroStatus;
     const matchSearch = !filtroSearch || 
       transacao.descricao?.toLowerCase().includes(filtroSearch.toLowerCase()) ||
-      transacao.gateway_transaction_id?.toLowerCase().includes(filtroSearch.toLowerCase());
+      transacao.gateway_transaction_id?.toLowerCase().includes(filtroSearch.toLowerCase()) ||
+      transacao.id.toLowerCase().includes(filtroSearch.toLowerCase());
     
     return matchStatus && matchSearch;
   });
 
   const totalReceita = transacoes
     .filter(t => t.status === 'pago')
-    .reduce((sum, t) => sum + t.valor, 0);
+    .reduce((sum, t) => sum + (t.valor || 0), 0);
 
   const transacoesPendentes = transacoes.filter(t => t.status === 'pendente').length;
 
@@ -189,12 +198,15 @@ const AdminTransacoes: React.FC = () => {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <Input
-                placeholder="Buscar por descrição ou ID da transação..."
-                value={filtroSearch}
-                onChange={(e) => setFiltroSearch(e.target.value)}
-                className="w-full"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Buscar por descrição, ID da transação..."
+                  value={filtroSearch}
+                  onChange={(e) => setFiltroSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             <Select value={filtroStatus} onValueChange={setFiltroStatus}>
               <SelectTrigger className="w-full sm:w-48">
@@ -223,6 +235,7 @@ const AdminTransacoes: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>ID</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Gateway</TableHead>
@@ -234,6 +247,9 @@ const AdminTransacoes: React.FC = () => {
               <TableBody>
                 {transacoesFiltradas.map((transacao) => (
                   <TableRow key={transacao.id}>
+                    <TableCell className="font-mono text-xs">
+                      {transacao.id.slice(0, 8)}...
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getStatusIcon(transacao.status)}
@@ -241,7 +257,7 @@ const AdminTransacoes: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      R$ {transacao.valor.toFixed(2)}
+                      R$ {(transacao.valor || 0).toFixed(2)}
                     </TableCell>
                     <TableCell>
                       <div>
@@ -266,6 +282,7 @@ const AdminTransacoes: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => atualizarStatusTransacao(transacao.id, 'pago')}
+                              className="text-green-600 border-green-300 hover:bg-green-50"
                             >
                               Confirmar
                             </Button>
@@ -273,6 +290,7 @@ const AdminTransacoes: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => atualizarStatusTransacao(transacao.id, 'cancelado')}
+                              className="text-red-600 border-red-300 hover:bg-red-50"
                             >
                               Cancelar
                             </Button>
@@ -284,8 +302,11 @@ const AdminTransacoes: React.FC = () => {
                 ))}
                 {transacoesFiltradas.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhuma transação encontrada
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      {transacoes.length === 0 
+                        ? "Nenhuma transação encontrada no sistema"
+                        : "Nenhuma transação encontrada com os filtros aplicados"
+                      }
                     </TableCell>
                   </TableRow>
                 )}
