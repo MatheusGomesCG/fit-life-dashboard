@@ -30,6 +30,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/cadastrar-aluno",
     "/editar-aluno",
     "/listar-alunos",
+    "/novo-treino",
     "/cadastrar-treino",
     "/gerenciar-ficha-treino",
     "/cadastrar-medidas",

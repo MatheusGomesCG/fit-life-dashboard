@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -14,6 +13,7 @@ import CadastrarAluno from "./pages/CadastrarAluno";
 import ListarAlunos from "./pages/ListarAlunos";
 import EditarAluno from "./pages/EditarAluno";
 import GerenciarAlunos from "./pages/GerenciarAlunos";
+import NovoTreino from "./pages/NovoTreino";
 import CadastrarTreino from "./pages/CadastrarTreino";
 import FichaTreino from "./pages/FichaTreino";
 import GerenciarFichaTreino from "./pages/GerenciarFichaTreino";
@@ -58,6 +58,7 @@ function App() {
               <Route path="/listar-alunos" element={<Layout><ListarAlunos /></Layout>} />
               <Route path="/editar-aluno/:id" element={<Layout><EditarAluno /></Layout>} />
               <Route path="/gerenciar-alunos" element={<Layout><GerenciarAlunos /></Layout>} />
+              <Route path="/novo-treino" element={<Layout><NovoTreino /></Layout>} />
               <Route path="/cadastrar-treino/:alunoId" element={<Layout><CadastrarTreino /></Layout>} />
               <Route path="/ficha-treino" element={<Layout><FichaTreino /></Layout>} />
               <Route path="/gerenciar-ficha-treino/:alunoId" element={<Layout><GerenciarFichaTreino /></Layout>} />

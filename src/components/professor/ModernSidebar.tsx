@@ -41,7 +41,7 @@ const ModernSidebar: React.FC = () => {
 
   const quickActions = [
     { path: "/cadastrar-aluno", label: "Cadastrar Aluno" },
-    { path: "/cadastrar-treino", label: "Novo Treino" },
+    { path: "/novo-treino", label: "Novo Treino" },
     { path: "/listar-alunos", label: "Lista de Alunos" },
   ];
 
