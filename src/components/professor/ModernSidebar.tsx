@@ -68,16 +68,18 @@ const ModernSidebar: React.FC = () => {
           )}
         </div>
         
-        {/* Botão de colapso apenas no desktop */}
+        {/* Botão de colapso apenas no desktop - SEMPRE VISÍVEL */}
         {!isMobile && (
           <button 
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className={`text-white hover:bg-gray-800 p-2 rounded transition-colors ${
-              isCollapsed ? 'hidden' : ''
-            }`}
+            className="text-white hover:bg-gray-800 p-1.5 rounded transition-colors flex-shrink-0 z-50"
             title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
           >
-            <ChevronLeft className="h-5 w-5" />
+            {isCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
           </button>
         )}
       </div>
@@ -191,31 +193,17 @@ const ModernSidebar: React.FC = () => {
     );
   }
 
-  // Desktop: Fixed sidebar com animação suave
+  // Desktop: Fixed sidebar
   return (
-    <>
-      <div className={`transition-all duration-300 ease-in-out flex-shrink-0 relative ${
+    <div className={`transition-all duration-300 ease-in-out flex-shrink-0 relative ${
+      isCollapsed ? 'w-16' : 'w-64'
+    }`}>
+      <div className={`fixed left-0 top-0 h-full z-20 ${
         isCollapsed ? 'w-16' : 'w-64'
-      }`}>
-        <div className="fixed left-0 top-0 h-full z-20">
-          <SidebarContent />
-        </div>
+      } transition-all duration-300 ease-in-out`}>
+        <SidebarContent />
       </div>
-      
-      {/* Botão flutuante para expandir quando colapsada */}
-      {isCollapsed && !isMobile && (
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="fixed top-20 left-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg transition-all duration-300 z-30 group"
-          title="Expandir sidebar"
-        >
-          <ChevronRight className="h-4 w-4" />
-          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-            Expandir menu
-          </div>
-        </button>
-      )}
-    </>
+    </div>
   );
 };
 
