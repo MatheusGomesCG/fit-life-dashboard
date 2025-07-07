@@ -18,7 +18,10 @@ const GerenciarFotosAluno: React.FC = () => {
 
   useEffect(() => {
     const fetchAluno = async () => {
+      console.log("📸 [GerenciarFotosAluno] Buscando aluno:", alunoId);
+      
       if (!alunoId) {
+        console.error("❌ [GerenciarFotosAluno] ID do aluno não encontrado");
         toast.error("ID do aluno não encontrado");
         navigate("/gerenciar-alunos");
         return;
@@ -27,10 +30,12 @@ const GerenciarFotosAluno: React.FC = () => {
       try {
         setLoading(true);
         const alunoData = await buscarAlunoPorId(alunoId);
+        console.log("✅ [GerenciarFotosAluno] Aluno encontrado:", alunoData.nome);
         setAluno(alunoData);
         setFotos(alunoData.fotos || []);
+        console.log("📷 [GerenciarFotosAluno] Fotos carregadas:", alunoData.fotos?.length || 0);
       } catch (error) {
-        console.error("Erro ao buscar dados do aluno:", error);
+        console.error("❌ [GerenciarFotosAluno] Erro ao buscar dados do aluno:", error);
         toast.error("Erro ao buscar dados do aluno.");
         navigate("/gerenciar-alunos");
       } finally {
@@ -42,6 +47,7 @@ const GerenciarFotosAluno: React.FC = () => {
   }, [alunoId, navigate]);
 
   const handleUpdateFotos = (fotosAtualizadas: FotoAluno[]) => {
+    console.log("🔄 [GerenciarFotosAluno] Atualizando fotos:", fotosAtualizadas.length);
     setFotos(fotosAtualizadas);
   };
 

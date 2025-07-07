@@ -125,7 +125,8 @@ const GerenciarAlunos: React.FC = () => {
   };
 
   const navegarParaFotos = (alunoId: string) => {
-    navigate(`/fotos-aluno/${alunoId}`);
+    console.log("🖼️ [GerenciarAlunos] Navegando para fotos do aluno:", alunoId);
+    navigate(`/fotos/${alunoId}`);
   };
 
   const navegarParaHistoricoMedidas = (alunoId: string) => {
