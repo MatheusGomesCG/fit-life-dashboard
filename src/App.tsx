@@ -122,8 +122,8 @@ function App() {
               <Route path="/gerenciar-alunos" element={<Layout><GerenciarAlunos /></Layout>} />
               <Route path="/novo-treino" element={<Layout><NovoTreino /></Layout>} />
               <Route path="/cadastrar-treino/:alunoId" element={<Layout><CadastrarTreino /></Layout>} />
-              <Route path="/ficha-treino" element={<Layout><FichaTreino /></Layout>} />
-              <Route path="/gerenciar-ficha-treino/:alunoId" element={<Layout><GerenciarFichaTreino /></Layout>} />
+              <Route path="/ficha-treino/:id" element={<Layout><FichaTreino /></Layout>} />
+              <Route path="/gerenciar-ficha-treino" element={<Layout><GerenciarFichaTreino /></Layout>} />
               <Route path="/meus-treinos" element={<Layout><MeusTreinos /></Layout>} />
               <Route path="/novo-agendamento" element={<Layout><NovoAgendamento /></Layout>} />
               <Route path="/agendamento" element={<Layout><Agendamento /></Layout>} />

@@ -30,19 +30,28 @@ const FichaTreino: React.FC = () => {
       }
 
       try {
+        console.log("🔍 [FichaTreino] Buscando ficha de treino para aluno:", id);
         setLoading(true);
-        // Buscar ficha de treino
+        
+        // Buscar ficha de treino do aluno
         const fichaTreinoData = await buscarFichaTreinoAluno(id);
         
         if (fichaTreinoData) {
+          console.log("✅ [FichaTreino] Ficha de treino encontrada:", fichaTreinoData);
           setFichaTreino(fichaTreinoData);
         } else {
           // Se não encontrou ficha, buscar pelo menos os dados do aluno
-          const aluno = await buscarAlunoPorId(id);
-          setError(`Nenhuma ficha de treino encontrada para ${aluno.nome}`);
+          try {
+            const aluno = await buscarAlunoPorId(id);
+            setError(`Nenhuma ficha de treino encontrada para ${aluno.nome}`);
+            console.log("⚠️ [FichaTreino] Ficha não encontrada para:", aluno.nome);
+          } catch (alunoError) {
+            console.error("❌ [FichaTreino] Erro ao buscar dados do aluno:", alunoError);
+            setError("Aluno não encontrado");
+          }
         }
       } catch (error) {
-        console.error("Erro ao carregar ficha de treino:", error);
+        console.error("❌ [FichaTreino] Erro ao carregar ficha de treino:", error);
         setError("Erro ao carregar ficha de treino");
       } finally {
         setLoading(false);
@@ -119,7 +128,7 @@ const FichaTreino: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
           <h1 className="text-2xl font-bold mb-2">Ficha de Treino</h1>
           <div className="flex flex-wrap gap-4">
@@ -137,7 +146,7 @@ const FichaTreino: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             onClick={handleEditarFicha}
             variant="outline"
@@ -161,20 +170,28 @@ const FichaTreino: React.FC = () => {
         <Accordion type="single" collapsible className="w-full">
           {Object.keys(exerciciosPorDia).length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              Nenhum exercício cadastrado para esta ficha de treino.
+              <p className="mb-4">Nenhum exercício cadastrado para esta ficha de treino.</p>
+              <Button
+                onClick={() => navigate(`/cadastrar-treino/${id}`)}
+                variant="default"
+                className="flex items-center gap-2"
+              >
+                <Edit className="h-4 w-4" />
+                Criar Exercícios
+              </Button>
             </div>
           ) : (
             Object.entries(exerciciosPorDia).map(([dia, exercicios]) => (
               <AccordionItem key={dia} value={dia} className="px-4">
                 <AccordionTrigger className="text-lg font-medium py-4">
-                  {dia}
+                  {dia} ({exercicios.length} exercício{exercicios.length > 1 ? 's' : ''})
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pb-4">
                     {exercicios.map((exercicio, idx) => (
                       <div key={idx} className="bg-gray-50 rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                          <div className="space-y-2 flex-1">
                             <h3 className="font-medium text-gray-900">{exercicio.nomeExercicio}</h3>
                             <p className="text-sm text-gray-600">
                               <span className="font-medium">Grupo Muscular:</span> {exercicio.grupoMuscular}
@@ -183,7 +200,7 @@ const FichaTreino: React.FC = () => {
                               <span className="font-medium">Carga:</span> {exercicio.cargaIdeal} kg
                             </p>
                             <p className="text-sm text-gray-600">
-                              {exercicio.series} séries x {exercicio.repeticoes} repetições
+                              <span className="font-medium">Séries/Repetições:</span> {exercicio.series} séries x {exercicio.repeticoes} repetições
                             </p>
                             {exercicio.estrategia && (
                               <p className="text-sm text-gray-600">
@@ -192,15 +209,17 @@ const FichaTreino: React.FC = () => {
                             )}
                           </div>
                           {exercicio.videoUrl && (
-                            <a
-                              href={exercicio.videoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-fitness-primary hover:text-fitness-primary/80 flex items-center gap-1"
-                            >
-                              <Youtube className="h-5 w-5" />
-                              <span className="text-sm">Ver vídeo</span>
-                            </a>
+                            <div className="flex-shrink-0">
+                              <a
+                                href={exercicio.videoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-fitness-primary hover:text-fitness-primary/80 flex items-center gap-1 text-sm"
+                              >
+                                <Youtube className="h-5 w-5" />
+                                <span>Ver vídeo</span>
+                              </a>
+                            </div>
                           )}
                         </div>
                       </div>
