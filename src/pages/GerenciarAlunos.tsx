@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -29,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Edit, Trash, UserPlus, Search, FileText, Camera, History } from "lucide-react";
+import { Edit, Trash, UserPlus, Search, FileText, Camera, History, User, Mail, Phone, Calendar } from "lucide-react";
 
 const GerenciarAlunos: React.FC = () => {
   const navigate = useNavigate();
@@ -155,9 +156,24 @@ const GerenciarAlunos: React.FC = () => {
     aluno.nome.toLowerCase().includes(filtro.toLowerCase())
   );
 
+  const ActionButton = ({ onClick, icon: Icon, title, className }: {
+    onClick: () => void;
+    icon: any;
+    title: string;
+    className: string;
+  }) => (
+    <button
+      onClick={onClick}
+      className={`p-2 rounded-md transition-colors ${className}`}
+      title={title}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gerenciar Alunos</h1>
           <p className="text-gray-600 mt-1">
@@ -190,71 +206,164 @@ const GerenciarAlunos: React.FC = () => {
             {alunos.length === 0 ? "Nenhum aluno cadastrado ainda." : "Nenhum aluno encontrado."}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Idade</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {alunosFiltrados.map((aluno) => (
-                  <TableRow key={aluno.id}>
-                    <TableCell className="font-medium">{aluno.nome}</TableCell>
-                    <TableCell>{aluno.email}</TableCell>
-                    <TableCell>{aluno.telefone}</TableCell>
-                    <TableCell>{aluno.idade} anos</TableCell>
-                    <TableCell>
-                      <div className="flex justify-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(aluno.id!)}
-                          className="p-1 text-blue-600 hover:text-blue-800"
-                          title="Editar aluno"
-                        >
-                          <Edit className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => navegarParaFicha(aluno.id!)}
-                          className="p-1 text-green-600 hover:text-green-800"
-                          title="Ficha de treino"
-                        >
-                          <FileText className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
-                          className="p-1 text-purple-600 hover:text-purple-800"
-                          title="Histórico de medidas"
-                        >
-                          <History className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => navegarParaFotos(aluno.id!)}
-                          className="p-1 text-yellow-600 hover:text-yellow-800"
-                          title="Gerenciar fotos"
-                        >
-                          <Camera className="h-5 w-5" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(aluno.id!, aluno.nome)}
-                          className="p-1 text-red-600 hover:text-red-800"
-                          title="Excluir aluno"
-                        >
-                          <Trash className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </TableCell>
+          <>
+            {/* Vista Desktop - Tabela */}
+            <div className="hidden md:block overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Telefone</TableHead>
+                    <TableHead>Idade</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {alunosFiltrados.map((aluno) => (
+                    <TableRow key={aluno.id}>
+                      <TableCell className="font-medium">{aluno.nome}</TableCell>
+                      <TableCell>{aluno.email}</TableCell>
+                      <TableCell>{aluno.telefone}</TableCell>
+                      <TableCell>{aluno.idade} anos</TableCell>
+                      <TableCell>
+                        <div className="flex justify-center space-x-2">
+                          <ActionButton
+                            onClick={() => handleEdit(aluno.id!)}
+                            icon={Edit}
+                            title="Editar aluno"
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                          />
+                          <ActionButton
+                            onClick={() => navegarParaFicha(aluno.id!)}
+                            icon={FileText}
+                            title="Ficha de treino"
+                            className="text-green-600 hover:text-green-800 hover:bg-green-50"
+                          />
+                          <ActionButton
+                            onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
+                            icon={History}
+                            title="Histórico de medidas"
+                            className="text-purple-600 hover:text-purple-800 hover:bg-purple-50"
+                          />
+                          <ActionButton
+                            onClick={() => navegarParaFotos(aluno.id!)}
+                            icon={Camera}
+                            title="Gerenciar fotos"
+                            className="text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50"
+                          />
+                          <ActionButton
+                            onClick={() => handleDelete(aluno.id!, aluno.nome)}
+                            icon={Trash}
+                            title="Excluir aluno"
+                            className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Vista Mobile - Cards */}
+            <div className="md:hidden space-y-4">
+              {alunosFiltrados.map((aluno) => (
+                <Card key={aluno.id} className="shadow-sm border border-gray-200">
+                  <CardContent className="p-4">
+                    {/* Header do Card */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-50 rounded-full">
+                          <User className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            {aluno.nome}
+                          </h3>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Informações do Aluno */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="h-4 w-4" />
+                        <span className="break-all">{aluno.email}</span>
+                      </div>
+                      {aluno.telefone && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Phone className="h-4 w-4" />
+                          <span>{aluno.telefone}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span>{aluno.idade} anos</span>
+                      </div>
+                    </div>
+
+                    {/* Ações */}
+                    <div className="border-t pt-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <Button
+                          onClick={() => handleEdit(aluno.id!)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span className="text-xs">Editar</span>
+                        </Button>
+                        <Button
+                          onClick={() => navegarParaFicha(aluno.id!)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-green-600 border-green-200 hover:bg-green-50"
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span className="text-xs">Treino</span>
+                        </Button>
+                        <Button
+                          onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+                        >
+                          <History className="h-4 w-4" />
+                          <span className="text-xs">Medidas</span>
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <Button
+                          onClick={() => navegarParaFotos(aluno.id!)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-yellow-600 border-yellow-200 hover:bg-yellow-50"
+                        >
+                          <Camera className="h-4 w-4" />
+                          <span className="text-xs">Fotos</span>
+                        </Button>
+                        <Button
+                          onClick={() => handleDelete(aluno.id!, aluno.nome)}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                        >
+                          <Trash className="h-4 w-4" />
+                          <span className="text-xs">Excluir</span>
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
+      {/* Alert Dialog para confirmação de exclusão */}
       <AlertDialog open={alunoToDelete !== null} onOpenChange={(open) => !open && cancelDelete()}>
         <AlertDialogTrigger asChild>
           <Button variant="ghost" className="hidden" />
