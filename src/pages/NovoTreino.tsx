@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,11 +36,11 @@ const gruposMusculares = [
 ];
 
 const diasSemana = [
-  "Segunda-feira",
-  "Terça-feira", 
-  "Quarta-feira",
-  "Quinta-feira",
-  "Sexta-feira",
+  "Segunda",
+  "Terça", 
+  "Quarta",
+  "Quinta",
+  "Sexta",
   "Sábado",
   "Domingo"
 ];
@@ -175,7 +174,8 @@ const NovoTreino: React.FC = () => {
       
       console.log("💾 [NovoTreino] Salvando ficha de treino...", {
         alunoId: alunoSelecionado,
-        exercicios: exerciciosFormatted.length
+        exercicios: exerciciosFormatted.length,
+        diasTreino: exerciciosFormatted.map(ex => ex.diaTreino)
       });
       
       await criarOuAtualizarFichaTreino(alunoSelecionado, exerciciosFormatted);

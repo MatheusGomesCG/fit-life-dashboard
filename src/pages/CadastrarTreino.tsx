@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ interface ExercicioForm extends Omit<CargaExercicio, 'cargaIdeal'> {
 
 const gruposMusculares = [
   "Peito",
-  "Costas",
+  "Costas", 
   "Pernas",
   "Ombros",
   "Bíceps",
@@ -31,17 +30,15 @@ const gruposMusculares = [
   "Panturrilha"
 ];
 
+// Corrigindo os dias da semana para serem compatíveis com varchar(10)
 const diasSemana = [
-  "Segunda-feira",
-  "Terça-feira",
-  "Quarta-feira",
-  "Quinta-feira",
-  "Sexta-feira",
-  "Sábado-feira",
-  "Domingo-feira",
-  "Segunda e Quinta-feira",
-  "Terça e Sexta-feira",
-  "Quarta e Sábado-feira"
+  "Segunda", // Segunda-feira -> Segunda
+  "Terça",   // Terça-feira -> Terça
+  "Quarta",  // Quarta-feira -> Quarta
+  "Quinta",  // Quinta-feira -> Quinta
+  "Sexta",   // Sexta-feira -> Sexta
+  "Sábado",
+  "Domingo"
 ];
 
 const CadastrarTreino: React.FC = () => {
