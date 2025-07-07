@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     "/editar-pagamento",
     "/gerenciar-pagamentos",
     "/chat-professor",
-    "/gerenciar-fotos",
+    "/fotos",
     "/historico-medidas",
     "/historico-geral",
     "/configuracoes",

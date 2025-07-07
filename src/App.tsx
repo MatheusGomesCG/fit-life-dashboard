@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -136,12 +137,12 @@ function App() {
               <Route path="/historico-medidas/:alunoId" element={<Layout><HistoricoMedidasAluno /></Layout>} />
               <Route path="/cadastrar-medidas/:alunoId" element={<Layout><CadastrarMedidas /></Layout>} />
               <Route path="/editar-avaliacao/:alunoId/:avaliacaoId" element={<Layout><EditarAvaliacao /></Layout>} />
-              <Route path="/gerenciar-fotos/:alunoId" element={<Layout><GerenciarFotosAluno /></Layout>} />
+              <Route path="/fotos/:alunoId" element={<Layout><GerenciarFotosAluno /></Layout>} />
               <Route path="/chat" element={<Layout><Chat /></Layout>} />
               <Route path="/chat-professor" element={<Layout><ChatProfessor /></Layout>} />
               <Route path="/configuracoes" element={<Layout><ConfiguracoesProfessor /></Layout>} />
               <Route path="/configuracoes-professor" element={<Layout><ConfiguracoesProfessor /></Layout>} />
-              <Route path="*" element={<Layout><NotFound /></Layout>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
         </BrowserRouter>
