@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, FileText, Check } from "lucide-react";
 import { toast } from "sonner";
 import { enviarComprovantePagamento } from "@/services/pagamentosService";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
 const ComprovanteUpload: React.FC = () => {

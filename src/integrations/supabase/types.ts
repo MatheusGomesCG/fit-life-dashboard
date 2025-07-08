@@ -256,6 +256,30 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins_exercicios: {
+        Row: {
+          created_at: string
+          exercise_id: string
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id: string
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversas: {
         Row: {
           aluno_id: string
@@ -390,6 +414,101 @@ export type Database = {
             referencedColumns: ["ficha_id"]
           },
         ]
+      }
+      feed_comentarios: {
+        Row: {
+          comentario: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          comentario: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          comentario?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_comentarios_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feed_posts: {
+        Row: {
+          conteudo: string
+          created_at: string
+          id: string
+          professor_id: string
+          tipo: string
+          updated_at: string
+          url_midia: string | null
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          id?: string
+          professor_id: string
+          tipo: string
+          updated_at?: string
+          url_midia?: string | null
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          id?: string
+          professor_id?: string
+          tipo?: string
+          updated_at?: string
+          url_midia?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feedbacks_treino: {
+        Row: {
+          created_at: string
+          exercise_id: string | null
+          id: string
+          mensagem: string
+          tipo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          mensagem: string
+          tipo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exercise_id?: string | null
+          id?: string
+          mensagem?: string
+          tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       fichas_treino: {
         Row: {
@@ -720,6 +839,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      registros_carga: {
+        Row: {
+          created_at: string
+          data: string
+          exercise_id: string
+          id: string
+          peso: number
+          repeticoes: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          exercise_id: string
+          id?: string
+          peso: number
+          repeticoes: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          exercise_id?: string
+          id?: string
+          peso?: number
+          repeticoes?: number
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
