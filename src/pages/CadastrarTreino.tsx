@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Save, PlusCircle, Trash2, Youtube } from "lucide-react";
+import { ArrowLeft, Save, PlusCircle, Trash2 } from "lucide-react";
 import {
   buscarAlunoPorId,
   criarOuAtualizarFichaTreino,
@@ -9,71 +9,90 @@ import {
   Aluno,
   buscarFichaTreinoAluno
 } from "@/services/alunosService";
+import {
+  listarExerciciosCadastrados,
+  listarTecnicasTreinamento,
+  ExercicioCadastrado,
+  TecnicaTreinamento
+} from "@/services/exerciciosCadastradosService";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ExercicioForm extends Omit<CargaExercicio, 'cargaIdeal'> {
   cargaIdeal: string;
+  exercicioCadastradoId?: string;
+  tecnicaId?: string;
+  equipamento?: string;
+  instrucoes?: string;
 }
 
 const gruposMusculares = [
-  "Peito",
-  "Costas", 
-  "Pernas",
-  "Ombros",
-  "Bíceps",
-  "Tríceps",
-  "Abdômen",
-  "Glúteos",
-  "Antebraço",
-  "Panturrilha"
+  "Peito", "Costas", "Pernas", "Ombros", "Bíceps", "Tríceps",
+  "Abdômen", "Glúteos", "Antebraço", "Panturrilha"
 ];
 
-// Corrigindo os dias da semana para serem compatíveis com varchar(10)
 const diasSemana = [
-  "Segunda", // Segunda-feira -> Segunda
-  "Terça",   // Terça-feira -> Terça
-  "Quarta",  // Quarta-feira -> Quarta
-  "Quinta",  // Quinta-feira -> Quinta
-  "Sexta",   // Sexta-feira -> Sexta
-  "Sábado",
-  "Domingo"
+  "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"
 ];
 
 const CadastrarTreino: React.FC = () => {
   const { alunoId } = useParams<{ alunoId: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exercicios, setExercicios] = useState<ExercicioForm[]>([]);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [exerciciosCadastrados, setExerciciosCadastrados] = useState<ExercicioCadastrado[]>([]);
+  const [tecnicas, setTecnicas] = useState<TecnicaTreinamento[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!alunoId) return;
+      if (!alunoId || !user?.id) return;
       
       try {
         setLoading(true);
+        
+        // Carregar dados do aluno
         const alunoData = await buscarAlunoPorId(alunoId);
         setAluno(alunoData);
+        
+        // Carregar exercícios cadastrados e técnicas
+        const [exerciciosCadastradosData, tecnicasData] = await Promise.all([
+          listarExerciciosCadastrados(user.id),
+          listarTecnicasTreinamento()
+        ]);
+        
+        setExerciciosCadastrados(exerciciosCadastradosData);
+        setTecnicas(tecnicasData);
         
         // Verificar se existe ficha de treino para carregar
         const fichaTreino = await buscarFichaTreinoAluno(alunoId);
         
         if (fichaTreino && fichaTreino.exercicios && fichaTreino.exercicios.length > 0) {
-          // Converter os exercícios para o formato do formulário
           const exerciciosForm = fichaTreino.exercicios.map(ex => ({
             ...ex,
-            cargaIdeal: ex.cargaIdeal.toString()
+            cargaIdeal: ex.cargaIdeal.toString(),
+            exercicioCadastradoId: ex.exercicioCadastradoId || '',
+            tecnicaId: '',
+            equipamento: ex.equipamento || '',
+            instrucoes: ex.instrucoes || ''
           }));
           
           setExercicios(exerciciosForm);
           setIsEditMode(true);
-          console.log("Exercícios carregados:", exerciciosForm);
         } else {
-          // Inicializar com um exercício vazio
           setExercicios([{
             nomeExercicio: "",
             grupoMuscular: "",
@@ -82,7 +101,11 @@ const CadastrarTreino: React.FC = () => {
             repeticoes: 12,
             estrategia: "",
             videoUrl: "",
-            diaTreino: ""
+            diaTreino: "",
+            exercicioCadastradoId: "",
+            tecnicaId: "",
+            equipamento: "",
+            instrucoes: ""
           }]);
           setIsEditMode(false);
         }
@@ -96,7 +119,7 @@ const CadastrarTreino: React.FC = () => {
     };
 
     fetchData();
-  }, [alunoId, navigate]);
+  }, [alunoId, navigate, user?.id]);
 
   const handleExercicioChange = (index: number, field: keyof ExercicioForm, value: string | number) => {
     const updatedExercicios = [...exercicios];
@@ -104,6 +127,22 @@ const CadastrarTreino: React.FC = () => {
       ...updatedExercicios[index],
       [field]: value
     };
+
+    // Se selecionou um exercício cadastrado, preenche os campos automaticamente
+    if (field === 'exercicioCadastradoId' && value) {
+      const exercicioCadastrado = exerciciosCadastrados.find(ex => ex.id === value);
+      if (exercicioCadastrado) {
+        updatedExercicios[index] = {
+          ...updatedExercicios[index],
+          nomeExercicio: exercicioCadastrado.nome,
+          grupoMuscular: exercicioCadastrado.grupo_muscular,
+          equipamento: exercicioCadastrado.equipamento || '',
+          instrucoes: exercicioCadastrado.instrucoes || '',
+          videoUrl: exercicioCadastrado.video_url || ''
+        };
+      }
+    }
+
     setExercicios(updatedExercicios);
   };
 
@@ -118,7 +157,11 @@ const CadastrarTreino: React.FC = () => {
         repeticoes: 12,
         estrategia: "",
         videoUrl: "",
-        diaTreino: ""
+        diaTreino: "",
+        exercicioCadastradoId: "",
+        tecnicaId: "",
+        equipamento: "",
+        instrucoes: ""
       }
     ]);
   };
@@ -205,24 +248,24 @@ const CadastrarTreino: React.FC = () => {
       <div className="flex items-center">
         <button
           onClick={() => navigate(-1)}
-          className="mr-4 p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100"
+          className="mr-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
           aria-label="Voltar"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             {isEditMode ? "Editar Ficha de Treino" : "Cadastrar Treino"}
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
             {aluno?.nome} - {aluno?.experiencia === "iniciante" ? "Iniciante" : aluno?.experiencia === "intermediario" ? "Intermediário" : "Avançado"}
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-900">Informações do Aluno</h2>
+          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Informações do Aluno</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -256,7 +299,7 @@ const CadastrarTreino: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900">Exercícios</h2>
+            <h2 className="text-lg font-medium text-gray-900 dark:text-white">Exercícios</h2>
             <button
               type="button"
               onClick={addExercicio}
@@ -268,9 +311,9 @@ const CadastrarTreino: React.FC = () => {
           </div>
 
           {exercicios.map((exercicio, index) => (
-            <div key={index} className="bg-gray-50 p-4 rounded-md mb-4">
+            <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md mb-4">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="font-medium">Exercício {index + 1}</h3>
+                <h3 className="font-medium text-gray-900 dark:text-white">Exercício {index + 1}</h3>
                 <button
                   type="button"
                   onClick={() => removeExercicio(index)}
@@ -281,6 +324,49 @@ const CadastrarTreino: React.FC = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Exercício Cadastrado
+                  </label>
+                  <Select 
+                    value={exercicio.exercicioCadastradoId || ""} 
+                    onValueChange={(value) => handleExercicioChange(index, "exercicioCadastradoId", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um exercício cadastrado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Exercício personalizado</SelectItem>
+                      {exerciciosCadastrados.map(ex => (
+                        <SelectItem key={ex.id} value={ex.id}>
+                          {ex.nome} - {ex.grupo_muscular}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Técnica de Treinamento
+                  </label>
+                  <Select 
+                    value={exercicio.tecnicaId || ""} 
+                    onValueChange={(value) => handleExercicioChange(index, "tecnicaId", value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma técnica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tecnicas.map(tecnica => (
+                        <SelectItem key={tecnica.id} value={tecnica.id}>
+                          {tecnica.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
                 <FormInput
                   id={`exercicio-${index}-nome`}
                   label="Nome do Exercício"
@@ -296,6 +382,13 @@ const CadastrarTreino: React.FC = () => {
                   onChange={(e) => handleExercicioChange(index, "grupoMuscular", e.target.value)}
                   options={gruposMusculares.map(grupo => ({ value: grupo, label: grupo }))}
                   required
+                />
+
+                <FormInput
+                  id={`exercicio-${index}-equipamento`}
+                  label="Equipamento"
+                  value={exercicio.equipamento || ""}
+                  onChange={(e) => handleExercicioChange(index, "equipamento", e.target.value)}
                 />
                 
                 <FormSelect
@@ -349,6 +442,19 @@ const CadastrarTreino: React.FC = () => {
                     onChange={(e) => handleExercicioChange(index, "videoUrl", e.target.value)}
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Instruções de Execução
+                  </label>
+                  <textarea
+                    value={exercicio.instrucoes || ""}
+                    onChange={(e) => handleExercicioChange(index, "instrucoes", e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-fitness-primary dark:bg-gray-700 dark:text-white"
+                    rows={3}
+                    placeholder="Descreva como executar o exercício..."
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -357,7 +463,7 @@ const CadastrarTreino: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="mr-4 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="mr-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
               Cancelar
             </button>

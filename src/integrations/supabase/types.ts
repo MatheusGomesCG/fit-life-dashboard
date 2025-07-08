@@ -355,15 +355,114 @@ export type Database = {
           },
         ]
       }
+      exercicio_tecnicas: {
+        Row: {
+          created_at: string
+          exercicio_relacionado_id: string | null
+          exercicio_treino_id: string
+          id: string
+          ordem: number | null
+          tecnica_id: string
+        }
+        Insert: {
+          created_at?: string
+          exercicio_relacionado_id?: string | null
+          exercicio_treino_id: string
+          id?: string
+          ordem?: number | null
+          tecnica_id: string
+        }
+        Update: {
+          created_at?: string
+          exercicio_relacionado_id?: string | null
+          exercicio_treino_id?: string
+          id?: string
+          ordem?: number | null
+          tecnica_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercicio_tecnicas_exercicio_relacionado_id_fkey"
+            columns: ["exercicio_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "exercicios_treino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercicio_tecnicas_exercicio_treino_id_fkey"
+            columns: ["exercicio_treino_id"]
+            isOneToOne: false
+            referencedRelation: "exercicios_treino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercicio_tecnicas_tecnica_id_fkey"
+            columns: ["tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "tecnicas_treinamento"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercicios_cadastrados: {
+        Row: {
+          created_at: string
+          equipamento: string | null
+          exercicio_similar_id: string | null
+          grupo_muscular: string
+          id: string
+          instrucoes: string | null
+          nome: string
+          professor_id: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          equipamento?: string | null
+          exercicio_similar_id?: string | null
+          grupo_muscular: string
+          id?: string
+          instrucoes?: string | null
+          nome: string
+          professor_id: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          equipamento?: string | null
+          exercicio_similar_id?: string | null
+          grupo_muscular?: string
+          id?: string
+          instrucoes?: string | null
+          nome?: string
+          professor_id?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercicios_cadastrados_exercicio_similar_id_fkey"
+            columns: ["exercicio_similar_id"]
+            isOneToOne: false
+            referencedRelation: "exercicios_cadastrados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exercicios_treino: {
         Row: {
           carga_ideal: number
           created_at: string
           dia_treino: string
+          equipamento: string | null
           estrategia: string | null
+          exercicio_cadastrado_id: string | null
           ficha_treino_id: string
           grupo_muscular: string
           id: string
+          instrucoes: string | null
           nome_exercicio: string
           repeticoes: number
           series: number
@@ -374,10 +473,13 @@ export type Database = {
           carga_ideal?: number
           created_at?: string
           dia_treino: string
+          equipamento?: string | null
           estrategia?: string | null
+          exercicio_cadastrado_id?: string | null
           ficha_treino_id: string
           grupo_muscular: string
           id?: string
+          instrucoes?: string | null
           nome_exercicio: string
           repeticoes?: number
           series?: number
@@ -388,10 +490,13 @@ export type Database = {
           carga_ideal?: number
           created_at?: string
           dia_treino?: string
+          equipamento?: string | null
           estrategia?: string | null
+          exercicio_cadastrado_id?: string | null
           ficha_treino_id?: string
           grupo_muscular?: string
           id?: string
+          instrucoes?: string | null
           nome_exercicio?: string
           repeticoes?: number
           series?: number
@@ -399,6 +504,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "exercicios_treino_exercicio_cadastrado_id_fkey"
+            columns: ["exercicio_cadastrado_id"]
+            isOneToOne: false
+            referencedRelation: "exercicios_cadastrados"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "exercicios_treino_ficha_treino_id_fkey"
             columns: ["ficha_treino_id"]
@@ -840,6 +952,42 @@ export type Database = {
           },
         ]
       }
+      progressao_professor: {
+        Row: {
+          aluno_id: string
+          carga_anterior: number
+          carga_nova: number
+          created_at: string
+          data_progressao: string
+          exercise_id: string
+          id: string
+          observacoes: string | null
+          professor_id: string
+        }
+        Insert: {
+          aluno_id: string
+          carga_anterior: number
+          carga_nova: number
+          created_at?: string
+          data_progressao?: string
+          exercise_id: string
+          id?: string
+          observacoes?: string | null
+          professor_id: string
+        }
+        Update: {
+          aluno_id?: string
+          carga_anterior?: number
+          carga_nova?: number
+          created_at?: string
+          data_progressao?: string
+          exercise_id?: string
+          id?: string
+          observacoes?: string | null
+          professor_id?: string
+        }
+        Relationships: []
+      }
       registros_carga: {
         Row: {
           created_at: string
@@ -867,6 +1015,27 @@ export type Database = {
           peso?: number
           repeticoes?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      tecnicas_treinamento: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          nome: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
         }
         Relationships: []
       }
