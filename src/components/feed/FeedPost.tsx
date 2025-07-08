@@ -44,10 +44,10 @@ const FeedPost: React.FC<FeedPostProps> = ({
   });
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4">
-      <div className="flex items-start space-x-3">
-        <Avatar className="w-10 h-10">
-          <AvatarFallback className="bg-fitness-primary text-white">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 md:p-4 mb-4">
+      <div className="flex items-start space-x-2 md:space-x-3">
+        <Avatar className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0">
+          <AvatarFallback className="bg-fitness-primary text-white text-xs md:text-sm">
             {autorNome.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
@@ -68,7 +68,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
           </div>
           
           <div className="mt-2">
-            <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+            <p className="text-sm md:text-base text-gray-900 dark:text-white whitespace-pre-wrap break-words">
               {conteudo}
             </p>
             
@@ -78,30 +78,32 @@ const FeedPost: React.FC<FeedPostProps> = ({
                   <img
                     src={urlMidia}
                     alt="Post media"
-                    className="rounded-lg max-w-full h-auto"
+                    className="rounded-lg max-w-full h-auto object-cover"
+                    loading="lazy"
                   />
                 ) : tipo === 'video' ? (
                   <video
                     src={urlMidia}
                     controls
                     className="rounded-lg max-w-full h-auto"
+                    preload="metadata"
                   />
                 ) : null}
               </div>
             )}
           </div>
           
-          <div className="flex items-center justify-between mt-4 pt-2 border-t border-gray-100 dark:border-gray-700">
-            <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-between mt-3 md:mt-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <div className="flex items-center space-x-2 md:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleCurtir}
-                className={`flex items-center space-x-1 ${
+                className={`flex items-center space-x-1 p-1 md:p-2 ${
                   curtido ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'
                 }`}
               >
-                <Heart className={`h-4 w-4 ${curtido ? 'fill-current' : ''}`} />
+                <Heart className={`h-3 w-3 md:h-4 md:w-4 ${curtido ? 'fill-current' : ''}`} />
                 <span className="text-xs">{curtidas}</span>
               </Button>
               
@@ -109,20 +111,20 @@ const FeedPost: React.FC<FeedPostProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onComentar?.(id)}
-                className="flex items-center space-x-1 text-gray-500 dark:text-gray-400"
+                className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 p-1 md:p-2"
               >
-                <MessageCircle className="h-4 w-4" />
-                <span className="text-xs">Comentar</span>
+                <MessageCircle className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-xs hidden sm:inline">Comentar</span>
               </Button>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => onCompartilhar?.(id)}
-                className="flex items-center space-x-1 text-gray-500 dark:text-gray-400"
+                className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 p-1 md:p-2"
               >
-                <Share2 className="h-4 w-4" />
-                <span className="text-xs">Compartilhar</span>
+                <Share2 className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="text-xs hidden sm:inline">Compartilhar</span>
               </Button>
             </div>
           </div>

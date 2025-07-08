@@ -32,20 +32,20 @@ const CriarPost: React.FC<CriarPostProps> = ({ onCriarPost, isLoading }) => {
   const nomeUsuario = user?.email?.split('@')[0] || 'Usuário';
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-      <div className="flex items-start space-x-3">
-        <Avatar className="w-10 h-10">
-          <AvatarFallback className="bg-fitness-primary text-white">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 md:p-4 mb-6">
+      <div className="flex items-start space-x-2 md:space-x-3">
+        <Avatar className="w-8 h-8 md:w-10 md:h-10 flex-shrink-0">
+          <AvatarFallback className="bg-fitness-primary text-white text-xs md:text-sm">
             {nomeUsuario.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         
-        <form onSubmit={handleSubmit} className="flex-1">
+        <form onSubmit={handleSubmit} className="flex-1 min-w-0">
           <Textarea
             placeholder="Compartilhe suas conquistas, dicas ou motivação..."
             value={conteudo}
             onChange={(e) => setConteudo(e.target.value)}
-            className="min-h-[80px] resize-none border-0 bg-gray-50 dark:bg-gray-700 focus:ring-0 focus:border-0"
+            className="min-h-[60px] md:min-h-[80px] resize-none border-0 bg-gray-50 dark:bg-gray-700 focus:ring-0 focus:border-0 text-sm md:text-base"
           />
           
           {tipoMidia !== 'texto' && (
@@ -60,16 +60,18 @@ const CriarPost: React.FC<CriarPostProps> = ({ onCriarPost, isLoading }) => {
             </div>
           )}
           
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-3 md:mt-4 gap-3 sm:gap-0">
+            <div className="flex items-center space-x-1 md:space-x-2 flex-wrap gap-1 md:gap-0">
               <Button
                 type="button"
                 variant={tipoMidia === 'imagem' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setTipoMidia(tipoMidia === 'imagem' ? 'texto' : 'imagem')}
+                className="text-xs md:text-sm"
               >
-                <Image className="h-4 w-4 mr-1" />
-                Imagem
+                <Image className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                <span className="hidden sm:inline">Imagem</span>
+                <span className="sm:hidden">Img</span>
               </Button>
               
               <Button
@@ -77,19 +79,21 @@ const CriarPost: React.FC<CriarPostProps> = ({ onCriarPost, isLoading }) => {
                 variant={tipoMidia === 'video' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setTipoMidia(tipoMidia === 'video' ? 'texto' : 'video')}
+                className="text-xs md:text-sm"
               >
-                <Video className="h-4 w-4 mr-1" />
-                Vídeo
+                <Video className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+                <span className="hidden sm:inline">Vídeo</span>
+                <span className="sm:hidden">Vid</span>
               </Button>
             </div>
             
             <Button
               type="submit"
               disabled={!conteudo.trim() || isLoading}
-              className="bg-fitness-primary hover:bg-fitness-primary/90"
+              className="bg-fitness-primary hover:bg-fitness-primary/90 text-xs md:text-sm w-full sm:w-auto"
             >
-              <Send className="h-4 w-4 mr-1" />
-              Publicar
+              <Send className="h-3 w-3 md:h-4 md:w-4 mr-1" />
+              {isLoading ? "Publicando..." : "Publicar"}
             </Button>
           </div>
         </form>

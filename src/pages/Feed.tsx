@@ -56,10 +56,10 @@ const Feed: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 px-4 pb-20">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Feed</h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-2">Feed</h1>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
           Compartilhe suas conquistas e acompanhe a evolução da comunidade
         </p>
       </div>

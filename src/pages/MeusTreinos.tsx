@@ -200,18 +200,12 @@ const MeusTreinos: React.FC = () => {
                         </div>
                         
                         <div className="flex flex-col sm:flex-row gap-2">
-                          {exercicio.id && exercicio.id !== 'undefined' ? (
-                            <CheckinExercicio
-                              exerciseId={exercicio.id}
-                              exerciseName={exercicio.nomeExercicio}
-                            />
-                          ) : (
-                            <div className="text-xs text-gray-500 italic">
-                              ID do exercício não disponível
-                            </div>
-                          )}
+                          <CheckinExercicio
+                            exerciseId={exercicio.exercicioCadastradoId || exercicio.id || `${exercicio.nomeExercicio}-${idx}`}
+                            exerciseName={exercicio.nomeExercicio}
+                          />
                           <FeedbackTreino
-                            exerciseId={exercicio.id}
+                            exerciseId={exercicio.exercicioCadastradoId || exercicio.id || `${exercicio.nomeExercicio}-${idx}`}
                             exerciseName={exercicio.nomeExercicio}
                           />
                         </div>
