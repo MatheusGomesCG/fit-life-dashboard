@@ -42,7 +42,7 @@ const diasSemana = [
 ];
 
 const CadastrarTreino: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [loading, setLoading] = useState(true);
@@ -52,15 +52,15 @@ const CadastrarTreino: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!id) return;
+      if (!alunoId) return;
       
       try {
         setLoading(true);
-        const alunoData = await buscarAlunoPorId(id);
+        const alunoData = await buscarAlunoPorId(alunoId);
         setAluno(alunoData);
         
         // Verificar se existe ficha de treino para carregar
-        const fichaTreino = await buscarFichaTreinoAluno(id);
+        const fichaTreino = await buscarFichaTreinoAluno(alunoId);
         
         if (fichaTreino && fichaTreino.exercicios && fichaTreino.exercicios.length > 0) {
           // Converter os exercícios para o formato do formulário
@@ -96,7 +96,7 @@ const CadastrarTreino: React.FC = () => {
     };
 
     fetchData();
-  }, [id, navigate]);
+  }, [alunoId, navigate]);
 
   const handleExercicioChange = (index: number, field: keyof ExercicioForm, value: string | number) => {
     const updatedExercicios = [...exercicios];
@@ -152,7 +152,7 @@ const CadastrarTreino: React.FC = () => {
     e.preventDefault();
     
     if (!validateForm()) return;
-    if (!id) {
+    if (!alunoId) {
       toast.error("ID do aluno não encontrado.");
       return;
     }
@@ -166,10 +166,10 @@ const CadastrarTreino: React.FC = () => {
         cargaIdeal: Number(ex.cargaIdeal)
       }));
       
-      await criarOuAtualizarFichaTreino(id, exerciciosFormatted);
+      await criarOuAtualizarFichaTreino(alunoId, exerciciosFormatted);
       
       toast.success(isEditMode ? "Ficha de treino atualizada com sucesso!" : "Ficha de treino cadastrada com sucesso!");
-      navigate(`/ficha-treino/${id}`);
+      navigate(`/ficha-treino/${alunoId}`);
     } catch (error) {
       console.error("Erro ao salvar ficha de treino:", error);
       toast.error("Erro ao salvar ficha de treino. Tente novamente.");
