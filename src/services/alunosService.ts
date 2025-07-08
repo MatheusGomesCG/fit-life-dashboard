@@ -18,6 +18,7 @@ export interface Aluno {
   endereco?: string;
   valor_mensalidade?: number;
   data_vencimento?: string;
+  data_nascimento?: string;
   observacoes?: string;
   imc?: number;
   percentual_gordura?: number;
@@ -26,6 +27,32 @@ export interface Aluno {
   senha_temporaria?: boolean;
   created_at: string;
   updated_at: string;
+  fotos?: FotoAluno[];
+}
+
+export interface FotoAluno {
+  id?: string;
+  aluno_id: string;
+  url: string;
+  tipo: "frente" | "lado" | "costas";
+  descricao?: string;
+  data?: string;
+  data_upload: string;
+  observacoes?: string;
+}
+
+export interface HistoricoMedida {
+  id: string;
+  aluno_id: string;
+  peso?: number;
+  altura?: number;
+  imc?: number;
+  percentual_gordura?: number;
+  dobras_cutaneas?: any;
+  medidas_corporais?: any;
+  data_medicao: string;
+  observacoes?: string;
+  created_at: string;
 }
 
 export interface CargaExercicio {
@@ -113,6 +140,100 @@ export const atualizarAluno = async (id: string, aluno: Partial<Aluno>): Promise
     console.error('Erro ao atualizar aluno:', error);
     throw error;
   }
+};
+
+export const excluirAluno = async (id: string): Promise<void> => {
+  try {
+    const { error } = await supabase
+      .from('aluno_profiles')
+      .delete()
+      .eq('user_id', id);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Erro ao excluir aluno:', error);
+    throw error;
+  }
+};
+
+// Photo functions
+export const adicionarFotoAluno = async (alunoId: string, foto: Omit<FotoAluno, 'id' | 'aluno_id'>): Promise<FotoAluno> => {
+  try {
+    const novaFoto = {
+      ...foto,
+      aluno_id: alunoId,
+      id: crypto.randomUUID()
+    };
+    
+    // In a real app, this would save to a database
+    // For now, we'll just return the photo object
+    return novaFoto as FotoAluno;
+  } catch (error) {
+    console.error('Erro ao adicionar foto:', error);
+    throw error;
+  }
+};
+
+export const removerFotoAluno = async (fotoId: string): Promise<void> => {
+  try {
+    // In a real app, this would delete from database
+    console.log('Removendo foto:', fotoId);
+  } catch (error) {
+    console.error('Erro ao remover foto:', error);
+    throw error;
+  }
+};
+
+// History functions
+export const buscarHistoricoMedidas = async (alunoId: string): Promise<HistoricoMedida[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('historico_medidas')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_medicao', { ascending: false });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Erro ao buscar histórico de medidas:', error);
+    throw error;
+  }
+};
+
+export const adicionarMedidaHistorico = async (medida: Omit<HistoricoMedida, 'id' | 'created_at'>): Promise<HistoricoMedida> => {
+  try {
+    const { data, error } = await supabase
+      .from('historico_medidas')
+      .insert(medida)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Erro ao adicionar medida ao histórico:', error);
+    throw error;
+  }
+};
+
+export const calcularIMC = (peso: number, altura: number): number => {
+  const alturaEmMetros = altura / 100;
+  return peso / (alturaEmMetros * alturaEmMetros);
+};
+
+export const calcularPercentualGordura = (dobras: any, genero: string, idade: number): number => {
+  // Simplified calculation - in a real app, you'd use proper formulas
+  const somaDobras = Object.values(dobras).reduce((sum: any, dobra: any) => sum + (dobra || 0), 0);
+  let percentual = 0;
+  
+  if (genero === 'masculino') {
+    percentual = 1.1125 * (somaDobras as number) - 0.00162 * (somaDobras as number) ** 2 + 0.00205 * idade - 5.401;
+  } else {
+    percentual = 1.29579 * (somaDobras as number) - 0.00071 * (somaDobras as number) ** 2 + 0.00043 * idade - 2.963;
+  }
+  
+  return Math.max(0, Math.min(50, percentual));
 };
 
 export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTreino | null> => {

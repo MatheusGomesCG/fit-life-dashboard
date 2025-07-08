@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { listarAlunos, Aluno } from "@/services/alunosService";
@@ -142,7 +141,7 @@ const ListarAlunos: React.FC = () => {
                   </th>
                   <th
                     className="px-6 py-3 cursor-pointer"
-                    onClick={() => handleSort("percentualGordura")}
+                    onClick={() => handleSort("percentual_gordura")}
                   >
                     <div className="flex items-center space-x-1">
                       <span>% Gordura</span>
@@ -171,8 +170,8 @@ const ListarAlunos: React.FC = () => {
                     <td className="px-6 py-4">{aluno.idade} anos</td>
                     <td className="px-6 py-4">{aluno.peso} kg</td>
                     <td className="px-6 py-4">{aluno.altura} cm</td>
-                    <td className="px-6 py-4">
-                      {aluno.percentualGordura?.toFixed(2)}%
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {aluno.percentual_gordura ? `${aluno.percentual_gordura.toFixed(1)}%` : "N/A"}
                     </td>
                     <td className="px-6 py-4">{aluno.imc?.toFixed(2)}</td>
                     <td className="px-6 py-4 capitalize">{aluno.experiencia}</td>

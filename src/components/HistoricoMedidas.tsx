@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -216,7 +215,7 @@ const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, id
     }
   };
 
-  const getTendencia = (valorAtual: number, valorAnterior: number) => {
+  const getTendencia = (valorAtual: number, valorAnterior: number): React.ReactNode => {
     if (valorAtual > valorAnterior) {
       return <TrendingUp className="h-4 w-4 text-red-500" />;
     } else if (valorAtual < valorAnterior) {

@@ -1,224 +1,180 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Save, PlusCircle, Trash2 } from "lucide-react";
-import {
-  buscarAlunoPorId,
-  criarOuAtualizarFichaTreino,
-  CargaExercicio,
-  Aluno,
-  buscarFichaTreinoAluno
-} from "@/services/alunosService";
-import {
-  listarExerciciosCadastrados,
-  listarTecnicasTreinamento,
-  ExercicioCadastrado,
-  TecnicaTreinamento
-} from "@/services/exerciciosCadastradosService";
-import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
-import LoadingSpinner from "@/components/LoadingSpinner";
+import { buscarAlunoPorId, criarOuAtualizarFichaTreino, CargaExercicio, Aluno } from "@/services/alunosService";
+import { listarExerciciosCadastrados } from "@/services/exerciciosCadastradosService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
-
-interface ExercicioForm extends Omit<CargaExercicio, 'cargaIdeal'> {
-  cargaIdeal: string;
-  exercicioCadastradoId?: string;
-  tecnicaId?: string;
-  equipamento?: string;
-  instrucoes?: string;
-}
-
-const gruposMusculares = [
-  "Peito", "Costas", "Pernas", "Ombros", "Bíceps", "Tríceps",
-  "Abdômen", "Glúteos", "Antebraço", "Panturrilha"
-];
-
-const diasSemana = [
-  "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"
-];
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const CadastrarTreino: React.FC = () => {
   const { alunoId } = useParams<{ alunoId: string }>();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [exercicios, setExercicios] = useState<ExercicioForm[]>([]);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [exerciciosCadastrados, setExerciciosCadastrados] = useState<ExercicioCadastrado[]>([]);
-  const [tecnicas, setTecnicas] = useState<TecnicaTreinamento[]>([]);
+  const [salvando, setSalvando] = useState(false);
+  const [exercicios, setExercicios] = useState<CargaExercicio[]>([]);
+  const [exerciciosCadastrados, setExerciciosCadastrados] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!alunoId || !user?.id) return;
+    const carregarDados = async () => {
+      if (!alunoId) return;
       
       try {
         setLoading(true);
-        
-        // Carregar dados do aluno
-        const alunoData = await buscarAlunoPorId(alunoId);
-        setAluno(alunoData);
-        
-        // Carregar exercícios cadastrados e técnicas
-        const [exerciciosCadastradosData, tecnicasData] = await Promise.all([
-          listarExerciciosCadastrados(user.id),
-          listarTecnicasTreinamento()
+        const [alunoData, exerciciosData] = await Promise.all([
+          buscarAlunoPorId(alunoId),
+          listarExerciciosCadastrados()
         ]);
         
-        setExerciciosCadastrados(exerciciosCadastradosData);
-        setTecnicas(tecnicasData);
-        
-        // Verificar se existe ficha de treino para carregar
-        const fichaTreino = await buscarFichaTreinoAluno(alunoId);
-        
-        if (fichaTreino && fichaTreino.exercicios && fichaTreino.exercicios.length > 0) {
-          const exerciciosForm = fichaTreino.exercicios.map(ex => ({
-            ...ex,
-            cargaIdeal: ex.cargaIdeal.toString(),
-            exercicioCadastradoId: ex.exercicioCadastradoId || '',
-            tecnicaId: '',
-            equipamento: ex.equipamento || '',
-            instrucoes: ex.instrucoes || ''
-          }));
-          
-          setExercicios(exerciciosForm);
-          setIsEditMode(true);
-        } else {
-          setExercicios([{
-            nomeExercicio: "",
-            grupoMuscular: "",
-            cargaIdeal: "0",
-            series: 3,
-            repeticoes: 12,
-            estrategia: "",
-            videoUrl: "",
-            diaTreino: "",
-            exercicioCadastradoId: "",
-            tecnicaId: "",
-            equipamento: "",
-            instrucoes: ""
-          }]);
-          setIsEditMode(false);
-        }
+        setAluno(alunoData);
+        setExerciciosCadastrados(exerciciosData);
       } catch (error) {
-        console.error("Erro ao buscar dados do aluno:", error);
-        toast.error("Erro ao buscar dados do aluno.");
-        navigate("/gerenciar-alunos");
+        console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar dados do aluno.");
+        navigate("/gerenciar-ficha-treino");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [alunoId, navigate, user?.id]);
+    carregarDados();
+  }, [alunoId, navigate]);
 
-  const handleExercicioChange = (index: number, field: keyof ExercicioForm, value: string | number) => {
-    const updatedExercicios = [...exercicios];
-    updatedExercicios[index] = {
-      ...updatedExercicios[index],
-      [field]: value
+  const handleNomeExercicioChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].nomeExercicio = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleGrupoMuscularChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].grupoMuscular = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleCargaIdealChange = (index: number, value: number) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].cargaIdeal = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleSeriesChange = (index: number, value: number) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].series = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleRepeticoesChange = (index: number, value: number) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].repeticoes = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleEstrategiaChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].estrategia = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleVideoUrlChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].videoUrl = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleDiaTreinoChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].diaTreino = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleExercicioCadastradoIdChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].exercicioCadastradoId = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleEquipamentoChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].equipamento = value;
+    setExercicios(novosExercicios);
+  };
+
+  const handleInstrucoesChange = (index: number, value: string) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios[index].instrucoes = value;
+    setExercicios(novosExercicios);
+  };
+
+  const adicionarExercicio = () => {
+    const novoExercicio: CargaExercicio = {
+      nomeExercicio: "",
+      grupoMuscular: "",
+      cargaIdeal: 0,
+      series: 3,
+      repeticoes: 12,
+      estrategia: "",
+      videoUrl: "",
+      diaTreino: "A",
+      exercicioCadastradoId: "",
+      equipamento: "",
+      instrucoes: ""
     };
-
-    // Se selecionou um exercício cadastrado, preenche os campos automaticamente
-    if (field === 'exercicioCadastradoId' && value) {
-      const exercicioCadastrado = exerciciosCadastrados.find(ex => ex.id === value);
-      if (exercicioCadastrado) {
-        updatedExercicios[index] = {
-          ...updatedExercicios[index],
-          nomeExercicio: exercicioCadastrado.nome,
-          grupoMuscular: exercicioCadastrado.grupo_muscular,
-          equipamento: exercicioCadastrado.equipamento || '',
-          instrucoes: exercicioCadastrado.instrucoes || '',
-          videoUrl: exercicioCadastrado.video_url || ''
-        };
-      }
-    }
-
-    setExercicios(updatedExercicios);
+    setExercicios([...exercicios, novoExercicio]);
   };
 
-  const addExercicio = () => {
-    setExercicios([
-      ...exercicios,
-      {
-        nomeExercicio: "",
-        grupoMuscular: "",
-        cargaIdeal: "0",
-        series: 3,
-        repeticoes: 12,
-        estrategia: "",
-        videoUrl: "",
-        diaTreino: "",
-        exercicioCadastradoId: "",
-        tecnicaId: "",
-        equipamento: "",
-        instrucoes: ""
-      }
-    ]);
-  };
-
-  const removeExercicio = (index: number) => {
-    if (exercicios.length === 1) {
-      toast.error("É necessário pelo menos um exercício na ficha de treino.");
-      return;
-    }
-    
-    const updatedExercicios = exercicios.filter((_, i) => i !== index);
-    setExercicios(updatedExercicios);
-  };
-
-  const validateForm = () => {
-    let isValid = true;
-    
-    for (let i = 0; i < exercicios.length; i++) {
-      const exercicio = exercicios[i];
-      if (!exercicio.nomeExercicio || !exercicio.grupoMuscular || !exercicio.diaTreino) {
-        toast.error(`Preencha o nome, grupo muscular e dia do treino do exercício ${i + 1}.`);
-        isValid = false;
-        break;
-      }
-    }
-    
-    return isValid;
+  const removerExercicio = (index: number) => {
+    const novosExercicios = [...exercicios];
+    novosExercicios.splice(index, 1);
+    setExercicios(novosExercicios);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) return;
+
     if (!alunoId) {
       toast.error("ID do aluno não encontrado.");
       return;
     }
-    
+
     try {
-      setSaving(true);
-      
-      // Convert string values to numbers
-      const exerciciosFormatted: CargaExercicio[] = exercicios.map(ex => ({
-        ...ex,
-        cargaIdeal: Number(ex.cargaIdeal)
-      }));
-      
-      await criarOuAtualizarFichaTreino(alunoId, exerciciosFormatted);
-      
-      toast.success(isEditMode ? "Ficha de treino atualizada com sucesso!" : "Ficha de treino cadastrada com sucesso!");
-      navigate(`/ficha-treino/${alunoId}`);
+      setSalvando(true);
+      await criarOuAtualizarFichaTreino(alunoId, exercicios);
+      toast.success("Ficha de treino salva com sucesso!");
+      navigate("/gerenciar-ficha-treino");
     } catch (error) {
       console.error("Erro ao salvar ficha de treino:", error);
       toast.error("Erro ao salvar ficha de treino. Tente novamente.");
     } finally {
-      setSaving(false);
+      setSalvando(false);
     }
+  };
+
+  const calcularCargaIdeal = (exercicio: CargaExercicio) => {
+    if (!aluno) return exercicio.cargaIdeal;
+    
+    const peso = aluno.peso || 70;
+    const experiencia = aluno.experiencia || "iniciante";
+    const percentualGordura = aluno.percentual_gordura || 20;
+    
+    let cargaBase = peso * 0.5;
+
+    if (experiencia === "intermediario") {
+      cargaBase *= 1.2;
+    } else if (experiencia === "avancado") {
+      cargaBase *= 1.5;
+    }
+
+    if (percentualGordura > 25) {
+      cargaBase *= 0.8;
+    }
+
+    return Math.round(cargaBase);
   };
 
   if (loading) {
@@ -233,257 +189,210 @@ const CadastrarTreino: React.FC = () => {
     return (
       <div className="text-center py-8">
         <p className="text-red-500">Aluno não encontrado.</p>
-        <button
-          onClick={() => navigate("/gerenciar-alunos")}
-          className="mt-4 text-fitness-primary hover:underline"
-        >
-          Voltar para lista de alunos
-        </button>
+        <Button onClick={() => navigate("/gerenciar-ficha-treino")} className="mt-4">
+          Voltar
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center">
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-4 p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {isEditMode ? "Editar Ficha de Treino" : "Cadastrar Treino"}
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {aluno?.nome} - {aluno?.experiencia === "iniciante" ? "Iniciante" : aluno?.experiencia === "intermediario" ? "Intermediário" : "Avançado"}
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate("/gerenciar-ficha-treino")}
+            className="mr-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Cadastrar Ficha de Treino</h1>
+            <p className="text-gray-600 mt-1">
+              Aluno: {aluno.nome}
+            </p>
+          </div>
         </div>
+        <Button onClick={adicionarExercicio}>
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Exercício
+        </Button>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-900 dark:text-white">Informações do Aluno</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div>
-            <p className="text-sm text-gray-500">Nome</p>
-            <p className="font-medium">{aluno.nome}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Idade</p>
-            <p className="font-medium">{aluno.idade} anos</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Peso</p>
-            <p className="font-medium">{aluno.peso} kg</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Altura</p>
-            <p className="font-medium">{aluno.altura} cm</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">IMC</p>
-            <p className="font-medium">{aluno.imc?.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">% Gordura</p>
-            <p className="font-medium">{aluno.percentualGordura?.toFixed(2)}%</p>
-          </div>
-        </div>
-
-        <hr className="my-6" />
-
-        <form onSubmit={handleSubmit}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-medium text-gray-900 dark:text-white">Exercícios</h2>
-            <button
-              type="button"
-              onClick={addExercicio}
-              className="text-fitness-primary hover:text-fitness-primary/80 flex items-center"
-            >
-              <PlusCircle className="h-4 w-4 mr-1" />
-              Adicionar exercício
-            </button>
-          </div>
-
-          {exercicios.map((exercicio, index) => (
-            <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-md mb-4">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="font-medium text-gray-900 dark:text-white">Exercício {index + 1}</h3>
-                <button
-                  type="button"
-                  onClick={() => removeExercicio(index)}
-                  className="text-red-500 hover:text-red-600"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {exercicios.map((exercicio, index) => (
+          <Card key={index}>
+            <CardHeader>
+              <CardTitle>Exercício {index + 1}</CardTitle>
+              <CardDescription>
+                Configure os detalhes do exercício
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Exercício Cadastrado
-                  </label>
-                  <Select 
-                    value={exercicio.exercicioCadastradoId || ""} 
-                    onValueChange={(value) => handleExercicioChange(index, "exercicioCadastradoId", value)}
-                  >
+                  <Label htmlFor={`nomeExercicio-${index}`}>Nome do Exercício</Label>
+                  <Input
+                    id={`nomeExercicio-${index}`}
+                    type="text"
+                    value={exercicio.nomeExercicio}
+                    onChange={(e) => handleNomeExercicioChange(index, e.target.value)}
+                    placeholder="Ex: Supino Reto"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`grupoMuscular-${index}`}>Grupo Muscular</Label>
+                  <Input
+                    id={`grupoMuscular-${index}`}
+                    type="text"
+                    value={exercicio.grupoMuscular}
+                    onChange={(e) => handleGrupoMuscularChange(index, e.target.value)}
+                    placeholder="Ex: Peito"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor={`cargaIdeal-${index}`}>Carga Ideal (kg)</Label>
+                  <Input
+                    id={`cargaIdeal-${index}`}
+                    type="number"
+                    value={exercicio.cargaIdeal}
+                    onChange={(e) => handleCargaIdealChange(index, Number(e.target.value))}
+                    placeholder="Ex: 50"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`series-${index}`}>Séries</Label>
+                  <Input
+                    id={`series-${index}`}
+                    type="number"
+                    value={exercicio.series}
+                    onChange={(e) => handleSeriesChange(index, Number(e.target.value))}
+                    placeholder="Ex: 3"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`repeticoes-${index}`}>Repetições</Label>
+                  <Input
+                    id={`repeticoes-${index}`}
+                    type="number"
+                    value={exercicio.repeticoes}
+                    onChange={(e) => handleRepeticoesChange(index, Number(e.target.value))}
+                    placeholder="Ex: 12"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor={`estrategia-${index}`}>Estratégia</Label>
+                  <Input
+                    id={`estrategia-${index}`}
+                    type="text"
+                    value={exercicio.estrategia}
+                    onChange={(e) => handleEstrategiaChange(index, e.target.value)}
+                    placeholder="Ex: Drop-set"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor={`videoUrl-${index}`}>Vídeo URL</Label>
+                  <Input
+                    id={`videoUrl-${index}`}
+                    type="text"
+                    value={exercicio.videoUrl}
+                    onChange={(e) => handleVideoUrlChange(index, e.target.value)}
+                    placeholder="Ex: https://youtube.com/watch?v=..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor={`diaTreino-${index}`}>Dia do Treino</Label>
+                  <Select value={exercicio.diaTreino} onValueChange={(value) => handleDiaTreinoChange(index, value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um exercício cadastrado" />
+                      <SelectValue placeholder="Selecione o dia" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Exercício personalizado</SelectItem>
-                      {exerciciosCadastrados.map(ex => (
+                      <SelectItem value="A">A</SelectItem>
+                      <SelectItem value="B">B</SelectItem>
+                      <SelectItem value="C">C</SelectItem>
+                      <SelectItem value="D">D</SelectItem>
+                      <SelectItem value="E">E</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor={`exercicioCadastradoId-${index}`}>Exercício Cadastrado</Label>
+                  <Select value={exercicio.exercicioCadastradoId} onValueChange={(value) => handleExercicioCadastradoIdChange(index, value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o exercício" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {exerciciosCadastrados.map((ex) => (
                         <SelectItem key={ex.id} value={ex.id}>
-                          {ex.nome} - {ex.grupo_muscular}
+                          {ex.nome} ({ex.grupo_muscular})
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Técnica de Treinamento
-                  </label>
-                  <Select 
-                    value={exercicio.tecnicaId || ""} 
-                    onValueChange={(value) => handleExercicioChange(index, "tecnicaId", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma técnica" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tecnicas.map(tecnica => (
-                        <SelectItem key={tecnica.id} value={tecnica.id}>
-                          {tecnica.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <FormInput
-                  id={`exercicio-${index}-nome`}
-                  label="Nome do Exercício"
-                  value={exercicio.nomeExercicio}
-                  onChange={(e) => handleExercicioChange(index, "nomeExercicio", e.target.value)}
-                  required
-                />
-                
-                <FormSelect
-                  id={`exercicio-${index}-grupo`}
-                  label="Grupo Muscular"
-                  value={exercicio.grupoMuscular}
-                  onChange={(e) => handleExercicioChange(index, "grupoMuscular", e.target.value)}
-                  options={gruposMusculares.map(grupo => ({ value: grupo, label: grupo }))}
-                  required
-                />
-
-                <FormInput
-                  id={`exercicio-${index}-equipamento`}
-                  label="Equipamento"
-                  value={exercicio.equipamento || ""}
-                  onChange={(e) => handleExercicioChange(index, "equipamento", e.target.value)}
-                />
-                
-                <FormSelect
-                  id={`exercicio-${index}-dia`}
-                  label="Dia do Treino"
-                  value={exercicio.diaTreino || ""}
-                  onChange={(e) => handleExercicioChange(index, "diaTreino", e.target.value)}
-                  options={diasSemana.map(dia => ({ value: dia, label: dia }))}
-                  required
-                />
-                
-                <FormInput
-                  id={`exercicio-${index}-carga`}
-                  label="Carga (kg)"
-                  type="number"
-                  value={exercicio.cargaIdeal}
-                  onChange={(e) => handleExercicioChange(index, "cargaIdeal", e.target.value)}
-                  required
-                />
-                
-                <FormInput
-                  id={`exercicio-${index}-series`}
-                  label="Séries"
-                  type="number"
-                  value={exercicio.series}
-                  onChange={(e) => handleExercicioChange(index, "series", Number(e.target.value))}
-                  required
-                />
-                
-                <FormInput
-                  id={`exercicio-${index}-repeticoes`}
-                  label="Repetições"
-                  type="number"
-                  value={exercicio.repeticoes}
-                  onChange={(e) => handleExercicioChange(index, "repeticoes", Number(e.target.value))}
-                  required
-                />
-                
-                <FormInput
-                  id={`exercicio-${index}-estrategia`}
-                  label="Estratégia/Técnica"
-                  value={exercicio.estrategia || ""}
-                  onChange={(e) => handleExercicioChange(index, "estrategia", e.target.value)}
-                />
-                
-                <div className="md:col-span-2">
-                  <FormInput
-                    id={`exercicio-${index}-video`}
-                    label="Link do Vídeo (YouTube)"
-                    value={exercicio.videoUrl || ""}
-                    onChange={(e) => handleExercicioChange(index, "videoUrl", e.target.value)}
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Instruções de Execução
-                  </label>
-                  <textarea
-                    value={exercicio.instrucoes || ""}
-                    onChange={(e) => handleExercicioChange(index, "instrucoes", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-fitness-primary dark:bg-gray-700 dark:text-white"
-                    rows={3}
-                    placeholder="Descreva como executar o exercício..."
+                  <Label htmlFor={`equipamento-${index}`}>Equipamento</Label>
+                  <Input
+                    id={`equipamento-${index}`}
+                    type="text"
+                    value={exercicio.equipamento}
+                    onChange={(e) => handleEquipamentoChange(index, e.target.value)}
+                    placeholder="Ex: Barra, Halteres"
                   />
                 </div>
               </div>
-            </div>
-          ))}
 
-          <div className="flex justify-end mt-8">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="mr-4 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors flex items-center"
-              disabled={saving}
-            >
-              {saving ? (
+              <div>
+                <Label htmlFor={`instrucoes-${index}`}>Instruções</Label>
+                <Input
+                  id={`instrucoes-${index}`}
+                  type="text"
+                  value={exercicio.instrucoes}
+                  onChange={(e) => handleInstrucoesChange(index, e.target.value)}
+                  placeholder="Ex: Manter a postura correta"
+                />
+              </div>
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => removerExercicio(index)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remover Exercício
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={salvando}>
+            {salvando ? (
+              <>
                 <LoadingSpinner size="small" />
-              ) : (
-                <>
-                  <Save className="h-5 w-5 mr-2" />
-                  Salvar Ficha de Treino
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+                <span>Salvando...</span>
+              </>
+            ) : (
+              "Salvar Ficha de Treino"
+            )}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

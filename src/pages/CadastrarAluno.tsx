@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +5,7 @@ import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { criarAluno } from "@/services/alunosService";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,9 +23,9 @@ const alunoSchema = z.object({
   experiencia: z.string().min(1, "Experiência é obrigatória"),
   restricoes_medicas: z.string(),
   genero: z.enum(["masculino", "feminino"]),
-  dataNascimento: z.string(),
-  valorMensalidade: z.number().min(0, "Valor deve ser maior ou igual a 0"),
-  dataVencimento: z.string(),
+  data_nascimento: z.string(),
+  valor_mensalidade: z.number().min(0, "Valor deve ser maior ou igual a 0"),
+  data_vencimento: z.string(),
   endereco: z.string().optional(),
   observacoes: z.string().optional(),
 });
@@ -34,6 +34,7 @@ type AlunoFormData = z.infer<typeof alunoSchema>;
 
 const CadastrarAluno: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AlunoFormData>({
@@ -49,7 +50,14 @@ const CadastrarAluno: React.FC = () => {
     try {
       setIsLoading(true);
 
+      if (!user?.id) {
+        toast.error("Usuário não autenticado");
+        return;
+      }
+
       const novoAluno = {
+        user_id: crypto.randomUUID(), // Generate a new user ID for the student
+        professor_id: user.id,
         nome: data.nome,
         email: data.email,
         telefone: data.telefone,
@@ -58,9 +66,9 @@ const CadastrarAluno: React.FC = () => {
         experiencia: data.experiencia,
         restricoes_medicas: data.restricoes_medicas,
         genero: data.genero,
-        dataNascimento: new Date(data.dataNascimento),
-        valorMensalidade: data.valorMensalidade,
-        dataVencimento: new Date(data.dataVencimento),
+        data_nascimento: data.data_nascimento,
+        valor_mensalidade: data.valor_mensalidade,
+        data_vencimento: data.data_vencimento,
         endereco: data.endereco || "",
         observacoes: data.observacoes || "",
       };
@@ -162,13 +170,13 @@ const CadastrarAluno: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                <Label htmlFor="data_nascimento">Data de Nascimento</Label>
                 <Input
-                  id="dataNascimento"
+                  id="data_nascimento"
                   type="date"
-                  {...register("dataNascimento")}
+                  {...register("data_nascimento")}
                 />
-                {errors.dataNascimento && <p className="text-red-500 text-sm">{errors.dataNascimento.message}</p>}
+                {errors.data_nascimento && <p className="text-red-500 text-sm">{errors.data_nascimento.message}</p>}
               </div>
             </div>
 
@@ -255,25 +263,25 @@ const CadastrarAluno: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="valorMensalidade">Valor da Mensalidade (R$)</Label>
+                <Label htmlFor="valor_mensalidade">Valor da Mensalidade (R$)</Label>
                 <Input
-                  id="valorMensalidade"
+                  id="valor_mensalidade"
                   type="number"
                   step="0.01"
-                  {...register("valorMensalidade", { valueAsNumber: true })}
+                  {...register("valor_mensalidade", { valueAsNumber: true })}
                   placeholder="Digite o valor da mensalidade"
                 />
-                {errors.valorMensalidade && <p className="text-red-500 text-sm">{errors.valorMensalidade.message}</p>}
+                {errors.valor_mensalidade && <p className="text-red-500 text-sm">{errors.valor_mensalidade.message}</p>}
               </div>
 
               <div>
-                <Label htmlFor="dataVencimento">Data de Vencimento</Label>
+                <Label htmlFor="data_vencimento">Data de Vencimento</Label>
                 <Input
-                  id="dataVencimento"
+                  id="data_vencimento"
                   type="date"
-                  {...register("dataVencimento")}
+                  {...register("data_vencimento")}
                 />
-                {errors.dataVencimento && <p className="text-red-500 text-sm">{errors.dataVencimento.message}</p>}
+                {errors.data_vencimento && <p className="text-red-500 text-sm">{errors.data_vencimento.message}</p>}
               </div>
             </div>
           </CardContent>

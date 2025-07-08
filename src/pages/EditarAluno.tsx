@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -18,13 +17,13 @@ interface FormData {
   email: string;
   telefone: string;
   idade: string;
-  dataNascimento: Date | null;
+  data_nascimento: Date | null;
   genero: "masculino" | "feminino" | "";
   endereco: string;
   objetivo: string;
   observacoes: string;
-  valorMensalidade: string;
-  dataVencimento: Date | null;
+  valor_mensalidade: string;
+  data_vencimento: Date | null;
   experiencia: "" | "iniciante" | "intermediario" | "avancado";
 }
 
@@ -35,9 +34,9 @@ interface FormErrors {
   idade?: string;
   experiencia?: string;
   genero?: string;
-  valorMensalidade?: string;
-  dataNascimento?: string;
-  dataVencimento?: string;
+  valor_mensalidade?: string;
+  data_nascimento?: string;
+  data_vencimento?: string;
 }
 
 const EditarAluno: React.FC = () => {
@@ -48,13 +47,13 @@ const EditarAluno: React.FC = () => {
     email: "",
     telefone: "",
     idade: "",
-    dataNascimento: null,
+    data_nascimento: null,
     genero: "",
     endereco: "",
     objetivo: "",
     observacoes: "",
-    valorMensalidade: "",
-    dataVencimento: null,
+    valor_mensalidade: "",
+    data_vencimento: null,
     experiencia: "",
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -76,14 +75,14 @@ const EditarAluno: React.FC = () => {
           nome: aluno.nome,
           email: aluno.email || "",
           telefone: aluno.telefone || "",
-          idade: aluno.idade.toString(),
-          dataNascimento: aluno.dataNascimento ? new Date(aluno.dataNascimento) : null,
+          idade: aluno.idade?.toString() || "",
+          data_nascimento: aluno.data_nascimento ? new Date(aluno.data_nascimento) : null,
           genero: (aluno.genero === "outro" ? "" : aluno.genero) as "masculino" | "feminino" | "",
           endereco: aluno.endereco || "",
           objetivo: aluno.objetivo || "",
           observacoes: aluno.observacoes || "",
-          valorMensalidade: aluno.valorMensalidade?.toString() || "",
-          dataVencimento: aluno.dataVencimento ? new Date(aluno.dataVencimento) : null,
+          valor_mensalidade: aluno.valor_mensalidade?.toString() || "",
+          data_vencimento: aluno.data_vencimento ? new Date(aluno.data_vencimento) : null,
           experiencia: (aluno.experiencia || "") as "" | "iniciante" | "intermediario" | "avancado",
         });
         
@@ -140,8 +139,8 @@ const EditarAluno: React.FC = () => {
       newErrors.email = "Email inválido";
     }
     
-    if (form.valorMensalidade && (isNaN(parseFloat(form.valorMensalidade)) || parseFloat(form.valorMensalidade) < 0)) {
-      newErrors.valorMensalidade = "Valor da mensalidade deve ser um número positivo";
+    if (form.valor_mensalidade && (isNaN(parseFloat(form.valor_mensalidade)) || parseFloat(form.valor_mensalidade) < 0)) {
+      newErrors.valor_mensalidade = "Valor da mensalidade deve ser um número positivo";
     }
     
     setErrors(newErrors);
@@ -171,13 +170,13 @@ const EditarAluno: React.FC = () => {
         email: form.email,
         telefone: form.telefone,
         idade: parseInt(form.idade),
-        dataNascimento: form.dataNascimento,
+        data_nascimento: form.data_nascimento?.toISOString().split('T')[0],
         genero: form.genero,
         endereco: form.endereco,
         objetivo: form.objetivo,
         observacoes: form.observacoes,
-        valorMensalidade: form.valorMensalidade ? parseFloat(form.valorMensalidade) : undefined,
-        dataVencimento: form.dataVencimento,
+        valor_mensalidade: form.valor_mensalidade ? parseFloat(form.valor_mensalidade) : undefined,
+        data_vencimento: form.data_vencimento?.toISOString().split('T')[0],
         experiencia: form.experiencia as "iniciante" | "intermediario" | "avancado",
       };
       
@@ -270,15 +269,15 @@ const EditarAluno: React.FC = () => {
               </div>
               
               <div>
-                <label htmlFor="dataNascimento" className="fitness-label block mb-2">
+                <label htmlFor="data_nascimento" className="fitness-label block mb-2">
                   Data de Nascimento
                 </label>
                 <DatePicker
-                  selected={form.dataNascimento}
-                  onSelect={(date) => setForm(prev => ({ ...prev, dataNascimento: date }))}
+                  selected={form.data_nascimento}
+                  onSelect={(date) => setForm(prev => ({ ...prev, data_nascimento: date }))}
                   placeholder="Selecione a data"
                 />
-                {errors.dataNascimento && <p className="mt-1 text-xs text-red-500">{errors.dataNascimento}</p>}
+                {errors.data_nascimento && <p className="mt-1 text-xs text-red-500">{errors.data_nascimento}</p>}
               </div>
               
               <FormInput
@@ -310,26 +309,26 @@ const EditarAluno: React.FC = () => {
               <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Dados Financeiros e Objetivo</h2>
               
               <FormInput
-                id="valorMensalidade"
+                id="valor_mensalidade"
                 label="Valor da Mensalidade (R$)"
                 type="number"
-                value={form.valorMensalidade}
+                value={form.valor_mensalidade}
                 onChange={handleChange}
                 min={0}
                 step={0.01}
-                error={errors.valorMensalidade}
+                error={errors.valor_mensalidade}
               />
               
               <div>
-                <label htmlFor="dataVencimento" className="fitness-label block mb-2">
+                <label htmlFor="data_vencimento" className="fitness-label block mb-2">
                   Data de Vencimento
                 </label>
                 <DatePicker
-                  selected={form.dataVencimento}
-                  onSelect={(date) => setForm(prev => ({ ...prev, dataVencimento: date }))}
+                  selected={form.data_vencimento}
+                  onSelect={(date) => setForm(prev => ({ ...prev, data_vencimento: date }))}
                   placeholder="Selecione a data"
                 />
-                {errors.dataVencimento && <p className="mt-1 text-xs text-red-500">{errors.dataVencimento}</p>}
+                {errors.data_vencimento && <p className="mt-1 text-xs text-red-500">{errors.data_vencimento}</p>}
               </div>
               
               <div>

@@ -1,137 +1,50 @@
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock4, Download, User, Youtube, Edit, ArrowLeft, PlusCircle, Play } from 'lucide-react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { buscarAlunoPorId, buscarFichaTreinoAluno, FichaTreino as FichaTreinoType, Aluno } from "@/services/alunosService";
+import { downloadPDFFichaTreino } from "@/services/pdfService";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { downloadPDF, gerarPDFFichaTreino } from '@/services/pdfService';
-import { toast } from 'sonner';
-import { buscarAlunoPorId, buscarFichaTreinoAluno, FichaTreino as FichaTreinoType } from '@/services/alunosService';
+import { ArrowLeft, FileDown, Edit, Plus } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import YouTubeModal from "@/components/YouTubeModal";
 
 const FichaTreino: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
+  const [aluno, setAluno] = useState<Aluno | null>(null);
+  const [ficha, setFicha] = useState<FichaTreinoType | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fichaTreino, setFichaTreino] = useState<FichaTreinoType | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [modalVideo, setModalVideo] = useState<{
-    isOpen: boolean;
-    videoUrl: string;
-    exercicioNome: string;
-  }>({
-    isOpen: false,
-    videoUrl: "",
-    exercicioNome: "",
-  });
 
   useEffect(() => {
-    const carregarFichaTreino = async () => {
-      if (!id) {
-        setError("ID do aluno não encontrado");
-        setLoading(false);
-        return;
-      }
-
+    const carregarDados = async () => {
+      if (!alunoId) return;
+      
       try {
-        console.log("🔍 [FichaTreino] Buscando ficha de treino para aluno:", id);
         setLoading(true);
+        const [alunoData, fichaData] = await Promise.all([
+          buscarAlunoPorId(alunoId),
+          buscarFichaTreinoAluno(alunoId)
+        ]);
         
-        // Buscar ficha de treino do aluno
-        const fichaTreinoData = await buscarFichaTreinoAluno(id);
-        
-        if (fichaTreinoData) {
-          console.log("✅ [FichaTreino] Ficha de treino encontrada:", fichaTreinoData);
-          setFichaTreino(fichaTreinoData);
-        } else {
-          // Se não encontrou ficha, buscar pelo menos os dados do aluno
-          try {
-            const aluno = await buscarAlunoPorId(id);
-            setError(`Nenhuma ficha de treino encontrada para ${aluno.nome}`);
-            console.log("⚠️ [FichaTreino] Ficha não encontrada para:", aluno.nome);
-          } catch (alunoError) {
-            console.error("❌ [FichaTreino] Erro ao buscar dados do aluno:", alunoError);
-            setError("Aluno não encontrado");
-          }
-        }
+        setAluno(alunoData);
+        setFicha(fichaData);
       } catch (error) {
-        console.error("❌ [FichaTreino] Erro ao carregar ficha de treino:", error);
-        setError("Erro ao carregar ficha de treino");
+        console.error("Erro ao carregar dados:", error);
+        toast.error("Erro ao carregar ficha de treino.");
+        navigate("/gerenciar-ficha-treino");
       } finally {
         setLoading(false);
       }
     };
 
-    carregarFichaTreino();
-  }, [id]);
-
-  // Group exercises by day
-  const exerciciosPorDia = fichaTreino?.exercicios.reduce((acc, exercicio) => {
-    if (!exercicio.diaTreino) return acc;
-    
-    if (!acc[exercicio.diaTreino]) {
-      acc[exercicio.diaTreino] = [];
-    }
-    acc[exercicio.diaTreino].push(exercicio);
-    return acc;
-  }, {} as Record<string, typeof fichaTreino.exercicios>) || {};
+    carregarDados();
+  }, [alunoId, navigate]);
 
   const handleDownloadPDF = () => {
-    try {
-      if (!fichaTreino) {
-        toast.error('Nenhuma ficha de treino para baixar');
-        return;
-      }
-
-      const doc = gerarPDFFichaTreino(fichaTreino);
-      downloadPDF(doc, `ficha-treino-${fichaTreino.aluno.nome.toLowerCase().replace(/\s+/g, '-')}.pdf`);
-      toast.success('PDF da ficha de treino baixado com sucesso!');
-    } catch (error) {
-      console.error('Erro ao gerar PDF:', error);
-      toast.error('Erro ao gerar o PDF da ficha de treino');
+    if (ficha && aluno) {
+      downloadPDFFichaTreino(ficha, aluno.nome);
     }
-  };
-
-  const handleEditarFicha = () => {
-    if (id) {
-      console.log("🔄 [FichaTreino] Navegando para editar ficha:", `/cadastrar-treino/${id}`);
-      navigate(`/cadastrar-treino/${id}`);
-    }
-  };
-
-  const handleCriarExercicios = () => {
-    if (id) {
-      console.log("✨ [FichaTreino] Navegando para criar exercícios:", `/cadastrar-treino/${id}`);
-      navigate(`/cadastrar-treino/${id}`);
-    }
-  };
-
-  const handleVoltar = () => {
-    console.log("⬅️ [FichaTreino] Voltando para página anterior");
-    navigate(-1);
-  };
-
-  const handleOpenVideoModal = (videoUrl: string, exercicioNome: string) => {
-    setModalVideo({
-      isOpen: true,
-      videoUrl,
-      exercicioNome,
-    });
-  };
-
-  const handleCloseVideoModal = () => {
-    setModalVideo({
-      isOpen: false,
-      videoUrl: "",
-      exercicioNome: "",
-    });
   };
 
   if (loading) {
@@ -142,246 +55,167 @@ const FichaTreino: React.FC = () => {
     );
   }
 
-  if (error || !fichaTreino) {
+  if (!aluno || !ficha) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Header com botão voltar */}
-          <div className="flex items-center gap-3 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleVoltar}
-              className="flex-shrink-0"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
-                Ficha de Treino
-              </h1>
-            </div>
-          </div>
-
-          <Card>
-            <CardContent className="text-center py-8 space-y-4">
-              <div className="text-red-500 mb-4">
-                <p>{error || "Ficha de treino não encontrada"}</p>
-              </div>
-              <div className="flex flex-col sm:flex-row justify-center gap-3">
-                <Button
-                  onClick={handleVoltar}
-                  variant="outline"
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Voltar
-                </Button>
-                {id && (
-                  <Button
-                    onClick={handleCriarExercicios}
-                    variant="default"
-                    className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600"
-                  >
-                    <PlusCircle className="h-4 w-4" />
-                    Criar Ficha de Treino
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="text-center py-8">
+        <p className="text-red-500">
+          {!aluno ? "Aluno não encontrado." : "Ficha de treino não encontrada."}
+        </p>
+        <Button onClick={() => navigate("/gerenciar-ficha-treino")} className="mt-4">
+          Voltar
+        </Button>
       </div>
     );
   }
 
+  // Agrupar exercícios por dia de treino
+  const exerciciosPorDia = ficha.exercicios.reduce((acc, exercicio) => {
+    if (!acc[exercicio.diaTreino]) {
+      acc[exercicio.diaTreino] = [];
+    }
+    acc[exercicio.diaTreino].push(exercicio);
+    return acc;
+  }, {} as Record<string, typeof ficha.exercicios>);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
-        {/* Header responsivo */}
-        <div className="flex items-center gap-3 mb-4">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
-            onClick={handleVoltar}
-            className="flex-shrink-0"
+            onClick={() => navigate("/gerenciar-ficha-treino")}
+            className="mr-4"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
           </Button>
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
-              Ficha de Treino
-            </h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Ficha de Treino</h1>
+            <p className="text-gray-600 mt-1">
+              {aluno.nome} - {aluno.email}
+            </p>
           </div>
         </div>
-
-        {/* Card de informações do aluno */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
-              <div className="space-y-3">
-                <CardTitle className="text-lg md:text-xl">
-                  Informações do Aluno
-                </CardTitle>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                    <span className="truncate">{fichaTreino.aluno.nome}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                    <span>{fichaTreino.aluno.idade} anos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock4 className="h-4 w-4 text-gray-500 flex-shrink-0" />
-                    <span className="truncate">Objetivo: {fichaTreino.aluno.objetivo || "Não definido"}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Botões de ação */}
-              <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-                <Button
-                  onClick={handleEditarFicha}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 justify-center"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span className="hidden sm:inline">Editar Ficha</span>
-                  <span className="sm:hidden">Editar</span>
-                </Button>
-                <Button
-                  onClick={handleDownloadPDF}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 justify-center"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Baixar PDF</span>
-                  <span className="sm:hidden">PDF</span>
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
-
-        {/* Card de exercícios */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg md:text-xl">
-              Exercícios do Treino
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.keys(exerciciosPorDia).length === 0 ? (
-              <div className="text-center py-8 space-y-4">
-                <div className="text-gray-500 mb-4">
-                  <p className="text-sm md:text-base">Nenhum exercício cadastrado para esta ficha de treino.</p>
-                </div>
-                <Button
-                  onClick={handleCriarExercicios}
-                  variant="default"
-                  className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600"
-                >
-                  <PlusCircle className="h-4 w-4" />
-                  Criar Exercícios
-                </Button>
-              </div>
-            ) : (
-              <Accordion type="single" collapsible className="w-full space-y-2">
-                {Object.entries(exerciciosPorDia).map(([dia, exercicios]) => (
-                  <AccordionItem key={dia} value={dia} className="border rounded-lg">
-                    <AccordionTrigger className="text-sm md:text-base font-medium px-4 py-3 hover:no-underline">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1">
-                        <span className="font-semibold">{dia}</span>
-                        <span className="text-xs md:text-sm text-gray-500">
-                          ({exercicios.length} exercício{exercicios.length > 1 ? 's' : ''})
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pb-4">
-                      <div className="space-y-3">
-                         {exercicios.map((exercicio, idx) => (
-                           <div 
-                             key={idx} 
-                             className={`bg-gray-50 rounded-lg p-3 md:p-4 transition-all duration-200 ${
-                               exercicio.videoUrl 
-                                 ? "cursor-pointer hover:bg-gray-100 hover:shadow-md border-l-4 border-l-orange-500" 
-                                 : ""
-                             }`}
-                             onClick={() => {
-                               if (exercicio.videoUrl) {
-                                 handleOpenVideoModal(exercicio.videoUrl, exercicio.nomeExercicio);
-                               }
-                             }}
-                           >
-                             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
-                               <div className="space-y-2 flex-1 min-w-0">
-                                 <div className="flex items-center gap-2">
-                                   <h3 className="font-medium text-gray-900 text-sm md:text-base truncate">
-                                     {exercicio.nomeExercicio}
-                                   </h3>
-                                   {exercicio.videoUrl && (
-                                     <div className="flex items-center gap-1 text-orange-500">
-                                       <Play className="h-4 w-4" />
-                                       <span className="text-xs hidden sm:inline">Clique para assistir</span>
-                                     </div>
-                                   )}
-                                 </div>
-                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
-                                   <p>
-                                     <span className="font-medium">Grupo:</span> {exercicio.grupoMuscular}
-                                   </p>
-                                   <p>
-                                     <span className="font-medium">Carga:</span> {exercicio.cargaIdeal} kg
-                                   </p>
-                                   <p className="sm:col-span-2">
-                                     <span className="font-medium">Séries/Rep:</span> {exercicio.series} x {exercicio.repeticoes}
-                                   </p>
-                                   {exercicio.estrategia && (
-                                     <p className="sm:col-span-2">
-                                       <span className="font-medium">Estratégia:</span> {exercicio.estrategia}
-                                     </p>
-                                   )}
-                                 </div>
-                               </div>
-                               {exercicio.videoUrl && (
-                                 <div className="flex-shrink-0">
-                                   <Button
-                                     size="sm"
-                                     variant="outline"
-                                     onClick={(e) => {
-                                       e.stopPropagation();
-                                       handleOpenVideoModal(exercicio.videoUrl, exercicio.nomeExercicio);
-                                     }}
-                                     className="text-orange-500 hover:text-orange-600 border-orange-200 hover:border-orange-300"
-                                   >
-                                     <Youtube className="h-4 w-4 mr-1" />
-                                     <span className="hidden sm:inline">Assistir</span>
-                                   </Button>
-                                 </div>
-                               )}
-                             </div>
-                           </div>
-                        ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            )}
-          </CardContent>
-        </Card>
+        
+        <div className="flex gap-2">
+          <Button onClick={handleDownloadPDF} variant="outline">
+            <FileDown className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+          <Button onClick={() => navigate(`/cadastrar-treino/${alunoId}`)}>
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Treino
+          </Button>
+        </div>
       </div>
 
-      {/* Modal do YouTube */}
-      <YouTubeModal
-        isOpen={modalVideo.isOpen}
-        onClose={handleCloseVideoModal}
-        videoUrl={modalVideo.videoUrl}
-        exercicioNome={modalVideo.exercicioNome}
-      />
+      {/* Informações do Aluno */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Informações do Aluno</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <span className="text-sm font-medium text-gray-500">Idade</span>
+              <p className="font-medium">{aluno.idade} anos</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Peso</span>
+              <p className="font-medium">{aluno.peso} kg</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Altura</span>
+              <p className="font-medium">{aluno.altura} cm</p>
+            </div>
+            <div>
+              <span className="text-sm font-medium text-gray-500">Experiência</span>
+              <p className="font-medium capitalize">{aluno.experiencia}</p>
+            </div>
+          </div>
+          {aluno.objetivo && (
+            <div className="mt-4">
+              <span className="text-sm font-medium text-gray-500">Objetivo</span>
+              <p className="font-medium">{aluno.objetivo}</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Exercícios por Dia */}
+      {Object.keys(exerciciosPorDia).length === 0 ? (
+        <Card>
+          <CardContent className="text-center py-8">
+            <p className="text-gray-500 mb-4">Nenhum exercício cadastrado ainda.</p>
+            <Button onClick={() => navigate(`/cadastrar-treino/${alunoId}`)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Exercícios
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        Object.entries(exerciciosPorDia).map(([dia, exerciciosDia]) => (
+          <Card key={dia}>
+            <CardHeader>
+              <CardTitle>Treino {dia}</CardTitle>
+              <CardDescription>
+                {exerciciosDia.length} exercício{exerciciosDia.length !== 1 ? 's' : ''}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {exerciciosDia.map((exercicio, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-medium text-lg">{exercicio.nomeExercicio}</h4>
+                      <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {exercicio.grupoMuscular}
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div>
+                        <span className="text-sm text-gray-500">Séries</span>
+                        <p className="font-medium">{exercicio.series}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Repetições</span>
+                        <p className="font-medium">{exercicio.repeticoes}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Carga</span>
+                        <p className="font-medium">{exercicio.cargaIdeal} kg</p>
+                      </div>
+                    </div>
+                    
+                    {exercicio.equipamento && (
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">Equipamento: </span>
+                        <span className="text-sm">{exercicio.equipamento}</span>
+                      </div>
+                    )}
+                    
+                    {exercicio.estrategia && (
+                      <div className="mb-2">
+                        <span className="text-sm text-gray-500">Estratégia: </span>
+                        <span className="text-sm">{exercicio.estrategia}</span>
+                      </div>
+                    )}
+                    
+                    {exercicio.instrucoes && (
+                      <div>
+                        <span className="text-sm text-gray-500">Instruções: </span>
+                        <p className="text-sm text-gray-700">{exercicio.instrucoes}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
     </div>
   );
 };

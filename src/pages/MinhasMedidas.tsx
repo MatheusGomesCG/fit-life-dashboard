@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -86,7 +85,7 @@ const MinhasMedidas: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-gray-500">% de Gordura</p>
-              <p className="font-medium text-xl">{aluno.percentualGordura?.toFixed(2)}%</p>
+              <p className="font-medium text-xl">{aluno.percentual_gordura?.toFixed(2)}%</p>
             </div>
           </div>
         </div>
