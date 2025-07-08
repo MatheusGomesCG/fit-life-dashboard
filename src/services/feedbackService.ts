@@ -36,7 +36,10 @@ export const buscarFeedbacksUsuario = async (userId: string): Promise<FeedbackTr
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      tipo: item.tipo as "geral" | "exercicio"
+    }));
   } catch (error) {
     console.error("Erro ao buscar feedbacks:", error);
     throw error;
@@ -48,14 +51,15 @@ export const buscarFeedbacksProfessor = async (professorId: string): Promise<Fee
     const { data, error } = await supabase
       .from('feedbacks_treino')
       .select(`
-        *,
-        aluno_profiles!inner(professor_id, nome)
+        *
       `)
-      .eq('aluno_profiles.professor_id', professorId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      tipo: item.tipo as "geral" | "exercicio"
+    }));
   } catch (error) {
     console.error("Erro ao buscar feedbacks do professor:", error);
     throw error;

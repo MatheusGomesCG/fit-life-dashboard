@@ -42,19 +42,21 @@ export const buscarFeedProfessor = async (professorId: string): Promise<PostFeed
       .from('feed_posts')
       .select(`
         *,
-        aluno_profiles!inner(nome),
         feed_comentarios(
           id,
           comentario,
           created_at,
-          aluno_profiles!inner(nome)
+          user_id
         )
       `)
       .eq('professor_id', professorId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      tipo: item.tipo as "texto" | "imagem" | "video"
+    }));
   } catch (error) {
     console.error("Erro ao buscar feed:", error);
     throw error;
