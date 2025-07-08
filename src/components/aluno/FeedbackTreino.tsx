@@ -2,8 +2,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageSquare, Send } from "lucide-react";
 import { toast } from "sonner";
 import { enviarFeedback } from "@/services/feedbackService";
@@ -16,9 +14,9 @@ interface FeedbackTreinoProps {
 
 const FeedbackTreino: React.FC<FeedbackTreinoProps> = ({ exerciseId, exerciseName }) => {
   const { user } = useAuth();
-  const [tipo, setTipo] = useState<"geral" | "exercicio">(exerciseId ? "exercicio" : "geral");
   const [mensagem, setMensagem] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +30,14 @@ const FeedbackTreino: React.FC<FeedbackTreinoProps> = ({ exerciseId, exerciseNam
     try {
       await enviarFeedback({
         user_id: user.id,
-        tipo,
+        tipo: exerciseId ? "exercicio" : "geral",
         mensagem: mensagem.trim(),
-        exercise_id: tipo === "exercicio" ? exerciseId : undefined
+        exercise_id: exerciseId
       });
 
       toast.success("Feedback enviado com sucesso!");
       setMensagem("");
+      setShowForm(false);
     } catch (error) {
       console.error("Erro ao enviar feedback:", error);
       toast.error("Erro ao enviar feedback. Tente novamente.");
@@ -47,67 +46,82 @@ const FeedbackTreino: React.FC<FeedbackTreinoProps> = ({ exerciseId, exerciseNam
     }
   };
 
+  if (!showForm) {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowForm(true)}
+        className="w-full sm:w-auto text-xs"
+      >
+        <MessageSquare className="w-3 h-3 mr-1" />
+        Feedback
+      </Button>
+    );
+  }
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          Enviar Feedback
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {!exerciseId && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tipo de Feedback
-              </label>
-              <Select value={tipo} onValueChange={(value: "geral" | "exercicio") => setTipo(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="geral">Feedback Geral do Treino</SelectItem>
-                  <SelectItem value="exercicio">Feedback de Exercício Específico</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+    <div className="bg-gray-50 rounded-lg p-3 space-y-3 w-full">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-4 h-4 text-gray-600" />
+          <span className="text-sm font-medium text-gray-900">Enviar Feedback</span>
+        </div>
+        <button
+          onClick={() => {
+            setShowForm(false);
+            setMensagem("");
+          }}
+          className="text-gray-400 hover:text-gray-600 text-sm"
+        >
+          ✕
+        </button>
+      </div>
 
-          {exerciseName && (
-            <p className="text-sm text-gray-600">
-              Enviando feedback sobre: <strong>{exerciseName}</strong>
-            </p>
-          )}
+      {exerciseName && (
+        <p className="text-xs text-gray-600">
+          Feedback sobre: <strong>{exerciseName}</strong>
+        </p>
+      )}
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sua Mensagem
-            </label>
-            <Textarea
-              value={mensagem}
-              onChange={(e) => setMensagem(e.target.value)}
-              placeholder={
-                tipo === "geral" 
-                  ? "Como foi seu treino hoje? Compartilhe suas impressões..."
-                  : "Como foi este exercício? Teve alguma dificuldade?"
-              }
-              rows={4}
-              required
-            />
-          </div>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <Textarea
+          value={mensagem}
+          onChange={(e) => setMensagem(e.target.value)}
+          placeholder={
+            exerciseId 
+              ? "Como foi este exercício? Teve alguma dificuldade?"
+              : "Como foi seu treino hoje? Compartilhe suas impressões..."
+          }
+          rows={3}
+          required
+          className="text-sm"
+        />
 
+        <div className="flex gap-2">
           <Button
             type="submit"
             disabled={isLoading || !mensagem.trim()}
-            className="w-full"
+            size="sm"
+            className="flex-1"
           >
-            <Send className="w-4 h-4 mr-2" />
-            {isLoading ? "Enviando..." : "Enviar Feedback"}
+            <Send className="w-3 h-3 mr-1" />
+            {isLoading ? "Enviando..." : "Enviar"}
           </Button>
-        </form>
-      </CardContent>
-    </Card>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setShowForm(false);
+              setMensagem("");
+            }}
+          >
+            Cancelar
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
