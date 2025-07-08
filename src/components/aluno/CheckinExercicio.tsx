@@ -26,32 +26,59 @@ const CheckinExercicio: React.FC<CheckinExercicioProps> = ({
 
   useEffect(() => {
     const verificarStatus = async () => {
-      if (user?.id) {
+      if (user?.id && exerciseId && exerciseId !== 'undefined') {
         try {
+          console.log("🔍 [CheckinExercicio] Verificando status:", { 
+            userId: user.id, 
+            exerciseId, 
+            exerciseName 
+          });
+          
           const realizado = await verificarExercicioRealizado(user.id, exerciseId, dataHoje);
           setIsRealizado(realizado);
         } catch (error) {
-          console.error("Erro ao verificar status do exercício:", error);
+          console.error("❌ [CheckinExercicio] Erro ao verificar status do exercício:", error);
         } finally {
           setVerificandoStatus(false);
         }
+      } else {
+        console.log("⚠️ [CheckinExercicio] Dados inválidos:", { 
+          hasUser: !!user?.id, 
+          exerciseId, 
+          exerciseName 
+        });
+        setVerificandoStatus(false);
       }
     };
 
     verificarStatus();
-  }, [user?.id, exerciseId, dataHoje]);
+  }, [user?.id, exerciseId, dataHoje, exerciseName]);
 
   const handleCheckin = async () => {
-    if (!user?.id || isRealizado) return;
+    if (!user?.id || !exerciseId || exerciseId === 'undefined' || isRealizado) {
+      console.log("⚠️ [CheckinExercicio] Não é possível fazer checkin:", {
+        hasUser: !!user?.id,
+        exerciseId,
+        isRealizado
+      });
+      toast.error("Não é possível registrar este exercício.");
+      return;
+    }
 
     setIsLoading(true);
     try {
+      console.log("🔄 [CheckinExercicio] Iniciando checkin:", {
+        userId: user.id,
+        exerciseId,
+        exerciseName
+      });
+
       await registrarCheckinExercicio(user.id, exerciseId);
       setIsRealizado(true);
       toast.success(`Exercício "${exerciseName}" marcado como realizado!`);
       onCheckin?.();
     } catch (error) {
-      console.error("Erro ao fazer checkin:", error);
+      console.error("❌ [CheckinExercicio] Erro ao fazer checkin:", error);
       toast.error("Erro ao registrar exercício. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -65,6 +92,12 @@ const CheckinExercicio: React.FC<CheckinExercicioProps> = ({
         Verificando...
       </Button>
     );
+  }
+
+  // Se não temos um ID válido para o exercício, não mostramos o botão
+  if (!exerciseId || exerciseId === 'undefined') {
+    console.log("⚠️ [CheckinExercicio] Exercise ID inválido:", exerciseId);
+    return null;
   }
 
   return (

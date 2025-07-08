@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -147,58 +146,72 @@ const MeusTreinos: React.FC = () => {
             </div>
             <div className="p-4">
               <ul className="divide-y divide-gray-100">
-                {treino.exercicios.map((exercicio, idx) => (
-                  <li key={idx} className="py-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{exercicio.nomeExercicio}</h3>
-                        <p className="text-sm text-gray-600">{exercicio.grupoMuscular}</p>
-                        <div className="mt-1 text-sm">
-                          <span className="mr-3 text-gray-900">{exercicio.series} séries</span>
-                          <span className="text-gray-900">{exercicio.repeticoes} repetições</span>
-                          {exercicio.cargaIdeal > 0 && (
-                            <span className="ml-3 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-md">
-                              {exercicio.cargaIdeal} kg
-                            </span>
+                {treino.exercicios.map((exercicio, idx) => {
+                  console.log("🔍 [MeusTreinos] Exercício:", {
+                    id: exercicio.id,
+                    nome: exercicio.nomeExercicio,
+                    index: idx
+                  });
+                  
+                  return (
+                    <li key={exercicio.id || `exercicio-${idx}`} className="py-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-gray-900">{exercicio.nomeExercicio}</h3>
+                          <p className="text-sm text-gray-600">{exercicio.grupoMuscular}</p>
+                          <div className="mt-1 text-sm">
+                            <span className="mr-3 text-gray-900">{exercicio.series} séries</span>
+                            <span className="text-gray-900">{exercicio.repeticoes} repetições</span>
+                            {exercicio.cargaIdeal > 0 && (
+                              <span className="ml-3 bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-md">
+                                {exercicio.cargaIdeal} kg
+                              </span>
+                            )}
+                          </div>
+                          {exercicio.estrategia && (
+                            <p className="mt-1 text-xs text-gray-500 italic">{exercicio.estrategia}</p>
                           )}
                         </div>
-                        {exercicio.estrategia && (
-                          <p className="mt-1 text-xs text-gray-500 italic">{exercicio.estrategia}</p>
-                        )}
+                        
+                        <div className="flex flex-col gap-2 ml-4">
+                          {exercicio.videoUrl && (
+                            <button
+                              onClick={() => handleVideoClick(exercicio.videoUrl, exercicio.nomeExercicio)}
+                              className="text-xs text-fitness-secondary hover:underline flex items-center"
+                            >
+                              <Play className="w-3 h-3 mr-1" />
+                              Vídeo
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleProgressaoClick(exercicio.id, exercicio.nomeExercicio)}
+                            className="text-xs text-blue-600 hover:underline flex items-center"
+                          >
+                            <ArrowRight className="w-3 h-3 mr-1" />
+                            Progressão
+                          </button>
+                        </div>
                       </div>
                       
-                      <div className="flex flex-col gap-2 ml-4">
-                        {exercicio.videoUrl && (
-                          <button
-                            onClick={() => handleVideoClick(exercicio.videoUrl, exercicio.nomeExercicio)}
-                            className="text-xs text-fitness-secondary hover:underline flex items-center"
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            Vídeo
-                          </button>
+                      <div className="flex gap-2 mt-3">
+                        {exercicio.id && exercicio.id !== 'undefined' ? (
+                          <CheckinExercicio
+                            exerciseId={exercicio.id}
+                            exerciseName={exercicio.nomeExercicio}
+                          />
+                        ) : (
+                          <div className="text-xs text-gray-500 italic">
+                            ID do exercício não disponível
+                          </div>
                         )}
-                        <button
-                          onClick={() => handleProgressaoClick(exercicio.id, exercicio.nomeExercicio)}
-                          className="text-xs text-blue-600 hover:underline flex items-center"
-                        >
-                          <ArrowRight className="w-3 h-3 mr-1" />
-                          Progressão
-                        </button>
+                        <FeedbackTreino
+                          exerciseId={exercicio.id}
+                          exerciseName={exercicio.nomeExercicio}
+                        />
                       </div>
-                    </div>
-                    
-                    <div className="flex gap-2 mt-3">
-                      <CheckinExercicio
-                        exerciseId={exercicio.id}
-                        exerciseName={exercicio.nomeExercicio}
-                      />
-                      <FeedbackTreino
-                        exerciseId={exercicio.id}
-                        exerciseName={exercicio.nomeExercicio}
-                      />
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
