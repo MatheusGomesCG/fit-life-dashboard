@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -87,6 +88,7 @@ const CadastrarPagamento: React.FC = () => {
         data_pagamento: status === "pago" && dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         mes,
         ano,
+        status,
         observacao,
         metodo_pagamento: metodoPagamento
       });

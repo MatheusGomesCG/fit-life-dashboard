@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -82,6 +83,7 @@ const ModalRegistrarPagamento: React.FC<ModalRegistrarPagamentoProps> = ({
         data_pagamento: dataPagamento ? format(dataPagamento, "yyyy-MM-dd") : undefined,
         mes,
         ano,
+        status: dataPagamento ? "pago" : "pendente",
         observacao,
         metodo_pagamento: metodoPagamento
       });
