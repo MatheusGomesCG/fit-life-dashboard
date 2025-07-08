@@ -74,6 +74,12 @@ const AlunoNavigation: React.FC = () => {
           href: "/chat",
           description: "Tire dúvidas sobre seus treinos e exercícios",
           icon: MessageSquare
+        },
+        {
+          title: "Feed",
+          href: "/feed",
+          description: "Compartilhe suas conquistas e veja dicas do professor",
+          icon: User
         }
       ]
     }
@@ -84,7 +90,7 @@ const AlunoNavigation: React.FC = () => {
     { path: "/dashboard", icon: Home, label: "Início" },
     { path: "/meus-treinos", icon: FileText, label: "Treinos" },
     { path: "/minhas-medidas", icon: TrendingUp, label: "Medidas" },
-    { path: "/meus-pagamentos", icon: DollarSign, label: "Pagamentos" },
+    { path: "/feed", icon: User, label: "Feed" },
     { path: "/chat", icon: MessageSquare, label: "Chat" },
   ];
 

@@ -113,6 +113,23 @@ const ProfessorNavigation: React.FC = () => {
           href: "/chat-professor",
           description: "Converse com seus alunos em tempo real",
           icon: MessageSquare
+        },
+        {
+          title: "Feed",
+          href: "/feed",
+          description: "Compartilhe dicas e acompanhe o progresso dos alunos",
+          icon: Camera
+        }
+      ]
+    },
+    {
+      title: "Exercícios",
+      items: [
+        {
+          title: "Exercícios Cadastrados",
+          href: "/exercicios-cadastrados",
+          description: "Gerencie seus exercícios personalizados",
+          icon: BookOpen
         }
       ]
     }
