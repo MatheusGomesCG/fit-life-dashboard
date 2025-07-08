@@ -269,6 +269,10 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
 
     console.log("✅ [criarAluno] Usuário auth criado:", authData.user.id);
 
+    // Wait longer for the user to be properly created in the database
+    console.log("⏳ [criarAluno] Aguardando sincronização do usuário...");
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
     // Use default values for peso and altura if not provided
     const peso = aluno.peso || 0;
     const altura = aluno.altura || 0;
@@ -304,6 +308,16 @@ export const criarAluno = async (aluno: Omit<Aluno, "id" | "imc" | "percentualGo
 
     if (error) {
       console.error("❌ [criarAluno] Erro ao criar perfil do aluno:", error);
+      
+      // If profile creation fails, try to clean up the auth user
+      try {
+        console.log("🧹 [criarAluno] Tentando limpar usuário auth após falha...");
+        // Note: We can't delete the auth user from client-side, so we'll log the issue
+        console.log("⚠️ [criarAluno] Usuário auth pode precisar ser removido manualmente:", authData.user.id);
+      } catch (cleanupError) {
+        console.error("❌ [criarAluno] Erro ao tentar limpar:", cleanupError);
+      }
+      
       throw error;
     }
 
