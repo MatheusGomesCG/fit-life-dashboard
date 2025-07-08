@@ -660,7 +660,30 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
       throw error;
     }
 
-    const aluno = await buscarAlunoPorId(alunoId);
+    // Construir objeto aluno com dados da view
+    const aluno = {
+      id: alunoId,
+      nome: data.aluno_nome,
+      email: data.aluno_email,
+      idade: data.idade,
+      peso: data.peso,
+      altura: data.altura,
+      objetivo: data.objetivo,
+      experiencia: data.experiencia,
+      telefone: null,
+      restricoes_medicas: null,
+      imc: data.peso && data.altura ? Number((data.peso / ((data.altura / 100) ** 2)).toFixed(2)) : null,
+      percentualGordura: 22, // valor padrão
+      fotos: [],
+      dataNascimento: null,
+      genero: null,
+      endereco: null,
+      observacoes: null,
+      valorMensalidade: null,
+      dataVencimento: null,
+      dobrasCutaneas: null,
+      medidasCorporais: null
+    };
 
     let exercicios: CargaExercicio[] = [];
     if (data.exercicios && Array.isArray(data.exercicios)) {
@@ -677,7 +700,7 @@ export const buscarFichaTreinoAluno = async (alunoId: string): Promise<FichaTrei
     }
 
     return {
-      aluno: aluno!,
+      aluno,
       exercicios,
       dataAvaliacao: data.created_at
     };
