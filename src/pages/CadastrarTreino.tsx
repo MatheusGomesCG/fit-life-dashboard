@@ -92,6 +92,7 @@ const CadastrarTreino: React.FC = () => {
 
   const adicionarExercicio = () => {
     const novoExercicio: ExercicioTreino = {
+      id: crypto.randomUUID(),
       nomeExercicio: '',
       grupoMuscular: '',
       series: 3,
