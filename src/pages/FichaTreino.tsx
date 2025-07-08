@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock4, Download, User, Youtube, Edit, ArrowLeft, PlusCircle } from 'lucide-react';
+import { CalendarDays, Clock4, Download, User, Youtube, Edit, ArrowLeft, PlusCircle, Play } from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
@@ -14,6 +14,7 @@ import { downloadPDF, gerarPDFFichaTreino } from '@/services/pdfService';
 import { toast } from 'sonner';
 import { buscarAlunoPorId, buscarFichaTreinoAluno, FichaTreino as FichaTreinoType } from '@/services/alunosService';
 import LoadingSpinner from "@/components/LoadingSpinner";
+import YouTubeModal from "@/components/YouTubeModal";
 
 const FichaTreino: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,15 @@ const FichaTreino: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [fichaTreino, setFichaTreino] = useState<FichaTreinoType | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [modalVideo, setModalVideo] = useState<{
+    isOpen: boolean;
+    videoUrl: string;
+    exercicioNome: string;
+  }>({
+    isOpen: false,
+    videoUrl: "",
+    exercicioNome: "",
+  });
 
   useEffect(() => {
     const carregarFichaTreino = async () => {
@@ -106,6 +116,22 @@ const FichaTreino: React.FC = () => {
   const handleVoltar = () => {
     console.log("⬅️ [FichaTreino] Voltando para página anterior");
     navigate(-1);
+  };
+
+  const handleOpenVideoModal = (videoUrl: string, exercicioNome: string) => {
+    setModalVideo({
+      isOpen: true,
+      videoUrl,
+      exercicioNome,
+    });
+  };
+
+  const handleCloseVideoModal = () => {
+    setModalVideo({
+      isOpen: false,
+      videoUrl: "",
+      exercicioNome: "",
+    });
   };
 
   if (loading) {
@@ -276,45 +302,68 @@ const FichaTreino: React.FC = () => {
                     </AccordionTrigger>
                     <AccordionContent className="px-4 pb-4">
                       <div className="space-y-3">
-                        {exercicios.map((exercicio, idx) => (
-                          <div key={idx} className="bg-gray-50 rounded-lg p-3 md:p-4">
-                            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
-                              <div className="space-y-2 flex-1 min-w-0">
-                                <h3 className="font-medium text-gray-900 text-sm md:text-base truncate">
-                                  {exercicio.nomeExercicio}
-                                </h3>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
-                                  <p>
-                                    <span className="font-medium">Grupo:</span> {exercicio.grupoMuscular}
-                                  </p>
-                                  <p>
-                                    <span className="font-medium">Carga:</span> {exercicio.cargaIdeal} kg
-                                  </p>
-                                  <p className="sm:col-span-2">
-                                    <span className="font-medium">Séries/Rep:</span> {exercicio.series} x {exercicio.repeticoes}
-                                  </p>
-                                  {exercicio.estrategia && (
-                                    <p className="sm:col-span-2">
-                                      <span className="font-medium">Estratégia:</span> {exercicio.estrategia}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              {exercicio.videoUrl && (
-                                <div className="flex-shrink-0">
-                                  <a
-                                    href={exercicio.videoUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-orange-500 hover:text-orange-600 flex items-center gap-1 text-xs md:text-sm transition-colors"
-                                  >
-                                    <Youtube className="h-4 w-4" />
-                                    <span>Ver vídeo</span>
-                                  </a>
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                         {exercicios.map((exercicio, idx) => (
+                           <div 
+                             key={idx} 
+                             className={`bg-gray-50 rounded-lg p-3 md:p-4 transition-all duration-200 ${
+                               exercicio.videoUrl 
+                                 ? "cursor-pointer hover:bg-gray-100 hover:shadow-md border-l-4 border-l-orange-500" 
+                                 : ""
+                             }`}
+                             onClick={() => {
+                               if (exercicio.videoUrl) {
+                                 handleOpenVideoModal(exercicio.videoUrl, exercicio.nomeExercicio);
+                               }
+                             }}
+                           >
+                             <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-3">
+                               <div className="space-y-2 flex-1 min-w-0">
+                                 <div className="flex items-center gap-2">
+                                   <h3 className="font-medium text-gray-900 text-sm md:text-base truncate">
+                                     {exercicio.nomeExercicio}
+                                   </h3>
+                                   {exercicio.videoUrl && (
+                                     <div className="flex items-center gap-1 text-orange-500">
+                                       <Play className="h-4 w-4" />
+                                       <span className="text-xs hidden sm:inline">Clique para assistir</span>
+                                     </div>
+                                   )}
+                                 </div>
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs md:text-sm text-gray-600">
+                                   <p>
+                                     <span className="font-medium">Grupo:</span> {exercicio.grupoMuscular}
+                                   </p>
+                                   <p>
+                                     <span className="font-medium">Carga:</span> {exercicio.cargaIdeal} kg
+                                   </p>
+                                   <p className="sm:col-span-2">
+                                     <span className="font-medium">Séries/Rep:</span> {exercicio.series} x {exercicio.repeticoes}
+                                   </p>
+                                   {exercicio.estrategia && (
+                                     <p className="sm:col-span-2">
+                                       <span className="font-medium">Estratégia:</span> {exercicio.estrategia}
+                                     </p>
+                                   )}
+                                 </div>
+                               </div>
+                               {exercicio.videoUrl && (
+                                 <div className="flex-shrink-0">
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       handleOpenVideoModal(exercicio.videoUrl, exercicio.nomeExercicio);
+                                     }}
+                                     className="text-orange-500 hover:text-orange-600 border-orange-200 hover:border-orange-300"
+                                   >
+                                     <Youtube className="h-4 w-4 mr-1" />
+                                     <span className="hidden sm:inline">Assistir</span>
+                                   </Button>
+                                 </div>
+                               )}
+                             </div>
+                           </div>
                         ))}
                       </div>
                     </AccordionContent>
@@ -325,6 +374,14 @@ const FichaTreino: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal do YouTube */}
+      <YouTubeModal
+        isOpen={modalVideo.isOpen}
+        onClose={handleCloseVideoModal}
+        videoUrl={modalVideo.videoUrl}
+        exercicioNome={modalVideo.exercicioNome}
+      />
     </div>
   );
 };
