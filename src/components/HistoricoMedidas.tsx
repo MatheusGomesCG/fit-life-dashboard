@@ -1,638 +1,382 @@
-import React, { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { 
-  buscarHistoricoMedidas, 
-  adicionarMedidaHistorico, 
-  calcularIMC, 
-  calcularPercentualGordura,
-  HistoricoMedida 
-} from "@/services/alunosService";
-import { Calendar, Plus, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { DatePicker } from "@/components/date-picker";
-import FormInput from "@/components/FormInput";
-import LoadingSpinner from "@/components/LoadingSpinner";
 
-interface HistoricoMedidasProps {
-  alunoId?: string;
-  genero?: "masculino" | "feminino";
-  idade?: number;
+import React, { useState, useEffect } from "react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon, TrendingUp, TrendingDown, Minus } from "lucide-react";
+
+interface MedidaHistorico {
+  id: string;
+  data_medicao: string;
+  peso?: number;
+  altura?: number;
+  percentual_gordura?: number;
+  imc?: number;
+  medidas_corporais?: {
+    peitoral?: number;
+    cintura?: number;
+    quadril?: number;
+    braco_direito?: number;
+    braco_esquerdo?: number;
+    coxa_direita?: number;
+    coxa_esquerda?: number;
+    panturrilha_direita?: number;
+    panturrilha_esquerda?: number;
+  };
+  dobras_cutaneas?: {
+    triceps?: number;
+    biceps?: number;
+    subescapular?: number;
+    suprailliaca?: number;
+    abdominal?: number;
+    coxa?: number;
+    panturrilha?: number;
+  };
+  observacoes?: string;
 }
 
-const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ alunoId, genero, idade }) => {
-  const [historico, setHistorico] = useState<HistoricoMedida[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [incluirDobras, setIncluirDobras] = useState(false);
+interface HistoricoMedidasProps {
+  medidas: MedidaHistorico[];
+  loading?: boolean;
+}
+
+const HistoricoMedidas: React.FC<HistoricoMedidasProps> = ({ medidas, loading = false }) => {
+  const [filtroTipo, setFiltroTipo] = useState<string>("todos");
+  const [periodoMeses, setPeriodoMeses] = useState<number>(6);
+
+  // Filtrar dados por período
+  const dataLimite = new Date();
+  dataLimite.setMonth(dataLimite.getMonth() - periodoMeses);
   
-  const [novaMedida, setNovaMedida] = useState({
-    peso: "",
-    altura: "",
-    dataMedicao: new Date(),
-    observacoes: "",
-    dobrasCutaneas: {
-      triceps: "",
-      subescapular: "",
-      axilarMedia: "",
-      peitoral: "",
-      suprailiaca: "",
-      abdominal: "",
-      coxa: "",
-    },
-    medidasCorporais: {
-      pescoco: "",
-      torax: "",
-      bracoEsquerdo: "",
-      bracoDireito: "",
-      antebracoEsquerdo: "",
-      antebracoDireito: "",
-      cintura: "",
-      quadril: "",
-      coxaEsquerda: "",
-      coxaDireita: "",
-      panturrilhaEsquerda: "",
-      panturrilhaDireita: "",
-    }
-  });
+  const medidasFiltradas = medidas.filter(medida => {
+    const dataMedicao = new Date(medida.data_medicao);
+    return dataMedicao >= dataLimite;
+  }).sort((a, b) => new Date(a.data_medicao).getTime() - new Date(b.data_medicao).getTime());
 
-  useEffect(() => {
-    if (alunoId) {
-      carregarHistorico();
-    }
-  }, [alunoId]);
+  // Preparar dados para gráfico
+  const dadosGrafico = medidasFiltradas.map(medida => ({
+    data: format(new Date(medida.data_medicao), "dd/MM", { locale: ptBR }),
+    dataCompleta: format(new Date(medida.data_medicao), "dd/MM/yyyy", { locale: ptBR }),
+    peso: medida.peso || 0,
+    percentualGordura: medida.percentual_gordura || 0,
+    imc: medida.imc || 0,
+    peitoral: medida.medidas_corporais?.peitoral || 0,
+    cintura: medida.medidas_corporais?.cintura || 0,
+    quadril: medida.medidas_corporais?.quadril || 0,
+    bracoDireito: medida.medidas_corporais?.braco_direito || 0,
+  }));
 
-  const carregarHistorico = async () => {
-    if (!alunoId) return;
+  // Função para calcular tendência
+  const calcularTendencia = (dados: number[]) => {
+    if (dados.length < 2) return null;
+    const primeiro = dados[0];
+    const ultimo = dados[dados.length - 1];
+    const diferenca = ultimo - primeiro;
+    const percentual = (diferenca / primeiro) * 100;
     
-    try {
-      setLoading(true);
-      const dados = await buscarHistoricoMedidas(alunoId);
-      setHistorico(dados);
-    } catch (error) {
-      console.error("Erro ao carregar histórico:", error);
-      toast.error("Erro ao carregar histórico de medidas");
-    } finally {
-      setLoading(false);
-    }
+    return {
+      valor: diferenca,
+      percentual: Math.abs(percentual),
+      tipo: diferenca > 0 ? 'aumento' : diferenca < 0 ? 'diminuicao' : 'estavel'
+    };
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setNovaMedida(prev => ({
-      ...prev,
-      [id]: value
-    }));
-  };
+  // Calcular tendências
+  const pesoValues = dadosGrafico.map(d => d.peso).filter(v => v > 0);
+  const gorduraValues = dadosGrafico.map(d => d.percentualGordura).filter(v => v > 0);
+  const imcValues = dadosGrafico.map(d => d.imc).filter(v => v > 0);
 
-  const handleDobraChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const fieldName = id.split("-")[1]; // Formato: "dobra-triceps"
+  const tendenciaPeso = calcularTendencia(pesoValues);
+  const tendenciaGordura = calcularTendencia(gorduraValues);
+  const tendenciaIMC = calcularTendencia(imcValues);
+
+  const renderTendencia = (tendencia: any, unidade: string = '') => {
+    if (!tendencia) return <span className="text-gray-400">-</span>;
     
-    setNovaMedida(prev => ({
-      ...prev,
-      dobrasCutaneas: {
-        ...prev.dobrasCutaneas,
-        [fieldName]: value
-      }
-    }));
-  };
-
-  const handleMedidaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    const fieldName = id.split("-")[1]; // Formato: "medida-pescoco"
+    const IconComponent = tendencia.tipo === 'aumento' ? TrendingUp : 
+                         tendencia.tipo === 'diminuicao' ? TrendingDown : Minus;
     
-    setNovaMedida(prev => ({
-      ...prev,
-      medidasCorporais: {
-        ...prev.medidasCorporais,
-        [fieldName]: value
-      }
-    }));
-  };
+    const cor = tendencia.tipo === 'aumento' ? 'text-red-500' : 
+                tendencia.tipo === 'diminuicao' ? 'text-green-500' : 'text-gray-500';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!alunoId || !novaMedida.peso || !novaMedida.altura) {
-      toast.error("Peso e altura são obrigatórios");
-      return;
-    }
-
-    // Se incluir dobras, verificar se todas estão preenchidas
-    if (incluirDobras) {
-      const dobras = Object.values(novaMedida.dobrasCutaneas);
-      if (dobras.some(value => value === "")) {
-        toast.error("Por favor, preencha todas as dobras cutâneas ou desmarque a opção");
-        return;
-      }
-    }
-
-    try {
-      setSubmitting(true);
-
-      const peso = parseFloat(novaMedida.peso);
-      const altura = parseFloat(novaMedida.altura);
-      const imc = calcularIMC(peso, altura);
-      
-      let dobrasCutaneasNumeric = null;
-      let percentualGordura = 22; // valor padrão
-
-      if (incluirDobras) {
-        dobrasCutaneasNumeric = {
-          triceps: parseFloat(novaMedida.dobrasCutaneas.triceps),
-          subescapular: parseFloat(novaMedida.dobrasCutaneas.subescapular),
-          axilarMedia: parseFloat(novaMedida.dobrasCutaneas.axilarMedia),
-          peitoral: parseFloat(novaMedida.dobrasCutaneas.peitoral),
-          suprailiaca: parseFloat(novaMedida.dobrasCutaneas.suprailiaca),
-          abdominal: parseFloat(novaMedida.dobrasCutaneas.abdominal),
-          coxa: parseFloat(novaMedida.dobrasCutaneas.coxa),
-        };
-
-        percentualGordura = genero && idade ? 
-          calcularPercentualGordura(dobrasCutaneasNumeric, genero, idade) : 22;
-      }
-
-      // Processar medidas corporais (apenas as preenchidas)
-      const medidasCorporaisNumeric: any = {};
-      Object.entries(novaMedida.medidasCorporais).forEach(([key, value]) => {
-        if (value && value.trim() !== "") {
-          medidasCorporaisNumeric[key] = parseFloat(value);
-        }
-      });
-
-      await adicionarMedidaHistorico({
-        aluno_id: alunoId,
-        peso,
-        altura,
-        imc,
-        percentual_gordura: percentualGordura,
-        dobras_cutaneas: dobrasCutaneasNumeric,
-        medidas_corporais: Object.keys(medidasCorporaisNumeric).length > 0 ? medidasCorporaisNumeric : null,
-        observacoes: novaMedida.observacoes,
-        data_medicao: novaMedida.dataMedicao.toISOString().split('T')[0]
-      });
-
-      toast.success("Medida adicionada ao histórico com sucesso!");
-      await carregarHistorico();
-      setShowForm(false);
-      
-      // Resetar formulário
-      setNovaMedida({
-        peso: "",
-        altura: "",
-        dataMedicao: new Date(),
-        observacoes: "",
-        dobrasCutaneas: {
-          triceps: "",
-          subescapular: "",
-          axilarMedia: "",
-          peitoral: "",
-          suprailiaca: "",
-          abdominal: "",
-          coxa: "",
-        },
-        medidasCorporais: {
-          pescoco: "",
-          torax: "",
-          bracoEsquerdo: "",
-          bracoDireito: "",
-          antebracoEsquerdo: "",
-          antebracoDireito: "",
-          cintura: "",
-          quadril: "",
-          coxaEsquerda: "",
-          coxaDireita: "",
-          panturrilhaEsquerda: "",
-          panturrilhaDireita: "",
-        }
-      });
-      setIncluirDobras(false);
-    } catch (error) {
-      console.error("Erro ao adicionar medida:", error);
-      toast.error("Erro ao adicionar medida ao histórico");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const getTendencia = (valorAtual: number, valorAnterior: number): React.ReactNode => {
-    if (valorAtual > valorAnterior) {
-      return <TrendingUp className="h-4 w-4 text-red-500" />;
-    } else if (valorAtual < valorAnterior) {
-      return <TrendingDown className="h-4 w-4 text-green-500" />;
-    } else {
-      return <Minus className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  if (!alunoId) {
     return (
-      <div className="text-gray-500 text-center py-8">
-        Selecione um aluno para visualizar o histórico de medidas
+      <div className={`flex items-center ${cor}`}>
+        <IconComponent className="h-4 w-4 mr-1" />
+        <span className="text-sm">
+          {Math.abs(tendencia.valor).toFixed(1)}{unidade} ({tendencia.percentual.toFixed(1)}%)
+        </span>
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                <div className="h-32 bg-gray-200 rounded"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     );
   }
 
-  if (loading) {
+  if (medidas.length === 0) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <LoadingSpinner size="large" />
-      </div>
+      <Card>
+        <CardContent className="text-center py-8">
+          <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Nenhuma medida registrada ainda.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-800">Histórico de Medidas Corporais</h3>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 px-4 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Nova Medida</span>
-        </button>
+      {/* Filtros */}
+      <div className="flex flex-wrap gap-4">
+        <Select value={periodoMeses.toString()} onValueChange={(value) => setPeriodoMeses(Number(value))}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="3">Últimos 3 meses</SelectItem>
+            <SelectItem value="6">Últimos 6 meses</SelectItem>
+            <SelectItem value="12">Último ano</SelectItem>
+            <SelectItem value="24">Últimos 2 anos</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Tipo de medida" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todas as medidas</SelectItem>
+            <SelectItem value="peso">Peso e IMC</SelectItem>
+            <SelectItem value="corporais">Medidas corporais</SelectItem>
+            <SelectItem value="dobras">Dobras cutâneas</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {showForm && (
-        <div className="bg-gray-50 p-6 rounded-lg border">
-          <h4 className="text-md font-medium mb-4">Adicionar Nova Medida</h4>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <FormInput
-                id="peso"
-                label="Peso (kg)"
-                type="number"
-                value={novaMedida.peso}
-                onChange={handleInputChange}
-                min={1}
-                max={300}
-                step={0.1}
-                required
-              />
-              
-              <FormInput
-                id="altura"
-                label="Altura (cm)"
-                type="number"
-                value={novaMedida.altura}
-                onChange={handleInputChange}
-                min={1}
-                max={250}
-                required
-              />
-              
-              <div>
-                <label className="fitness-label block mb-2">Data da Medição</label>
-                <DatePicker
-                  selected={novaMedida.dataMedicao}
-                  onSelect={(date) => setNovaMedida(prev => ({ ...prev, dataMedicao: date || new Date() }))}
-                  placeholder="Selecione a data"
-                />
-              </div>
+      {/* Cards de resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">Peso</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {pesoValues.length > 0 ? `${pesoValues[pesoValues.length - 1].toFixed(1)} kg` : '-'}
             </div>
+            {renderTendencia(tendenciaPeso, 'kg')}
+          </CardContent>
+        </Card>
 
-            {/* Medidas Corporais */}
-            <div>
-              <h5 className="text-sm font-medium mb-3">Medidas Corporais (cm)</h5>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <FormInput
-                  id="medida-pescoco"
-                  label="Pescoço"
-                  type="number"
-                  value={novaMedida.medidasCorporais.pescoco}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-torax"
-                  label="Tórax"
-                  type="number"
-                  value={novaMedida.medidasCorporais.torax}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-bracoEsquerdo"
-                  label="Braço Esquerdo"
-                  type="number"
-                  value={novaMedida.medidasCorporais.bracoEsquerdo}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-bracoDireito"
-                  label="Braço Direito"
-                  type="number"
-                  value={novaMedida.medidasCorporais.bracoDireito}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-antebracoEsquerdo"
-                  label="Antebraço Esquerdo"
-                  type="number"
-                  value={novaMedida.medidasCorporais.antebracoEsquerdo}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-antebracoDireito"
-                  label="Antebraço Direito"
-                  type="number"
-                  value={novaMedida.medidasCorporais.antebracoDireito}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-cintura"
-                  label="Cintura"
-                  type="number"
-                  value={novaMedida.medidasCorporais.cintura}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-quadril"
-                  label="Quadril"
-                  type="number"
-                  value={novaMedida.medidasCorporais.quadril}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-coxaEsquerda"
-                  label="Coxa Esquerda"
-                  type="number"
-                  value={novaMedida.medidasCorporais.coxaEsquerda}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-coxaDireita"
-                  label="Coxa Direita"
-                  type="number"
-                  value={novaMedida.medidasCorporais.coxaDireita}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-panturrilhaEsquerda"
-                  label="Panturrilha Esquerda"
-                  type="number"
-                  value={novaMedida.medidasCorporais.panturrilhaEsquerda}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-                
-                <FormInput
-                  id="medida-panturrilhaDireita"
-                  label="Panturrilha Direita"
-                  type="number"
-                  value={novaMedida.medidasCorporais.panturrilhaDireita}
-                  onChange={handleMedidaChange}
-                  min={0}
-                  step={0.1}
-                />
-              </div>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">% Gordura</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {gorduraValues.length > 0 ? `${gorduraValues[gorduraValues.length - 1].toFixed(1)}%` : '-'}
             </div>
+            {renderTendencia(tendenciaGordura, '%')}
+          </CardContent>
+        </Card>
 
-            {/* Opção para incluir dobras cutâneas */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="incluirDobras"
-                checked={incluirDobras}
-                onChange={(e) => setIncluirDobras(e.target.checked)}
-                className="rounded"
-              />
-              <label htmlFor="incluirDobras" className="text-sm font-medium text-gray-700">
-                Incluir medição de dobras cutâneas
-              </label>
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium">IMC</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {imcValues.length > 0 ? imcValues[imcValues.length - 1].toFixed(1) : '-'}
             </div>
+            {renderTendencia(tendenciaIMC)}
+          </CardContent>
+        </Card>
+      </div>
 
-            {incluirDobras && (
-              <div>
-                <h5 className="text-sm font-medium mb-3">Dobras Cutâneas (mm)</h5>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <FormInput
-                    id="dobra-triceps"
-                    label="Tríceps"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.triceps}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
+      {/* Gráficos */}
+      {(filtroTipo === "todos" || filtroTipo === "peso") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução do Peso</CardTitle>
+            <CardDescription>
+              Acompanhe a variação do seu peso ao longo do tempo
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={(label, payload) => {
+                      const item = dadosGrafico.find(d => d.data === label);
+                      return item ? item.dataCompleta : label;
+                    }}
                   />
-                  
-                  <FormInput
-                    id="dobra-subescapular"
-                    label="Subescapular"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.subescapular}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="peso"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    name="Peso (kg)"
                   />
-                  
-                  <FormInput
-                    id="dobra-axilarMedia"
-                    label="Axilar Média"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.axilarMedia}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
-                  />
-                  
-                  <FormInput
-                    id="dobra-peitoral"
-                    label="Peitoral"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.peitoral}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
-                  />
-                  
-                  <FormInput
-                    id="dobra-suprailiaca"
-                    label="Suprailíaca"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.suprailiaca}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
-                  />
-                  
-                  <FormInput
-                    id="dobra-abdominal"
-                    label="Abdominal"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.abdominal}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
-                  />
-                  
-                  <FormInput
-                    id="dobra-coxa"
-                    label="Coxa"
-                    type="number"
-                    value={novaMedida.dobrasCutaneas.coxa}
-                    onChange={handleDobraChange}
-                    min={0}
-                    step={0.1}
-                    required={incluirDobras}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="observacoes" className="fitness-label block mb-2">
-                Observações
-              </label>
-              <textarea
-                id="observacoes"
-                value={novaMedida.observacoes}
-                onChange={handleInputChange}
-                className="fitness-input w-full min-h-[100px]"
-                placeholder="Observações sobre a medição"
-              />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-
-            <div className="flex gap-4">
-              <button
-                type="submit"
-                disabled={submitting}
-                className="px-6 py-2 bg-fitness-primary text-white rounded-md hover:bg-fitness-primary/90 transition-colors disabled:opacity-50"
-              >
-                {submitting ? <LoadingSpinner size="small" /> : "Salvar Medida"}
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-            </div>
-          </form>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {historico.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
-          <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-          <p>Nenhuma medida registrada ainda</p>
-          <p className="text-sm">Adicione a primeira medida para começar o acompanhamento</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-gray-200 rounded-lg">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Data</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Peso (kg)</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Altura (cm)</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">IMC</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">% Gordura</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Medidas</th>
-                <th className="border border-gray-200 px-4 py-3 text-left text-sm font-medium text-gray-700">Observações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {historico.map((medida, index) => {
-                const medidaAnterior = historico[index + 1];
-                
-                return (
-                  <tr key={medida.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      {new Date(medida.data_medicao).toLocaleDateString('pt-BR')}
+      {(filtroTipo === "todos" || filtroTipo === "peso") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Evolução da Gordura Corporal</CardTitle>
+            <CardDescription>
+              Monitore seu percentual de gordura corporal
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={(label, payload) => {
+                      const item = dadosGrafico.find(d => d.data === label);
+                      return item ? item.dataCompleta : label;
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="percentualGordura"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    name="Gordura (%)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {(filtroTipo === "todos" || filtroTipo === "corporais") && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Medidas Corporais</CardTitle>
+            <CardDescription>
+              Evolução das principais medidas corporais
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={dadosGrafico}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="data" />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={(label, payload) => {
+                      const item = dadosGrafico.find(d => d.data === label);
+                      return item ? item.dataCompleta : label;
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="peitoral"
+                    stroke="#ff7300"
+                    strokeWidth={2}
+                    name="Peitoral (cm)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="cintura"
+                    stroke="#8dd1e1"
+                    strokeWidth={2}
+                    name="Cintura (cm)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="quadril"
+                    stroke="#d084d0"
+                    strokeWidth={2}
+                    name="Quadril (cm)"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="bracoDireito"
+                    stroke="#ffc658"
+                    strokeWidth={2}
+                    name="Braço (cm)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tabela de dados históricos */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Histórico Completo</CardTitle>
+          <CardDescription>
+            Todas as medições registradas no período selecionado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Data</th>
+                  <th className="text-left p-2">Peso (kg)</th>
+                  <th className="text-left p-2">% Gordura</th>
+                  <th className="text-left p-2">IMC</th>
+                  <th className="text-left p-2">Observações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {medidasFiltradas.reverse().map((medida) => (
+                  <tr key={medida.id} className="border-b hover:bg-gray-50">
+                    <td className="p-2">
+                      {format(new Date(medida.data_medicao), "dd/MM/yyyy", { locale: ptBR })}
                     </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span>{medida.peso?.toFixed(1)}</span>
-                        {medidaAnterior && medida.peso && medidaAnterior.peso && 
-                          getTendencia(medida.peso, medidaAnterior.peso)
-                        }
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      {medida.altura?.toFixed(0)}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span>{medida.imc?.toFixed(2)}</span>
-                        {medidaAnterior && medida.imc && medidaAnterior.imc && 
-                          getTendencia(medida.imc, medidaAnterior.imc)
-                        }
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <span>{medida.percentual_gordura?.toFixed(2)}%</span>
-                        {medidaAnterior && medida.percentual_gordura && medidaAnterior.percentual_gordura && 
-                          getTendencia(medida.percentual_gordura, medidaAnterior.percentual_gordura)
-                        }
-                      </div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      {medida.medidas_corporais ? (
-                        <div className="text-xs">
-                          {Object.entries(medida.medidas_corporais).map(([key, value]) => (
-                            <div key={key} className="truncate">
-                              {key}: {value}cm
-                            </div>
-                          )).slice(0, 3)}
-                          {Object.keys(medida.medidas_corporais).length > 3 && (
-                            <div className="text-gray-500">+{Object.keys(medida.medidas_corporais).length - 3} mais</div>
-                          )}
-                        </div>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm">
-                      {medida.observacoes || "-"}
-                    </td>
+                    <td className="p-2">{medida.peso?.toFixed(1) || '-'}</td>
+                    <td className="p-2">{medida.percentual_gordura?.toFixed(1) || '-'}%</td>
+                    <td className="p-2">{medida.imc?.toFixed(1) || '-'}</td>
+                    <td className="p-2 max-w-xs truncate">{medida.observacoes || '-'}</td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
