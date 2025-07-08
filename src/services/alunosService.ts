@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Aluno {
@@ -56,6 +55,7 @@ export interface HistoricoMedida {
 }
 
 export interface CargaExercicio {
+  id?: string;
   nomeExercicio: string;
   grupoMuscular: string;
   cargaIdeal: number;
@@ -344,4 +344,8 @@ export const criarOuAtualizarFichaTreino = async (alunoId: string, exercicios: C
     console.error('Erro ao criar/atualizar ficha de treino:', error);
     throw error;
   }
+};
+
+export const criarFichaTreino = async (alunoId: string, exercicios: CargaExercicio[]): Promise<FichaTreino> => {
+  return criarOuAtualizarFichaTreino(alunoId, exercicios);
 };
