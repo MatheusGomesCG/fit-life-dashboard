@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Plus, Trash2, Save } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExercicioTreino {
   id?: string;
@@ -51,9 +52,18 @@ const CadastrarTreino: React.FC = () => {
     
     try {
       setLoading(true);
+      
+      // Get current user ID for professor
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        toast.error("Usuário não autenticado.");
+        navigate("/gerenciar-ficha-treino");
+        return;
+      }
+      
       const [alunoData, exerciciosData] = await Promise.all([
         buscarAlunoPorId(alunoId),
-        listarExerciciosCadastrados()
+        listarExerciciosCadastrados(userData.user.id)
       ]);
       
       setAluno(alunoData);
