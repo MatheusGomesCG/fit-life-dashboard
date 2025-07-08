@@ -32,7 +32,7 @@ const Feed: React.FC = () => {
     }
   };
 
-  const handleCriarPost = async (conteudo: string, tipo: string, urlMidia?: string) => {
+  const handleCriarPost = async (conteudo: string, tipo: "texto" | "imagem" | "video", urlMidia?: string) => {
     if (!user?.id) return;
     
     try {

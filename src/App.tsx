@@ -27,7 +27,6 @@ import GerenciarAgendamentos from "@/pages/GerenciarAgendamentos";
 import Agendamento from "@/pages/Agendamento";
 import NovoAgendamento from "@/pages/NovoAgendamento";
 import ChatProfessor from "@/pages/ChatProfessor";
-import { getUserRole } from "@/utils/userRoleUtils";
 
 function App() {
   const { user, loading } = useAuth();
@@ -44,7 +43,8 @@ function App() {
     return <Login />;
   }
 
-  const userRole = getUserRole(user);
+  // Use the user.tipo property directly instead of getUserRole function
+  const userRole = user.tipo;
 
   return (
     <Routes>

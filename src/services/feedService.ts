@@ -12,6 +12,18 @@ export interface PostFeed {
   updated_at?: string;
 }
 
+export interface FeedPost {
+  id: string;
+  user_id: string;
+  professor_id: string;
+  tipo: "texto" | "imagem" | "video";
+  conteudo: string;
+  url_midia?: string;
+  created_at: string;
+  updated_at: string;
+  autor_nome?: string;
+}
+
 export interface ComentarioFeed {
   id?: string;
   post_id: string;
@@ -32,6 +44,33 @@ export const criarPost = async (post: Omit<PostFeed, "id" | "created_at" | "upda
     return data as PostFeed;
   } catch (error) {
     console.error("Erro ao criar post:", error);
+    throw error;
+  }
+};
+
+export const listarPostsFeed = async (userId: string): Promise<FeedPost[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('feed_posts')
+      .select(`
+        *,
+        feed_comentarios(
+          id,
+          comentario,
+          created_at,
+          user_id
+        )
+      `)
+      .or(`user_id.eq.${userId},professor_id.eq.${userId}`)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(item => ({
+      ...item,
+      tipo: item.tipo as "texto" | "imagem" | "video"
+    }));
+  } catch (error) {
+    console.error("Erro ao listar posts do feed:", error);
     throw error;
   }
 };
