@@ -3,9 +3,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { FileText, Calendar, ArrowRight } from "lucide-react";
+import { FileText, Calendar, ArrowRight, Play } from "lucide-react";
 import { buscarFichaTreinoAluno } from "@/services/alunosService";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import CheckinExercicio from "@/components/aluno/CheckinExercicio";
+import FeedbackTreino from "@/components/aluno/FeedbackTreino";
+import ProgressaoCarga from "@/components/aluno/ProgressaoCarga";
+import YouTubeModal from "@/components/YouTubeModal";
 
 const MeusTreinos: React.FC = () => {
   const { user } = useAuth();
@@ -13,6 +17,16 @@ const MeusTreinos: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [treinos, setTreinos] = useState<any[]>([]);
   const [temFichaTreino, setTemFichaTreino] = useState(false);
+  const [videoModal, setVideoModal] = useState<{isOpen: boolean, url: string, exercicioNome: string}>({
+    isOpen: false,
+    url: "",
+    exercicioNome: ""
+  });
+  const [progressaoModal, setProgressaoModal] = useState<{isOpen: boolean, exerciseId: string, exerciseName: string}>({
+    isOpen: false,
+    exerciseId: "",
+    exerciseName: ""
+  });
 
   useEffect(() => {
     const carregarTreinos = async () => {
@@ -58,6 +72,22 @@ const MeusTreinos: React.FC = () => {
 
     carregarTreinos();
   }, [user]);
+
+  const handleVideoClick = (url: string, nome: string) => {
+    setVideoModal({
+      isOpen: true,
+      url,
+      exercicioNome: nome
+    });
+  };
+
+  const handleProgressaoClick = (exerciseId: string, exerciseName: string) => {
+    setProgressaoModal({
+      isOpen: true,
+      exerciseId,
+      exerciseName
+    });
+  };
 
   if (loading) {
     return (
@@ -118,9 +148,9 @@ const MeusTreinos: React.FC = () => {
             <div className="p-4">
               <ul className="divide-y divide-gray-100">
                 {treino.exercicios.map((exercicio, idx) => (
-                  <li key={idx} className="py-3">
-                    <div className="flex justify-between items-start">
-                      <div>
+                  <li key={idx} className="py-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
                         <h3 className="font-medium text-gray-900">{exercicio.nomeExercicio}</h3>
                         <p className="text-sm text-gray-600">{exercicio.grupoMuscular}</p>
                         <div className="mt-1 text-sm">
@@ -136,17 +166,36 @@ const MeusTreinos: React.FC = () => {
                           <p className="mt-1 text-xs text-gray-500 italic">{exercicio.estrategia}</p>
                         )}
                       </div>
-                      {exercicio.videoUrl && (
-                        <a 
-                          href={exercicio.videoUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs text-fitness-secondary hover:underline flex items-center"
+                      
+                      <div className="flex flex-col gap-2 ml-4">
+                        {exercicio.videoUrl && (
+                          <button
+                            onClick={() => handleVideoClick(exercicio.videoUrl, exercicio.nomeExercicio)}
+                            className="text-xs text-fitness-secondary hover:underline flex items-center"
+                          >
+                            <Play className="w-3 h-3 mr-1" />
+                            Vídeo
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleProgressaoClick(exercicio.id, exercicio.nomeExercicio)}
+                          className="text-xs text-blue-600 hover:underline flex items-center"
                         >
-                          Ver vídeo
-                          <ArrowRight className="ml-1 h-3 w-3" />
-                        </a>
-                      )}
+                          <ArrowRight className="w-3 h-3 mr-1" />
+                          Progressão
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2 mt-3">
+                      <CheckinExercicio
+                        exerciseId={exercicio.id}
+                        exerciseName={exercicio.nomeExercicio}
+                      />
+                      <FeedbackTreino
+                        exerciseId={exercicio.id}
+                        exerciseName={exercicio.nomeExercicio}
+                      />
                     </div>
                   </li>
                 ))}
@@ -155,6 +204,41 @@ const MeusTreinos: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Feedback geral do treino */}
+      <div className="mt-8">
+        <FeedbackTreino />
+      </div>
+
+      {/* Modais */}
+      <YouTubeModal
+        isOpen={videoModal.isOpen}
+        onClose={() => setVideoModal({isOpen: false, url: "", exercicioNome: ""})}
+        videoUrl={videoModal.url}
+        exercicioNome={videoModal.exercicioNome}
+      />
+
+      {progressaoModal.isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Progressão de Carga</h2>
+              <button
+                onClick={() => setProgressaoModal({isOpen: false, exerciseId: "", exerciseName: ""})}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-4">
+              <ProgressaoCarga
+                exerciseId={progressaoModal.exerciseId}
+                exerciseName={progressaoModal.exerciseName}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
