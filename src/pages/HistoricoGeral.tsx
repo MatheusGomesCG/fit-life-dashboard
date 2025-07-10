@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -51,6 +50,7 @@ const HistoricoGeral: React.FC = () => {
   }, [authLoading, isAuthenticated, user?.tipo, navigate]);
 
   const navegarParaHistoricoMedidas = (alunoId: string) => {
+    console.log("📊 [HistoricoGeral] Navegando para histórico de medidas:", alunoId);
     navigate(`/historico-medidas/${alunoId}`);
   };
 
@@ -120,47 +120,109 @@ const HistoricoGeral: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome do Aluno</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead>Idade</TableHead>
-                    <TableHead>Peso Atual</TableHead>
-                    <TableHead>Altura</TableHead>
-                    <TableHead className="text-center">Ver Histórico</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {alunosFiltrados.map((aluno) => (
-                    <TableRow key={aluno.id}>
-                      <TableCell className="font-medium flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        {aluno.nome}
-                      </TableCell>
-                      <TableCell>{aluno.email}</TableCell>
-                      <TableCell>{aluno.telefone || "Não informado"}</TableCell>
-                      <TableCell>{aluno.idade ? `${aluno.idade} anos` : "Não informado"}</TableCell>
-                      <TableCell>{aluno.peso ? `${aluno.peso} kg` : "Não informado"}</TableCell>
-                      <TableCell>{aluno.altura ? `${aluno.altura} cm` : "Não informado"}</TableCell>
-                      <TableCell className="text-center">
+            <>
+              {/* Vista Desktop - Tabela */}
+              <div className="hidden lg:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome do Aluno</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Telefone</TableHead>
+                      <TableHead>Idade</TableHead>
+                      <TableHead>Peso Atual</TableHead>
+                      <TableHead>Altura</TableHead>
+                      <TableHead className="text-center">Ver Histórico</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {alunosFiltrados.map((aluno) => (
+                      <TableRow key={aluno.id}>
+                        <TableCell className="font-medium flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-400" />
+                          {aluno.nome}
+                        </TableCell>
+                        <TableCell>{aluno.email}</TableCell>
+                        <TableCell>{aluno.telefone || "Não informado"}</TableCell>
+                        <TableCell>{aluno.idade ? `${aluno.idade} anos` : "Não informado"}</TableCell>
+                        <TableCell>{aluno.peso ? `${aluno.peso} kg` : "Não informado"}</TableCell>
+                        <TableCell>{aluno.altura ? `${aluno.altura} cm` : "Não informado"}</TableCell>
+                        <TableCell className="text-center">
+                          <Button
+                            onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <Calendar className="h-4 w-4" />
+                            Ver Evolução
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Vista Mobile/Tablet - Cards */}
+              <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                {alunosFiltrados.map((aluno) => (
+                  <Card key={aluno.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 bg-blue-50 rounded-full">
+                          <User className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <CardTitle className="text-lg font-semibold truncate">
+                            {aluno.nome}
+                          </CardTitle>
+                          <p className="text-sm text-gray-500">{aluno.email}</p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-3">
+                      {/* Informações básicas */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-gray-500">Telefone</span>
+                          <span className="font-medium">{aluno.telefone || "Não informado"}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-gray-500">Idade</span>
+                          <span className="font-medium">{aluno.idade ? `${aluno.idade} anos` : "Não informado"}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Medidas corporais */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="flex flex-col">
+                          <span className="text-gray-500">Peso Atual</span>
+                          <span className="font-medium">{aluno.peso ? `${aluno.peso} kg` : "Não informado"}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-gray-500">Altura</span>
+                          <span className="font-medium">{aluno.altura ? `${aluno.altura} cm` : "Não informado"}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Botão de ação */}
+                      <div className="pt-2 border-t">
                         <Button
                           onClick={() => navegarParaHistoricoMedidas(aluno.id!)}
-                          variant="outline"
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                           size="sm"
-                          className="flex items-center gap-2"
                         >
-                          <Calendar className="h-4 w-4" />
-                          Ver Evolução
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Ver Evolução Completa
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

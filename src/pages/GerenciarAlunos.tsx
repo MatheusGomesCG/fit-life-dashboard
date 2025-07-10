@@ -87,6 +87,7 @@ const GerenciarAlunos: React.FC = () => {
   }, [authLoading, isAuthenticated, user?.tipo, navigate]);
 
   const handleEdit = (id: string) => {
+    console.log("✏️ [GerenciarAlunos] Navegando para editar aluno:", id);
     navigate(`/editar-aluno/${id}`);
   };
 
@@ -122,6 +123,7 @@ const GerenciarAlunos: React.FC = () => {
   };
 
   const navegarParaFicha = (alunoId: string) => {
+    console.log("📋 [GerenciarAlunos] Navegando para ficha de treino:", alunoId);
     navigate(`/ficha-treino/${alunoId}`);
   };
 
@@ -131,6 +133,7 @@ const GerenciarAlunos: React.FC = () => {
   };
 
   const navegarParaHistoricoMedidas = (alunoId: string) => {
+    console.log("📏 [GerenciarAlunos] Navegando para histórico de medidas:", alunoId);
     navigate(`/historico-medidas/${alunoId}`);
   };
 

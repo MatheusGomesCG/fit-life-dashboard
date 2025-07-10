@@ -62,14 +62,17 @@ const GerenciarFichaTreino: React.FC = () => {
   };
 
   const navegarParaFicha = (alunoId: string) => {
+    console.log("📋 [GerenciarFichaTreino] Navegando para ver ficha:", alunoId);
     navigate(`/ficha-treino/${alunoId}`);
   };
 
   const navegarParaCadastrarFicha = (alunoId: string) => {
+    console.log("➕ [GerenciarFichaTreino] Navegando para cadastrar ficha:", alunoId);
     navigate(`/cadastrar-treino/${alunoId}`);
   };
   
   const navegarParaEditarFicha = (alunoId: string) => {
+    console.log("✏️ [GerenciarFichaTreino] Navegando para editar ficha:", alunoId);
     navigate(`/cadastrar-treino/${alunoId}`);
   };
 
