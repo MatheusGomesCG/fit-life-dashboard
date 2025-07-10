@@ -40,7 +40,7 @@ interface FormErrors {
 }
 
 const EditarAluno: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { alunoId } = useParams<{ alunoId: string }>();
   const navigate = useNavigate();
   const [form, setForm] = useState<FormData>({
     nome: "",
@@ -62,11 +62,11 @@ const EditarAluno: React.FC = () => {
 
   useEffect(() => {
     const fetchAluno = async () => {
-      if (!id) return;
+      if (!alunoId) return;
       
       try {
         setLoading(true);
-        const aluno = await buscarAlunoPorId(id);
+        const aluno = await buscarAlunoPorId(alunoId);
         
         if (!aluno) return;
         
@@ -96,7 +96,7 @@ const EditarAluno: React.FC = () => {
     };
 
     fetchAluno();
-  }, [id, navigate]);
+  }, [alunoId, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { id, value } = e.target;
@@ -150,7 +150,7 @@ const EditarAluno: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm() || !id) {
+    if (!validateForm() || !alunoId) {
       toast.error("Por favor, corrija os erros no formulário");
       return;
     }
@@ -180,7 +180,7 @@ const EditarAluno: React.FC = () => {
         experiencia: form.experiencia as "iniciante" | "intermediario" | "avancado",
       };
       
-      await atualizarAluno(id, alunoData);
+      await atualizarAluno(alunoId, alunoData);
       toast.success("Aluno atualizado com sucesso!");
       navigate("/gerenciar-alunos");
     } catch (error) {

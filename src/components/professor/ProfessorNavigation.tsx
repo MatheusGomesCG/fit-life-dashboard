@@ -64,8 +64,8 @@ const ProfessorNavigation: React.FC = () => {
           icon: FileText
         },
         {
-          title: "Cadastrar Treino",
-          href: "/cadastrar-treino",
+          title: "Criar Ficha",
+          href: "/gerenciar-ficha-treino",
           description: "Crie uma nova ficha de treino personalizada",
           icon: BookOpen
         }

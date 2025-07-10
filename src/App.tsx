@@ -27,6 +27,9 @@ import GerenciarAgendamentos from "@/pages/GerenciarAgendamentos";
 import Agendamento from "@/pages/Agendamento";
 import NovoAgendamento from "@/pages/NovoAgendamento";
 import ChatProfessor from "@/pages/ChatProfessor";
+import HistoricoGeral from "@/pages/HistoricoGeral";
+import GerenciarFotosAluno from "@/pages/GerenciarFotosAluno";
+import ConfiguracoesProfessor from "@/pages/ConfiguracoesProfessor";
 
 function App() {
   const { user, loading } = useAuth();
@@ -166,6 +169,21 @@ function App() {
         <Route path="/chat-professor" element={
           <ProtectedRoute allowedRoles={['professor']}>
             <ChatProfessor />
+          </ProtectedRoute>
+        } />
+        <Route path="/historico-geral" element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <HistoricoGeral />
+          </ProtectedRoute>
+        } />
+        <Route path="/fotos/:alunoId" element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <GerenciarFotosAluno />
+          </ProtectedRoute>
+        } />
+        <Route path="/configuracoes-professor" element={
+          <ProtectedRoute allowedRoles={['professor']}>
+            <ConfiguracoesProfessor />
           </ProtectedRoute>
         } />
 

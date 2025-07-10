@@ -61,8 +61,8 @@ const ModernSidebar: React.FC = () => {
 
   const quickActions = [
     { path: "/cadastrar-aluno", label: "Cadastrar Aluno" },
-    { path: "/novo-treino", label: "Novo Treino" },
-    { path: "/listar-alunos", label: "Lista de Alunos" },
+    { path: "/gerenciar-ficha-treino", label: "Criar Ficha" },
+    { path: "/gerenciar-alunos", label: "Lista de Alunos" },
   ];
 
   const managementItems = [
